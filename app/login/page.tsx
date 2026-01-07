@@ -219,6 +219,26 @@ export default function Login() {
           );
         })}
       </div>
+
+      {/* Mobile Logo - Top Center */}
+      <motion.div
+        className="md:hidden absolute top-4 left-1/2 transform -translate-x-1/2 z-50 cursor-pointer"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        onClick={() => router.push('/')}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <Image 
+          src="/icons/logo.svg" 
+          alt="Logo" 
+          width={48} 
+          height={48} 
+          className="w-12 h-12 object-contain"
+        />
+      </motion.div>
+
       {/* Main Login Popup Container */}
       <motion.div 
         className="relative w-full max-w-[1400px] min-h-[600px] sm:min-h-[700px] md:min-h-[856px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row my-4 sm:my-6 md:my-8"
@@ -235,10 +255,11 @@ export default function Login() {
          >
            {/* Logo */}
            <motion.div
-             className="absolute top-4 sm:top-6 md:top-8 lg:top-[64px] left-4 sm:left-6 md:left-8 lg:left-[63px]"
+             className="absolute top-4 sm:top-6 md:top-8 lg:top-[64px] left-4 sm:left-6 md:left-8 lg:left-[63px] cursor-pointer"
              initial={{ y: -20, opacity: 0 }}
              animate={{ y: 0, opacity: 1 }}
              transition={{ delay: 0.3, duration: 0.6 }}
+             onClick={() => router.push('/')}
            >
              <Image src="/icons/logo.svg" alt="Logo" width={68} height={68} className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-[68px] lg:h-[68px] object-contain" />
            </motion.div>
@@ -306,35 +327,7 @@ export default function Login() {
           </motion.button>
 
           {/* Main Content Container */}
-          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-0 py-6 sm:py-8 md:py-12 lg:py-0">
-            {/* Role Selector Tabs */}
-            <motion.div 
-              className="mt-12 sm:mt-16 md:mt-20 lg:mt-0 lg:absolute lg:top-[152px] lg:left-[154px] w-full lg:w-[514px] h-12 sm:h-14 md:h-[56px] mb-6 sm:mb-8"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.9, duration: 0.5 }}
-            >
-              <div className="flex bg-[#F2F4F7] rounded-xl p-1 h-full">
-                {['Student', 'Teacher', 'Parent', 'Organization'].map((role, index) => (
-                  <motion.button 
-                    key={role}
-                    onClick={() => setSelectedRole(role)}
-                    className={`flex-1 px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 rounded-lg font-normal text-xs sm:text-[13px] transition-all duration-200 touch-manipulation ${
-                      selectedRole === role
-                        ? 'bg-white text-[#101828] shadow-sm' 
-                        : 'text-[#667085]'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 1.0 + index * 0.1, duration: 0.3 }}
-                  >
-                    {role}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
+          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-0 py-3 sm:py-8 md:py-12 lg:py-0">
 
             {/* Welcome back Title */}
             <motion.h2 
@@ -353,7 +346,7 @@ export default function Login() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.85, duration: 0.5 }}
             >
-              Welcome back! Please enter your details.
+              Please enter your details.
             </motion.p>
 
             {/* Login Form */}

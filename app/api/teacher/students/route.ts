@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { fullName, email, classGrade, schoolName } = body;
+    const { fullName, email, password, classGrade, schoolName } = body;
 
     // Validate required fields
     console.log('Validating fields:', { fullName, email, classGrade, schoolName });
@@ -130,6 +130,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate password if provided
+    if (password && password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters long' },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     console.log('Checking for existing user with email:', email);
     const existingUser = await User.findOne({ email });
@@ -137,24 +145,40 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       console.log('User already exists, returning 400');
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { error: 'A user with this email address is already registered. Please use a different email.' },
         { status: 400 }
+      );
+    }
+
+    // Check if student already exists with same name and school for this teacher
+    console.log('Checking for existing student:', { fullName, schoolName, teacherId });
+    const existingStudent = await Student.findOne({
+      fullName,
+      schoolName: schoolName || 'Not specified',
+      teacherId: teacherId
+    });
+    console.log('Existing student found:', existingStudent ? 'YES' : 'NO');
+    if (existingStudent) {
+      console.log('Student already exists, returning 409');
+      return NextResponse.json(
+        { error: 'A student with this name already exists in your class at this school. Please check the student list or use a different name.' },
+        { status: 409 }
       );
     }
 
     console.log('Validation passed, proceeding to create user and student records');
 
-    // Generate secure password
+    // Use provided password or generate secure password
     const generateSecurePassword = () => {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-      let password = '';
+      let generatedPassword = '';
       for (let i = 0; i < 12; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
+        generatedPassword += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      return password;
+      return generatedPassword;
     };
 
-    const securePassword = generateSecurePassword();
+    const securePassword = password || generateSecurePassword();
 
     // Create new user
     const newUser = new User({
@@ -220,7 +244,7 @@ export async function POST(request: NextRequest) {
         id: savedUser._id.toString(),
         name: savedUser.name,
         email: savedUser.email,
-        password: securePassword,
+        password: securePassword, // Return the plain password (before hashing) for display
         loginUrl
       },
       student: {
@@ -228,7 +252,7 @@ export async function POST(request: NextRequest) {
         userId: savedUser._id.toString(),
         fullName: savedUser.name,
         email: savedUser.email,
-        password: securePassword, // Include password in student object for frontend
+        password: securePassword, // Include password in student object for frontend (plain text before hashing)
         classGrade,
         schoolName: schoolName || 'Not specified',
         uniqueId: savedStudent.uniqueId,

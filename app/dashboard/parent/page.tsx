@@ -952,9 +952,7 @@ export default function ParentDashboard() {
                           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold shadow-2xl ring-4 ring-purple-200/50 group-hover:scale-105 transition-transform duration-300">
                             {user?.name?.charAt(0) || 'P'}
                           </div>
-                          <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
-                            <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                          </div>
+                          
                           {/* Floating particles around avatar */}
                           <div className="absolute inset-0 pointer-events-none">
                             {[...Array(3)].map((_, i) => (
@@ -1092,7 +1090,7 @@ export default function ParentDashboard() {
 
                   {/* Child Profile Card */}
                   <motion.div 
-                    className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200/50 relative overflow-hidden"
+                    className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200/50 relative overflow-hidden mb-5"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1.2 }}
@@ -1131,9 +1129,7 @@ export default function ParentDashboard() {
                               {child?.name ? child.name.charAt(0).toUpperCase() : '?'}
                             </span>
                           </div>
-                          <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
-                            <div className="w-3 h-3 bg-white rounded-full"></div>
-                          </div>
+                          
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
@@ -1149,7 +1145,7 @@ export default function ParentDashboard() {
 
                   {/* Progress Bar */}
                   <motion.div 
-                    className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200/50 relative overflow-hidden"
+                    className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200/50 relative overflow-hidden mb-5"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1.4 }}
@@ -1181,7 +1177,7 @@ export default function ParentDashboard() {
 
                   {/* Recent Activity */}
                   <motion.div 
-                    className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200/50 relative overflow-hidden"
+                    className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200/50 relative overflow-hidden mb-5"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1.6 }}
@@ -1682,74 +1678,7 @@ export default function ParentDashboard() {
           </main>
           
           {/* Right Panel */}
-          <aside 
-            className={`dashboard-right-panel ${isRightPanelOpen ? 'open' : ''} flex flex-col justify-between`}
-            onMouseEnter={() => !isMobile && setIsRightPanelHovered(true)}
-            onMouseLeave={() => !isMobile && setIsRightPanelHovered(false)}
-          >
-            {/* Arrow indicator for expandability - centered in collapsed state (desktop only) */}
-            {!isMobile && (
-              <div className={`flex justify-center items-center ${isRightPanelHovered ? 'h-16' : 'flex-1'}`}>
-                <div 
-                  className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:border-gray-300 transition-all duration-200 shadow-md"
-                  style={{ transform: isRightPanelHovered ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            )}
-            {/* Panel Content */}
-            <div className="flex-1 flex flex-col transition-all duration-300 p-4">
-              {/* Close button for mobile */}
-              {isMobile && (
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-                  <button 
-                    onClick={() => setIsRightPanelOpen(false)}
-                    className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:border-gray-300 transition-all duration-200"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-              {/* Desktop title */}
-              {!isMobile && (
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 transition-opacity duration-200"
-                    style={{ opacity: isRightPanelHovered ? 1 : 0 }}>
-                  Quick Actions
-                </h3>
-              )}
-              <div className="space-y-3">
-                <div className={`flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 shadow-sm hover:bg-purple-50 cursor-pointer transition-all duration-200 ${isMobile ? '' : (isRightPanelHovered ? '' : 'opacity-0 pointer-events-none')}`}> 
-                  <div className="w-3 h-3 rounded-full flex-shrink-0 bg-blue-500"></div>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900 text-sm">View Progress Report</div>
-                    <div className="text-xs text-gray-500">Latest updates</div>
-                  </div>
-                  <span className="text-gray-400">→</span>
-                </div>
-                <div className={`flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 shadow-sm hover:bg-purple-50 cursor-pointer transition-all duration-200 ${isMobile ? '' : (isRightPanelHovered ? '' : 'opacity-0 pointer-events-none')}`}> 
-                  <div className="w-3 h-3 rounded-full flex-shrink-0 bg-green-500"></div>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900 text-sm">Contact Teacher</div>
-                    <div className="text-xs text-gray-500">Send message</div>
-                  </div>
-                  <span className="text-gray-400">→</span>
-                </div>
-              </div>
-              <button 
-                className={`btn btn-primary w-full mt-6 transition-opacity duration-200 ${isMobile ? '' : (isRightPanelHovered ? '' : 'opacity-0 pointer-events-none')}`}
-                onClick={() => setActiveTab('reports')}
-              >
-                View all reports
-              </button>
-            </div>
-            
-          </aside>
+          
           
           {/* Mobile Right Panel Overlay */}
           {isRightPanelOpen && (

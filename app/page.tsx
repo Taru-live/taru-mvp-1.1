@@ -323,73 +323,87 @@ export default function Home() {
               </motion.div>
 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                {/* Content Container */}
-                                   <div className="flex-1 flex flex-col items-center justify-end text-center p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 pb-20 sm:pb-24 md:pb-32">
+                                   <div className="md:flex-1 md:flex md:flex-col md:items-center md:justify-center text-center p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 pb-20 sm:pb-24 md:pb-32">
                  
-                 {/* Illustration Area */}
-                 <motion.div 
-                   className="mb-4 sm:mb-6 md:mb-8 lg:mb-12 relative w-full h-full min-h-[200px] sm:min-h-[300px] md:min-h-[400px]"
-                   initial={{ scale: 0.8, opacity: 0 }}
-                   animate={{ scale: 1, opacity: 1 }}
-                   transition={{ delay: 0.3, duration: 0.5 }}
-                 >
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               {cards[currentCard].illustration === "learning" && (
-                         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                           {/* Top Left - AI Logo */}
-                           <div className="absolute top-8 sm:top-12 md:top-16 lg:top-20 left-2 sm:left-4 md:left-8 lg:left-16 xl:left-24">
-                             <Image 
-                               src="/ai_landing.png" 
-                               alt="AI Logo" 
-                               width={142} 
-                               height={142} 
-                               className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-[142px] xl:h-[142px] object-contain"
-                             />
-                           </div>
-                           
-                           {/* Top Right - Computer Monitor */}
-                           <div className="absolute top-8 sm:top-12 md:top-16 lg:top-20 right-2 sm:right-4 md:right-8 lg:right-16 xl:right-24">
-                             <Image 
-                               src="/comcap_landing.png" 
-                               alt="Computer Monitor" 
-                               width={164} 
-                               height={164} 
-                               className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-[164px] xl:h-[164px] object-contain transform rotate-[8.37deg]"
-                             />
-                           </div>
-                           
-                           {/* Above Welcome - Teacher/Presentation (larger) */}
-                           <div className="absolute top-4 sm:top-6 md:top-8 lg:top-12 xl:top-16 left-1/2 transform -translate-x-1/2">
-                             <Image 
-                               src="/teacher_landing.png" 
-                               alt="Teacher" 
-                               width={400} 
-                               height={400} 
-                               className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-[400px] 2xl:h-[400px] object-contain"
-                             />
-                           </div>
-                           
-                           {/* Bottom Left - Graduation Cap and Diploma */}
-                           <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 xl:bottom-16 left-2 sm:left-4 md:left-8 lg:left-16 xl:left-24">
-                             <Image 
-                               src="/cap_landing.png" 
-                               alt="Graduation Cap and Diploma" 
-                               width={196} 
-                               height={196} 
-                               className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[196px] 2xl:h-[196px] object-contain"
-                             />
-                           </div>
-                           
-                           {/* Bottom Right - Robot Teaching */}
-                           <div className="absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 xl:bottom-24 right-2 sm:right-4 md:right-8 lg:right-16 xl:right-24">
-                             <Image 
-                               src="/robo_landing.png" 
-                               alt="Robot Teaching" 
-                               width={158} 
-                               height={158} 
-                               className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[158px] 2xl:h-[158px] object-contain transform -rotate-[9.6deg]"
-                             />
-                           </div>
-                         </div>
-                       )}
+                  {/* Illustration Area */}
+                  <motion.div 
+                    className="mb-[5px] md:mb-4 lg:mb-6 relative w-full min-h-[200px] sm:min-h-[300px] md:min-h-[400px]"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                  >
+                    {cards[currentCard].illustration === "learning" && (
+                      <>
+                        {/* Mobile Layout - Only Teacher Image (screens < md) */}
+                        <div className="md:hidden absolute top-[65px] sm:top-[81px] left-1/2 transform -translate-x-1/2 pointer-events-none">
+                          <Image 
+                            src="/teacher_landing.png" 
+                            alt="Teacher" 
+                            width={400} 
+                            height={400} 
+                            className="w-48 h-48 sm:w-56 sm:h-56 object-contain"
+                          />
+                        </div>
+
+                        {/* Desktop Layout - All Images (md and larger) */}
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden">
+                          {/* Top Left - AI Logo */}
+                          <div className="absolute top-8 md:top-16 lg:top-20 left-8 md:left-8 lg:left-16 xl:left-24">
+                            <Image 
+                              src="/ai_landing.png" 
+                              alt="AI Logo" 
+                              width={142} 
+                              height={142} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-[142px] xl:h-[142px] object-contain"
+                            />
+                          </div>
+                          
+                          {/* Top Right - Computer Monitor */}
+                          <div className="absolute top-8 md:top-16 lg:top-20 right-8 md:right-8 lg:right-16 xl:right-24">
+                            <Image 
+                              src="/comcap_landing.png" 
+                              alt="Computer Monitor" 
+                              width={164} 
+                              height={164} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-[164px] xl:h-[164px] object-contain transform rotate-[8.37deg]"
+                            />
+                          </div>
+                          
+                          {/* Center - Teacher/Presentation */}
+                          <div className="absolute top-1/4 md:top-8 lg:top-12 xl:top-16 left-1/2 transform -translate-x-1/2">
+                            <Image 
+                              src="/teacher_landing.png" 
+                              alt="Teacher" 
+                              width={400} 
+                              height={400}
+                              className="sm:w-80 sm:h-80 w-56 h-56 lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-[400px] 2xl:h-[400px] object-contain"
+                            />
+                          </div>
+                          
+                          {/* Bottom Left - Graduation Cap and Diploma */}
+                          <div className="absolute bottom-4 md:bottom-8 lg:bottom-12 xl:bottom-16 left-8 md:left-8 lg:left-16 xl:left-24">
+                            <Image 
+                              src="/cap_landing.png" 
+                              alt="Graduation Cap and Diploma" 
+                              width={196} 
+                              height={196} 
+                              className="w-32 h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[196px] 2xl:h-[196px] object-contain"
+                            />
+                          </div>
+                          
+                          {/* Bottom Right - Robot Teaching */}
+                          <div className="absolute bottom-8 md:bottom-16 lg:bottom-20 xl:bottom-24 right-8 md:right-8 lg:right-16 xl:right-24">
+                            <Image 
+                              src="/robo_landing.png" 
+                              alt="Robot Teaching" 
+                              width={158} 
+                              height={158} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[158px] 2xl:h-[158px] object-contain transform -rotate-[9.6deg]"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   
                                      {cards[currentCard].illustration === "ai" && (
                      <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -536,13 +550,13 @@ export default function Home() {
                       )}
                  </motion.div>
 
-                {/* Title with Advanced Animations */}
-                <motion.div
-                  className="mb-4 sm:mb-6 md:mb-8 px-2 sm:px-4"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                >
+                 {/* Title with Advanced Animations */}
+                 <motion.div
+                   className="mt-4 sm:mt-6 mb-2 sm:mb-3 md:mb-4 px-2 sm:px-4"
+                   initial={{ y: 20, opacity: 0 }}
+                   animate={{ y: 0, opacity: 1 }}
+                   transition={{ delay: 0.4, duration: 0.5 }}
+                 >
                  {currentCard === 0 && (
                    <StaggeredText
                      text="Welcome to the Future of Learning"
@@ -587,13 +601,13 @@ export default function Home() {
                  )}
                </motion.div>
 
-                {/* Description with Typewriter Effect */}
-                <motion.div 
-                  className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-700 mb-6 sm:mb-8 md:mb-10 lg:mb-12 leading-relaxed max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl px-4 sm:px-6"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                >
+                 {/* Description with Typewriter Effect */}
+                 <motion.div 
+                   className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-700 mb-3 sm:mb-4 md:mb-5 lg:mb-6 leading-relaxed max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl pl-8 pr-4 sm:px-6"
+                   initial={{ y: 20, opacity: 0 }}
+                   animate={{ y: 0, opacity: 1 }}
+                   transition={{ delay: 0.5, duration: 0.5 }}
+                 >
                   <TypewriterText
                     text={cards[currentCard].description}
                     delay={0.8}
@@ -630,28 +644,28 @@ export default function Home() {
                     </RippleButton>
                   </StaggerItem>
                 </StaggerContainer>
-              </div>
 
-                             {/* Card Indicators */}
-               <motion.div 
-                 className="absolute bottom-3 sm:bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 sm:gap-3 z-30"
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 1 }}
-                 transition={{ delay: 0.7, duration: 0.5 }}
-               >
-                                   {[0, 1, 2, 3].map((index) => (
-                   <motion.button
-                     key={index}
-                     onClick={() => setCurrentCard(index)}
-                     className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full transition-all duration-300 touch-manipulation ${
-                       currentCard === index ? 'bg-blue-600 scale-125' : 'bg-gray-300'
-                     }`}
-                     whileHover={{ scale: 1.2 }}
-                     whileTap={{ scale: 0.9 }}
-                     aria-label={`Go to slide ${index + 1}`}
-                   />
-                 ))}
-               </motion.div>
+                {/* Card Indicators */}
+                <motion.div 
+                  className="flex gap-2 sm:gap-3 justify-center mt-6 sm:mt-8 mb-4 sm:mb-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                >
+                  {[0, 1, 2, 3].map((index) => (
+                    <motion.button
+                      key={index}
+                      onClick={() => setCurrentCard(index)}
+                      className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full transition-all duration-300 touch-manipulation ${
+                        currentCard === index ? 'bg-blue-600 scale-125' : 'bg-gray-300'
+                      }`}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </motion.div>
+              </div>
 
                {/* Google Translate - Bottom Left */}
                <motion.div 

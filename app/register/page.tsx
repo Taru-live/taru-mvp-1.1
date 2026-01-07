@@ -313,6 +313,26 @@ export default function Register() {
           );
         })}
       </div>
+
+      {/* Mobile Logo - Top Center */}
+      <motion.div
+        className="md:hidden absolute top-4 left-1/2 transform -translate-x-1/2 z-50 cursor-pointer"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        onClick={() => router.push('/')}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <Image 
+          src="/icons/logo.svg" 
+          alt="Logo" 
+          width={48} 
+          height={48} 
+          className="w-12 h-12 object-contain"
+        />
+      </motion.div>
+
       {/* Main Registration Popup Container */}
       <motion.div 
         className="relative w-full max-w-[1400px] min-h-[600px] sm:min-h-[700px] md:min-h-[856px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row my-4 sm:my-6 md:my-8"
@@ -329,10 +349,11 @@ export default function Register() {
         >
           {/* Logo */}
           <motion.div
-            className="absolute top-4 sm:top-6 md:top-8 lg:top-[64px] left-4 sm:left-6 md:left-8 lg:left-[63px]"
+            className="absolute top-4 sm:top-6 md:top-8 lg:top-[64px] left-4 sm:left-6 md:left-8 lg:left-[63px] cursor-pointer"
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
+            onClick={() => router.push('/')}
           >
             <Image src="/icons/logo.svg" alt="Logo" width={68} height={68} className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-[68px] lg:h-[68px] object-contain" />
           </motion.div>

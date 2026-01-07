@@ -242,6 +242,8 @@ export default function TeacherDashboard() {
   
   // Form states
   const [showAddStudentForm, setShowAddStudentForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [addStudentError, setAddStudentError] = useState<string | null>(null);
   const [showBulkImportForm, setShowBulkImportForm] = useState(false);
   const [showCreateModuleForm, setShowCreateModuleForm] = useState(false);
   const [showAssignModuleForm, setShowAssignModuleForm] = useState(false);
@@ -607,6 +609,8 @@ export default function TeacherDashboard() {
         }
         setStudents(prev => [...prev, result.student]);
         setShowAddStudentForm(false);
+        setShowPassword(false);
+        setAddStudentError(null);
         
         // Show credentials modal if password is provided
         if (result.student.password) {
@@ -639,8 +643,11 @@ export default function TeacherDashboard() {
         console.error('Response status:', response.status);
         console.error('Response headers:', response.headers);
         
-        // Add error notification with more specific error message
+        // Set inline error message in the form
         const errorMessage = error.error || error.details || 'Failed to add student. Please try again.';
+        setAddStudentError(errorMessage);
+        
+        // Add error notification with more specific error message
         const errorNotification = {
           id: Date.now().toString(),
           title: 'Error Adding Student',
@@ -659,8 +666,11 @@ export default function TeacherDashboard() {
         type: typeof error
       });
       
-      // Add error notification with more specific error message
+      // Set inline error message in the form
       const errorMessage = error instanceof Error ? error.message : 'Network error. Please check your connection and try again.';
+      setAddStudentError(errorMessage);
+      
+      // Add error notification with more specific error message
       const errorNotification = {
         id: Date.now().toString(),
         title: 'Error Adding Student',
@@ -2637,7 +2647,11 @@ export default function TeacherDashboard() {
       {/* Add Student Modal */}
       <Dialog
         open={showAddStudentForm}
-        onClose={() => setShowAddStudentForm(false)}
+        onClose={() => {
+          setShowAddStudentForm(false);
+          setShowPassword(false);
+          setAddStudentError(null);
+        }}
         className="relative z-50"
       >
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -2646,12 +2660,28 @@ export default function TeacherDashboard() {
             <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
               Add New Student
             </Dialog.Title>
+            {addStudentError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-800">{addStudentError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <form onSubmit={(e) => {
               e.preventDefault();
+              setAddStudentError(null); // Clear previous errors
               const formData = new FormData(e.currentTarget);
               const studentData = {
                 fullName: formData.get('fullName'),
                 email: formData.get('email'),
+                password: formData.get('password'),
                 classGrade: formData.get('classGrade'),
                 schoolName: formData.get('schoolName')
               };
@@ -2678,6 +2708,66 @@ export default function TeacherDashboard() {
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                    placeholder="Set password for student"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2718,7 +2808,11 @@ export default function TeacherDashboard() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowAddStudentForm(false)}
+                  onClick={() => {
+                    setShowAddStudentForm(false);
+                    setShowPassword(false);
+                    setAddStudentError(null);
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                 >
                   Cancel

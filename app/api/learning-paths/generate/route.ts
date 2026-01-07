@@ -5,9 +5,9 @@ import User from '@/models/User';
 import Assessment from '@/models/Assessment';
 import LearningPath from '@/models/LearningPath';
 import Student from '@/models/Student';
+import { LangChainService } from '@/lib/langchain/LangChainService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const N8N_WEBHOOK_URL = process.env.N8N_LEARNING_PATH_WEBHOOK_URL || 'https://nclbtaru.app.n8n.cloud/webhook/learnign-path';
 
 interface DecodedToken {
   userId: string;
@@ -68,116 +68,98 @@ export async function POST(request: NextRequest) {
 
     const { assessmentResults, validationResults } = await request.json();
 
-    // Prepare data for N8N learning path generation
-    const learningPathData = {
-      studentProfile: {
-        skills: assessment.subjectsILike || [],
-        interests: assessment.topicsThatExciteMe || [],
-        careerGoals: assessment.currentCareerInterest || [],
-        dreamJob: assessment.dreamJobAsKid || '',
-        aspirations: assessment.whatImMostProudOf || '',
-        problemsToSolve: assessment.ifICouldFixOneProblem || '',
-        learningStyle: assessment.preferredLearningStyle || [],
-        languagePreference: assessment.languagePreference || 'English'
-      },
-      assessmentResults: assessmentResults || {},
-      validationResults: validationResults || {},
-      studentId: decoded.userId,
-      studentName: user.name,
-      grade: user.profile?.grade || '6',
-      requirements: {
-        duration: '6 months',
-        format: 'video-based',
-        platform: 'YouTube',
-        includeProjects: true,
-        includeAssessments: true
-      }
-    };
-
-    // Call N8N webhook for learning path generation
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 seconds for complex generation
+    // Use LangChainService instead of n8n webhook
+    const langChainService = new LangChainService();
 
     try {
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'generate_learning_path',
-          data: learningPathData
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const result = await response.json();
-        
-        // Extract learning path from N8N response
-        const learningPath = result.learningPath || result.data?.learningPath || {};
-        
-        if (!learningPath.milestones || learningPath.milestones.length === 0) {
-          throw new Error('No learning path generated');
+      const learningPath = await langChainService.generateLearningPath(
+        '',
+        {
+          studentName: user.name,
+          grade: user.profile?.grade || '6',
+          skills: assessment.subjectsILike || [],
+          interests: assessment.topicsThatExciteMe || [],
+          careerGoals: assessment.currentCareerInterest || [],
+          dreamJob: assessment.dreamJobAsKid || '',
+          aspirations: assessment.whatImMostProudOf || '',
+          problemsToSolve: assessment.ifICouldFixOneProblem || '',
+          learningStyle: assessment.preferredLearningStyle || [],
+          languagePreference: assessment.languagePreference || 'English',
+          assessmentResults: assessmentResults || {},
+          validationResults: validationResults || {},
+          duration: '6 months',
+          format: 'video-based',
+          platform: 'YouTube',
+          includeProjects: true,
+          includeAssessments: true,
         }
+      );
 
-        // Create learning path in database
-        const pathId = `LP_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-        const newLearningPath = new LearningPath({
-          pathId,
-          uniqueId: student.uniqueId,
-          name: learningPath.name || 'Personalized Learning Path',
-          description: learningPath.description || 'AI-generated learning path based on your assessment',
-          category: learningPath.category || 'academic',
-          targetGrade: user.profile?.grade || '6',
-          careerGoal: assessment.dreamJobAsKid || '',
-          milestones: learningPath.milestones.map((milestone: any, index: number) => ({
-            milestoneId: `MIL_${pathId}_${index}`,
-            name: milestone.name || `Milestone ${index + 1}`,
-            description: milestone.description || '',
-            modules: milestone.modules || [],
-            estimatedTime: milestone.estimatedTime || 120,
-            prerequisites: milestone.prerequisites || [],
-            status: index === 0 ? 'available' : 'locked',
-            progress: 0
-          })),
-          totalModules: learningPath.totalModules || learningPath.milestones.length * 3,
-          totalDuration: learningPath.totalDuration || learningPath.milestones.reduce((sum: number, m: any) => sum + (m.estimatedTime || 120), 0),
-          totalXpPoints: learningPath.totalXpPoints || learningPath.milestones.length * 100,
-          isActive: true
-        });
-
-        await newLearningPath.save();
-
-        return NextResponse.json({
-          success: true,
-          learningPath: {
-            pathId,
-            name: newLearningPath.name,
-            description: newLearningPath.description,
-            milestones: newLearningPath.milestones,
-            totalModules: newLearningPath.totalModules,
-            totalDuration: newLearningPath.totalDuration,
-            totalXpPoints: newLearningPath.totalXpPoints
-          },
-          metadata: {
-            generatedAt: new Date().toISOString(),
-            studentId: decoded.userId,
-            totalMilestones: newLearningPath.milestones.length
-          }
-        });
-
-      } else {
-        throw new Error(`N8N returned ${response.status}`);
+      if (!learningPath || !learningPath.milestones || learningPath.milestones.length === 0) {
+        throw new Error('No learning path generated');
       }
 
+      // Create learning path in database
+      const pathId = `LP_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      const newLearningPath = new LearningPath({
+        pathId,
+        uniqueId: student.uniqueId,
+        name: learningPath.name || 'Personalized Learning Path',
+        description: learningPath.description || 'AI-generated learning path based on your assessment',
+        category: learningPath.category || 'academic',
+        targetGrade: user.profile?.grade || '6',
+        careerGoal: assessment.dreamJobAsKid || '',
+        milestones: learningPath.milestones.map((milestone: any, index: number) => ({
+          milestoneId: `MIL_${pathId}_${index}`,
+          name: milestone.name || `Milestone ${index + 1}`,
+          description: milestone.description || '',
+          modules: milestone.modules || [],
+          estimatedTime: milestone.estimatedTime || 120,
+          prerequisites: milestone.prerequisites || [],
+          status: index === 0 ? 'available' : 'locked',
+          progress: 0,
+          difficulty: milestone.difficulty || 'beginner',
+          skills: milestone.skills || [],
+          learningObjectives: milestone.learningObjectives || [],
+        })),
+        totalModules: learningPath.totalModules || learningPath.milestones.length * 3,
+        totalDuration: learningPath.totalDuration || learningPath.milestones.reduce((sum: number, m: any) => sum + (m.estimatedTime || 120), 0),
+        totalXpPoints: learningPath.totalXpPoints || learningPath.milestones.length * 100,
+        isActive: true,
+        source: 'ai-generated',
+      });
+
+      await newLearningPath.save();
+
+      return NextResponse.json({
+        success: true,
+        learningPath: {
+          pathId,
+          name: newLearningPath.name,
+          description: newLearningPath.description,
+          milestones: newLearningPath.milestones,
+          totalModules: newLearningPath.totalModules,
+          totalDuration: newLearningPath.totalDuration,
+          totalXpPoints: newLearningPath.totalXpPoints
+        },
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          studentId: decoded.userId,
+          totalMilestones: newLearningPath.milestones.length
+        }
+      });
+
     } catch (error) {
-      console.error('N8N learning path generation error:', error);
+      console.error('LangChain learning path generation error:', error);
       
       // Fallback learning path generation
-      const fallbackPath = generateFallbackLearningPath(learningPathData, student.uniqueId);
+      const fallbackPath = generateFallbackLearningPath({
+        studentProfile: {
+          skills: assessment.subjectsILike || [],
+          interests: assessment.topicsThatExciteMe || [],
+          careerGoals: assessment.currentCareerInterest || [],
+        }
+      }, student.uniqueId);
       
       return NextResponse.json({
         success: true,
@@ -187,7 +169,7 @@ export async function POST(request: NextRequest) {
           generatedAt: new Date().toISOString(),
           studentId: decoded.userId,
           totalMilestones: fallbackPath.milestones.length,
-          error: 'Using fallback learning path due to N8N unavailability'
+          error: 'Using fallback learning path due to LangChain unavailability'
         }
       });
     }
@@ -288,4 +270,4 @@ function generateFallbackLearningPath(data: any, uniqueId: string) {
     totalDuration: milestones.reduce((sum, m) => sum + m.estimatedTime, 0),
     totalXpPoints: milestones.length * 100
   };
-} 
+}
