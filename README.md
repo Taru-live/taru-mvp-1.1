@@ -225,30 +225,6 @@ taru/
 
 ---
 
-## 🤖 LangChain Migration
-
-This project has been migrated from n8n workflows to LangChain for AI-powered features. All AI functionality now uses direct LangChain integration instead of external webhooks.
-
-### Migration Status
-✅ **Complete**: All LangChain chains, prompts, and services implemented  
-🔄 **In Progress**: API route updates
-
-### Quick Start
-1. Set `OPENAI_API_KEY` in your `.env` file
-2. Install dependencies: `npm install`
-3. See [LangChain Migration Guide](./LANGCHAIN_MIGRATION_GUIDE.md) for details
-
-### LangChain Features
-- **AI Chat Assistant**: Conversational AI with context awareness
-- **Learning Path Generation**: Personalized curriculum creation
-- **Assessment Generation**: Dynamic question creation
-- **Module Content**: MCQ and flashcard generation
-- **Result Analysis**: Intelligent assessment analysis
-
-See [LangChain Documentation](./lib/langchain/README.md) for complete details.
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Here's how you can help:

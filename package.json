@@ -43,12 +43,7 @@
     "react-pdf": "^10.0.1",
     "react-speech-recognition": "^4.0.1",
     "react-youtube": "^10.1.0",
-    "recharts": "^3.1.0",
-    "@langchain/core": "^0.3.0",
-    "@langchain/openai": "^0.3.0",
-    "@langchain/community": "^0.3.0",
-    "langchain": "^0.3.0",
-    "zod": "^3.23.8"
+    "recharts": "^3.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

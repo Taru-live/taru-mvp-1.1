@@ -4,9 +4,9 @@ import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
 import AssessmentResponse from '@/models/AssessmentResponse';
 import { N8NCacheService } from '@/lib/N8NCacheService';
-import { LangChainService } from '@/lib/langchain/LangChainService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const N8N_SCORE_WEBHOOK_URL = 'https://nclbtaru.app.n8n.cloud/webhook/Score-result';
 
 interface DecodedToken {
   userId: string;
@@ -90,119 +90,171 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('🔍 Analyzing assessment results using LangChain for student:', student.uniqueId);
+    console.log('🔍 Sending uniqueID to N8N Score-result webhook:', student.uniqueId);
+    console.log('🔍 N8N webhook URL:', N8N_SCORE_WEBHOOK_URL);
 
-    // Use LangChainService instead of n8n webhook
-    const langChainService = new LangChainService();
+    // Send uniqueID to N8N webhook using GET request with URL parameters
+    const urlParams = new URLSearchParams({
+      uniqueId: student.uniqueId
+    });
     
+    const webhookUrl = `${N8N_SCORE_WEBHOOK_URL}?${urlParams.toString()}`;
+    console.log('🔍 Webhook URL:', webhookUrl);
+
+    // Add timeout to prevent hanging requests (increased to 30 seconds for n8n workflows)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    let n8nOutput: any; // Declare n8nOutput here
     try {
-      // Get formatted responses for analysis
-      const formattedResponses = assessmentResponse.responses.map((r: any) => ({
-        Q: r.questionId || r.Q,
-        section: r.category || r.section,
-        question: r.question,
-        studentAnswer: r.answer || r.studentAnswer,
-        type: r.questionType === 'MCQ' ? 'Multiple Choice' : 'Open Text'
-      }));
+      console.log('🔍 Making GET request to N8N webhook...');
+      const response = await fetch(webhookUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal
+      });
+      
+      console.log('🔍 N8N webhook response status:', response.status);
+      console.log('🔍 N8N webhook response statusText:', response.statusText);
 
-      const analysis = await langChainService.analyzeAssessmentResults(
-        student.uniqueId,
-        formattedResponses
-      );
+      clearTimeout(timeoutId);
 
-      if (!analysis) {
-        console.log('⚠️ No analysis generated from LangChain, using fallback');
+      if (!response.ok) {
+        console.error('🔍 N8N webhook request failed:', response.status, response.statusText);
+        return NextResponse.json(
+          { error: 'Failed to get assessment results' },
+          { status: 500 }
+        );
+      }
+
+      // Add better error handling for JSON parsing
+      const responseText = await response.text();
+      console.log('🔍 Raw N8N response text:', responseText);
+      
+      if (!responseText || responseText.trim() === '') {
+        console.log('⚠️ N8N returned empty response, using fallback');
         return NextResponse.json({
           success: true,
           result: {
-            totalQuestions: assessmentResponse.responses.length,
+            totalQuestions: 0,
             score: 0,
             summary: 'Assessment completed successfully!',
-            langChainResults: null
+            n8nResults: null
           }
         });
       }
-
-      // Extract data from LangChain analysis
-      const score = parseInt(analysis.Score) || 0;
-      const totalQuestions = parseInt(analysis['Total Questions']) || assessmentResponse.responses.length;
-      const summary = analysis.Summary || 'Assessment completed successfully!';
-
-      // Prepare result data from LangChain analysis
-      const resultData = {
-        type: analysis.PersonalityType || 'Assessment Completed',
-        description: summary,
-        score: score,
-        learningStyle: analysis.LearningStyle || 'Mixed',
-        recommendations: analysis.Recommendations || [],
-        totalQuestions: totalQuestions,
-        langChainResults: analysis
-      };
-
-      // Save to cache
-      try {
-        // Save to cache
-        const n8nResult = await N8NCacheService.saveResult({
-          uniqueId: student.uniqueId,
-          resultType: 'assessment_analysis',
-          webhookUrl: 'langchain-analysis',
-          requestPayload: { uniqueId: student.uniqueId },
-          responseData: analysis,
-          processedData: resultData,
-          status: 'completed',
-          metadata: {
-            studentId: decoded.userId,
-            assessmentId: `${student.uniqueId}_diagnostic`,
-            contentType: 'analysis',
-            version: '1.0'
-          },
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-        });
-
-        // Update assessment response with LangChain results
-        await N8NCacheService.updateAssessmentResults(
-          student.uniqueId,
-          'analysis',
-          resultData,
-          n8nResult._id.toString()
-        );
-
-        console.log(`💾 Saved assessment analysis to cache for student ${student.uniqueId}`);
-      } catch (cacheError) {
-        console.error('❌ Error saving to cache:', cacheError);
-        // Continue with response even if cache fails
-      }
-
-      // Update assessment response with LangChain results (legacy support)
-      assessmentResponse.result = resultData;
-      await assessmentResponse.save();
-      console.log('🔍 Assessment response updated with LangChain results');
-
-      return NextResponse.json({
-        success: true,
-        result: {
-          totalQuestions: totalQuestions,
-          score: score,
-          summary: summary,
-          langChainResults: analysis
-        }
-      });
-
-    } catch (error) {
-      console.error('LangChain assessment analysis error:', error);
       
-      // Return fallback result
+      n8nOutput = JSON.parse(responseText);
+      console.log('🔍 Parsed N8N webhook response:', n8nOutput);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error('🔍 N8N webhook request timed out after 30 seconds');
+      } else {
+        console.error('🔍 N8N webhook request failed:', fetchError);
+      }
+      
+      // Return fallback result instead of failing
       return NextResponse.json({
         success: true,
         result: {
-          totalQuestions: assessmentResponse.responses.length,
+          totalQuestions: 0,
           score: 0,
           summary: 'Assessment completed successfully!',
-          langChainResults: null,
-          error: 'Using fallback due to LangChain error'
+          n8nResults: null
         }
       });
     }
+
+    // Parse the N8N output format - expecting array with single object
+    let result = null;
+    if (n8nOutput && Array.isArray(n8nOutput) && n8nOutput.length > 0) {
+      result = n8nOutput[0];
+      console.log('🔍 Parsed N8N result:', result);
+    } else if (n8nOutput && typeof n8nOutput === 'object') {
+      result = n8nOutput;
+      console.log('🔍 Using direct N8N result:', result);
+    }
+
+    if (!result) {
+      console.log('⚠️ No valid result from N8N, using fallback');
+      return NextResponse.json({
+        success: true,
+        result: {
+          totalQuestions: 0,
+          score: 0,
+          summary: 'Assessment completed successfully!',
+          n8nResults: null
+        }
+      });
+    }
+
+    // Extract data from new N8N format
+    const score = parseInt(result.Score) || 0;
+    const totalQuestions = parseInt(result['Total Questions']) || 0;
+    const summary = result.Summary || 'Assessment completed successfully!';
+
+    // Prepare result data from N8N analysis
+    const resultData = {
+      type: result.PersonalityType || 'Assessment Completed',
+      description: summary,
+      score: score,
+      learningStyle: result.LearningStyle || 'Mixed',
+      recommendations: result.Recommendations || [],
+      totalQuestions: totalQuestions,
+      n8nResults: result
+    };
+
+    // Save to cache
+    try {
+      // Save to N8N cache
+      const n8nResult = await N8NCacheService.saveResult({
+        uniqueId: student.uniqueId,
+        resultType: 'assessment_analysis',
+        webhookUrl: N8N_SCORE_WEBHOOK_URL,
+        requestPayload: { uniqueId: student.uniqueId },
+        responseData: n8nOutput,
+        processedData: resultData,
+        status: 'completed',
+        metadata: {
+          studentId: decoded.userId,
+          assessmentId: `${student.uniqueId}_diagnostic`,
+          contentType: 'analysis',
+          version: '1.0'
+        },
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      });
+
+      // Update assessment response with N8N results
+      await N8NCacheService.updateAssessmentResults(
+        student.uniqueId,
+        'analysis',
+        resultData,
+        n8nResult._id.toString()
+      );
+
+      console.log(`💾 Saved assessment analysis to cache for student ${student.uniqueId}`);
+    } catch (cacheError) {
+      console.error('❌ Error saving to cache:', cacheError);
+      // Continue with response even if cache fails
+    }
+
+    // Update assessment response with N8N results (legacy support)
+    assessmentResponse.result = resultData;
+    await assessmentResponse.save();
+    console.log('🔍 Assessment response updated with N8N results');
+
+    return NextResponse.json({
+      success: true,
+      result: {
+        totalQuestions: totalQuestions,
+        score: score,
+        summary: summary, // Only show Summary as requested
+        n8nResults: result
+      }
+    });
 
   } catch (error) {
     console.error('Assessment result error:', error);
@@ -249,6 +301,39 @@ export async function GET(request: NextRequest) {
         { error: 'Student not found' },
         { status: 404 }
       );
+    }
+
+    // Test N8N webhook connectivity
+    try {
+      console.log('🔍 Testing N8N webhook connectivity...');
+      const testPayload = {
+        uniqueId: 'test',
+        submittedAt: new Date().toISOString()
+      };
+      const testResponse = await fetch(N8N_SCORE_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testPayload)
+      });
+      
+      console.log('🔍 N8N test response status:', testResponse.status);
+      console.log('🔍 N8N test response headers:', Object.fromEntries(testResponse.headers.entries()));
+      
+      if (testResponse.ok) {
+        const testText = await testResponse.text();
+        console.log('🔍 N8N test response text:', testText);
+        
+        try {
+          const testJson = JSON.parse(testText);
+          console.log('🔍 N8N test response JSON:', testJson);
+        } catch (parseError) {
+          console.log('🔍 N8N test response is not valid JSON');
+        }
+      }
+    } catch (testError) {
+      console.error('🔍 N8N webhook test failed:', testError);
     }
 
     // Get assessment response

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LangChainService } from '@/lib/langchain/LangChainService';
 
 export async function POST(request: NextRequest) {
   return handleRequest('POST', request);
@@ -11,11 +10,11 @@ export async function GET(request: NextRequest) {
 
 async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
   try {
+    let webhookUrl = process.env.N8N_WEBHOOK_URL || 'https://nclbtaru.app.n8n.cloud/webhook/MCQ';
     let query = '';
     let studentData: Record<string, unknown> = {};
     let studentUniqueId = '';
     let sessionId = '';
-    let context: Record<string, unknown> = {};
 
     if (method === 'POST') {
       const body = await request.json();
@@ -25,7 +24,7 @@ async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
       studentData = body.studentData || {};
       studentUniqueId = body.studentUniqueId || '';
       sessionId = body.sessionId || '';
-      context = body.context || {};
+      if (body.webhookUrl) webhookUrl = body.webhookUrl;
     } else {
       const { searchParams } = new URL(request.url);
       query = searchParams.get('query') || searchParams.get('message') || '';
@@ -39,13 +38,7 @@ async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
         uniqueId: searchParams.get('uniqueId') || '',
         timestamp: searchParams.get('timestamp') || new Date().toISOString()
       };
-      context = {
-        pdfContent: searchParams.get('pdfContent') || '',
-        selectedText: searchParams.get('selectedText') || '',
-        currentTime: parseInt(searchParams.get('currentTime') || '0'),
-        bookmarks: [],
-        action: searchParams.get('action') || 'general',
-      };
+      if (searchParams.get('webhookUrl')) webhookUrl = searchParams.get('webhookUrl')!;
     }
 
     if (!query) {
@@ -55,65 +48,116 @@ async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
       return NextResponse.json({ error: 'Student name is required' }, { status: 400 });
     }
 
-    console.log('Generating LangChain chat response for:', query);
+    const payload = {
+      query,
+      studentData,
+      studentUniqueId,
+      sessionId,
+    };
 
-    // Use LangChainService instead of n8n webhook
-    const langChainService = new LangChainService();
+    console.log('Payload being sent to N8N:', JSON.stringify(payload, null, 2));
+
+    // Enhanced error handling with timeout
+    let rawResponse;
+    let webhookResponse;
     
     try {
-      const result = await langChainService.generateResponse(
-        query,
-        {
-          pdfContent: context.pdfContent as string,
-          selectedText: context.selectedText as string,
-          currentTime: context.currentTime as number,
-          bookmarks: context.bookmarks as any[],
-          action: context.action as string,
-        },
-        {
-          name: studentData.name as string,
-          grade: studentData.grade as string,
-          school: studentData.school as string,
-        }
-      );
-
-      return NextResponse.json({
-        success: result.success,
-        response: result.content,
-        suggestions: result.suggestions,
-        relatedQuestions: result.relatedQuestions,
-        langChainOutput: {
-          aiInput: query,
-          aiResponse: result.content,
-          timestamp: new Date().toISOString(),
-          studentContext: {
-            name: studentData.name,
-            grade: studentData.grade,
-            school: studentData.school
-          }
-        },
-        metadata: {
-          method,
-          responseTime: Date.now(),
-          messageLength: query.length,
-          studentDataProvided: !!studentData,
-          timestamp: new Date().toISOString(),
-          studentUniqueId: studentUniqueId,
-          sessionId: sessionId,
-          confidence: result.confidence
-        }
-      });
-    } catch (error) {
-      console.error('LangChain chat error:', error);
+      console.log('Attempting to connect to webhook:', webhookUrl);
       
-      // Fallback response
+      // Add timeout to prevent hanging requests (increased to 30 seconds for n8n workflows)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      // Convert payload to URL parameters for GET request
+      const urlParams = new URLSearchParams({
+        query: payload.query,
+        name: payload.studentData.name as string,
+        email: payload.studentData.email as string,
+        grade: payload.studentData.grade as string,
+        school: payload.studentData.school as string,
+        uniqueId: payload.studentData.uniqueId as string,
+        timestamp: payload.studentData.timestamp as string,
+        studentUniqueId: payload.studentUniqueId, // Add student unique ID to webhook
+        sessionId: payload.sessionId // Add session ID to webhook
+      });
+      
+      const getUrl = `${webhookUrl}?${urlParams.toString()}`;
+      
+      webhookResponse = await fetch(getUrl, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      try {
+        rawResponse = await webhookResponse.json();
+        console.log('N8N Response:', JSON.stringify(rawResponse, null, 2));
+      } catch (parseError) {
+        console.error('Failed to parse n8n response as JSON:', parseError);
+        rawResponse = { error: 'Invalid JSON response from n8n' };
+      }
+    } catch (fetchError: unknown) {
+      const error = fetchError as Error & { code?: string };
+      console.error('Webhook connection failed:', error);
+      console.error('Webhook URL attempted:', webhookUrl);
+      console.error('Error name:', error.name);
+      console.error('Error code:', error.code);
+      
+      let errorMessage = 'Connection failed';
+      if (error.name === 'AbortError') {
+        errorMessage = 'Webhook timeout (30s) - n8n workflow may be taking too long or inactive';
+      } else if (error.code === 'ENOTFOUND') {
+        errorMessage = 'Webhook URL not found - check n8n webhook URL';
+      } else if (error.code === 'ECONNREFUSED') {
+        errorMessage = 'Connection refused - n8n server may be down';
+      }
+      
+      console.error('Diagnosed issue:', errorMessage);
+      
+      // Return immediate fallback response for network errors
       return NextResponse.json({
         success: true,
         response: generateFallbackResponse(query, studentData),
         fallback: true,
-        langChainOutput: {
-          aiInput: query,
-          aiResponse: 'Offline mode - using built-in responses',
+                 n8nOutput: {
+           fullResponse: null,
+           processedResponse: null,
+           aiInput: query,
+           aiResponse: 'Offline mode - using built-in responses',
+           timestamp: new Date().toISOString(),
+           studentContext: {
+             name: studentData.name,
+             grade: studentData.grade,
+             school: studentData.school
+           }
+         },
+        metadata: {
+          method,
+          webhookStatus: 0,
+          responseTime: Date.now(),
+          messageLength: query.length,
+          studentDataProvided: !!studentData,
+          webhookUrl: webhookUrl,
+          timestamp: new Date().toISOString(),
+          conversationId: '', // conversationId is no longer used
+          error: `Webhook unreachable: ${errorMessage} - using fallback mode`
+        }
+      });
+    }
+
+    const { responseText, aiInput, aiResponse, n8nOutput } = extractN8nResponse(rawResponse);
+
+    if (webhookResponse.ok) {
+      return NextResponse.json({
+        success: true,
+        response: responseText,
+        n8nOutput: {
+          fullResponse: rawResponse,
+          processedResponse: n8nOutput,
+          aiInput,
+          aiResponse,
           timestamp: new Date().toISOString(),
           studentContext: {
             name: studentData.name,
@@ -123,13 +167,54 @@ async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
         },
         metadata: {
           method,
+          webhookStatus: webhookResponse.status,
           responseTime: Date.now(),
           messageLength: query.length,
           studentDataProvided: !!studentData,
+          webhookUrl: webhookUrl,
           timestamp: new Date().toISOString(),
-          studentUniqueId: studentUniqueId,
-          sessionId: sessionId,
-          error: `LangChain error: ${error instanceof Error ? error.message : 'Unknown error'} - using fallback mode`
+          conversationId: '', // conversationId is no longer used
+          studentUniqueId: studentUniqueId, // Add student unique ID to metadata
+          sessionId: sessionId // Add session ID to metadata
+        }
+      });
+    } else {
+      console.error('Webhook failed:', webhookResponse.status, webhookResponse.statusText);
+      console.log('Using intelligent fallback response for query:', query);
+      
+      return NextResponse.json({
+        success: true,
+        response: generateFallbackResponse(query, studentData),
+        fallback: true,
+                 n8nOutput: {
+           fullResponse: rawResponse,
+           processedResponse: null,
+           aiInput: query,
+           aiResponse: 'Intelligent fallback response (n8n unavailable)',
+           timestamp: new Date().toISOString(),
+           studentContext: {
+             name: studentData.name,
+             grade: studentData.grade,
+             school: studentData.school
+           }
+         },
+        metadata: {
+          method,
+          webhookStatus: webhookResponse.status,
+          responseTime: Date.now(),
+          messageLength: query.length,
+          studentDataProvided: !!studentData,
+          webhookUrl: webhookUrl,
+          timestamp: new Date().toISOString(),
+          conversationId: '', // conversationId is no longer used
+          studentUniqueId: studentUniqueId, // Add student unique ID to metadata
+          sessionId: sessionId, // Add session ID to metadata
+          error: `Webhook returned ${webhookResponse.status} - using fallback mode`
+        },
+        n8nError: {
+          status: webhookResponse.status,
+          statusText: webhookResponse.statusText,
+          raw: rawResponse
         }
       });
     }
@@ -168,4 +253,63 @@ function generateFallbackResponse(query: string, studentData: Record<string, unk
   
   // Default friendly response
   return `Hello ${studentName}! I'm your AI learning assistant. While I'm working in offline mode right now, I'm still here to help! You can ask me about your learning progress, modules, or any questions about your educational journey.`;
+}
+
+// Utility to extract responses from various possible webhook response shapes
+function extractN8nResponse(data: Record<string, unknown>) {
+  // Handle error cases
+  if (data?.error) {
+    return {
+      responseText: 'I\'m having trouble processing your request right now. Please try again later.',
+      aiInput: '',
+      aiResponse: 'Error: ' + data.error,
+      n8nOutput: data
+    };
+  }
+
+  const flat = flattenObject(data);
+  const get = (keys: string[]) => keys.map(k => flat[k]).find(v => typeof v === 'string' && v.trim().length > 0);
+
+  // Try to extract the AI response from various possible fields
+  let responseText = get(['output', 'result', 'response', 'message', 'text', 'content', 'answer']);
+  
+  // Check if data is an array and extract from first element
+  if (!responseText && Array.isArray(data) && data.length > 0) {
+    const firstItem = data[0];
+    if (firstItem && typeof firstItem === 'object') {
+      const flatFirst = flattenObject(firstItem);
+      const getFromFirst = (keys: string[]) => keys.map(k => flatFirst[k]).find(v => typeof v === 'string' && v.trim().length > 0);
+      responseText = getFromFirst(['output', 'result', 'response', 'message', 'text', 'content', 'answer']) || 
+                    Object.values(flatFirst).find(v => typeof v === 'string' && v.trim().length > 20) as string;
+    }
+  }
+  
+  // Fallback to default message
+  responseText = responseText || 'Thank you for your message! I\'ll get back to you soon.';
+  
+  // Try to extract the original query/input
+  const aiInput = get(['query', 'aiInput', 'input', 'prompt', 'question']) || '';
+  
+  // Use the response text as the AI response
+  const aiResponse = responseText;
+
+  // Extract the full n8n output for debugging
+  const n8nOutput = data?.json || data?.data || data;
+
+  console.log('Extracted response:', { responseText, aiInput, aiResponse });
+
+  return { responseText, aiInput, aiResponse, n8nOutput };
+}
+
+// Flattens a nested object into a single-level key map
+function flattenObject(obj: Record<string, unknown>, parent = '', res: Record<string, unknown> = {}) {
+  for (const key in obj) {
+    const propName = parent ? `${parent}.${key}` : key;
+    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+      flattenObject(obj[key] as Record<string, unknown>, propName, res);
+    } else {
+      res[propName] = obj[key];
+    }
+  }
+  return res;
 }
