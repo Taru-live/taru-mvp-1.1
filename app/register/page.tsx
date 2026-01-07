@@ -225,7 +225,7 @@ export default function Register() {
 
   return (
     <motion.main 
-      className="min-h-screen flex items-center justify-center overflow-x-hidden overflow-y-auto bg-[#6D18CE] p-3 sm:p-4 md:p-6 relative w-full"
+      className="min-h-screen flex flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#6D18CE] p-2 sm:p-4 md:p-6 py-4 sm:py-6 md:py-8 lg:py-3 relative w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -314,9 +314,9 @@ export default function Register() {
         })}
       </div>
 
-      {/* Mobile Logo - Top Center */}
+      {/* Mobile Logo - Above White Box */}
       <motion.div
-        className="md:hidden absolute top-4 left-1/2 transform -translate-x-1/2 z-50 cursor-pointer"
+        className="lg:hidden mb-4 sm:mb-6 cursor-pointer"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.6 }}
@@ -329,20 +329,24 @@ export default function Register() {
           alt="Logo" 
           width={48} 
           height={48} 
-          className="w-12 h-12 object-contain"
+          className="w-12 h-12 sm:w-14 sm:h-14 object-contain mx-auto"
         />
       </motion.div>
 
       {/* Main Registration Popup Container */}
       <motion.div 
-        className="relative w-full max-w-[1400px] min-h-[600px] sm:min-h-[700px] md:min-h-[856px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row my-4 sm:my-6 md:my-8"
+        className="relative w-full max-w-[1400px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
         {/* Left Section - Purple Background with Content */}
         <motion.section 
-          className="w-full lg:w-[577px] min-h-[300px] sm:min-h-[400px] lg:h-auto lg:min-h-[856px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12"
+          className="w-full lg:w-[577px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12"
+          style={{ 
+            minHeight: 'clamp(500px, 80vh, 856px)',
+            height: 'auto'
+          }}
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
@@ -383,17 +387,17 @@ export default function Register() {
 
                  {/* Right Section - White Form Card */}
          <motion.section 
-           className="w-full lg:w-[823px] lg:h-[856px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 min-h-[600px] sm:min-h-[700px]"
+           className="w-full lg:w-[823px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 lg:min-h-[856px]"
            initial={{ x: 100, opacity: 0 }}
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.8 }}
          >
 
           {/* Main Content Container */}
-          <div className="px-4 sm:px-6 md:px-8 lg:px-[60px] py-6 sm:py-8 md:py-10 lg:py-[40px] h-full flex flex-col">
+          <div className="px-4 sm:px-6 md:px-8 lg:px-[60px] py-4 sm:py-5 md:py-6 lg:py-[40px] h-full flex flex-col">
             {/* Role Selector Tabs */}
             <motion.div 
-              className="w-full h-12 sm:h-14 md:h-[56px] mb-4 sm:mb-6"
+              className="w-full h-12 sm:h-14 md:h-[56px] mb-3 sm:mb-4 md:mb-6"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.9, duration: 0.5 }}
@@ -422,7 +426,7 @@ export default function Register() {
 
             {/* Create Account Title */}
             <motion.h2 
-              className="text-xl sm:text-2xl md:text-[24.7297px] leading-tight sm:leading-snug md:leading-[30px] font-bold text-black mb-4 sm:mb-6 w-auto lg:w-[190px]"
+              className="text-xl sm:text-2xl md:text-[24.7297px] leading-tight sm:leading-snug md:leading-[30px] font-bold text-black mb-3 sm:mb-4 md:mb-6 w-auto lg:w-[190px]"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.5 }}
@@ -439,7 +443,7 @@ export default function Register() {
               transition={{ delay: 1.1, duration: 0.6 }}
             >
               {/* Form Fields Container */}
-              <div className="flex-1 space-y-4 sm:space-y-5 md:space-y-6 overflow-y-auto">
+              <div className="flex-1 space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 overflow-y-auto">
                 {/* Full Name */}
                 <div className="relative">
                   <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">Full Name</label>
@@ -764,7 +768,7 @@ export default function Register() {
               </AnimatePresence>
 
               {/* Bottom Section */}
-              <div className="mt-6 sm:mt-8 space-y-4">
+              <div className="mt-4 sm:mt-5 md:mt-6 lg:mt-8 space-y-3 sm:space-y-4">
                 {/* Register Button */}
                 <motion.button
                   type="submit"

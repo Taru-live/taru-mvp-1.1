@@ -252,7 +252,7 @@ export default function Home() {
              exit={{ opacity: 0, x: -100 }}
              transition={{ duration: 0.5 }}
            >
-                           {/* Main Card */}
+              {/* Main Card */}
               <motion.div 
                 className="bg-white w-full h-full min-h-screen relative overflow-x-hidden overflow-y-auto flex flex-col"
                 whileHover={{ scale: 1.005 }}
@@ -322,33 +322,35 @@ export default function Home() {
                 </motion.div>
               </motion.div>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               {/* Content Container */}
-                                   <div className="md:flex-1 md:flex md:flex-col md:items-center md:justify-center text-center p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 pb-20 sm:pb-24 md:pb-32">
+                {/* Content Container */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8 sm:py-12 md:py-16 lg:py-20 pb-20 sm:pb-24 md:pb-32">
                  
-                  {/* Illustration Area */}
+                  {/* Illustration Area - Single Central Image on Mobile */}
                   <motion.div 
-                    className="mb-[5px] md:mb-4 lg:mb-6 relative w-full min-h-[200px] sm:min-h-[300px] md:min-h-[400px]"
+                    className="mb-4 sm:mb-6 md:mb-8 lg:mb-10 relative w-full flex items-center justify-center"
+                    style={{ minHeight: 'clamp(200px, 30vh, 500px)' }}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
                   >
                     {cards[currentCard].illustration === "learning" && (
                       <>
-                        {/* Mobile Layout - Only Teacher Image (screens < md) */}
-                        <div className="md:hidden absolute top-[65px] sm:top-[81px] left-1/2 transform -translate-x-1/2 pointer-events-none">
+                        {/* Mobile Layout - Only Central Teacher Image */}
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
                           <Image 
                             src="/teacher_landing.png" 
                             alt="Teacher" 
                             width={400} 
                             height={400} 
-                            className="w-48 h-48 sm:w-56 sm:h-56 object-contain"
+                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                            priority
                           />
                         </div>
 
-                        {/* Desktop Layout - All Images (md and larger) */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden">
+                        {/* Desktop Layout - All Images */}
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
                           {/* Top Left - AI Logo */}
-                          <div className="absolute top-8 md:top-16 lg:top-20 left-8 md:left-8 lg:left-16 xl:left-24">
+                          <div className="absolute top-8 lg:top-16 xl:top-20 left-8 lg:left-16 xl:left-24">
                             <Image 
                               src="/ai_landing.png" 
                               alt="AI Logo" 
@@ -359,7 +361,7 @@ export default function Home() {
                           </div>
                           
                           {/* Top Right - Computer Monitor */}
-                          <div className="absolute top-8 md:top-16 lg:top-20 right-8 md:right-8 lg:right-16 xl:right-24">
+                          <div className="absolute top-8 lg:top-16 xl:top-20 right-8 lg:right-16 xl:right-24">
                             <Image 
                               src="/comcap_landing.png" 
                               alt="Computer Monitor" 
@@ -370,18 +372,18 @@ export default function Home() {
                           </div>
                           
                           {/* Center - Teacher/Presentation */}
-                          <div className="absolute top-1/4 md:top-8 lg:top-12 xl:top-16 left-1/2 transform -translate-x-1/2">
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                             <Image 
                               src="/teacher_landing.png" 
                               alt="Teacher" 
                               width={400} 
                               height={400}
-                              className="sm:w-80 sm:h-80 w-56 h-56 lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-[400px] 2xl:h-[400px] object-contain"
+                              className="w-56 h-56 lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-[400px] 2xl:h-[400px] object-contain"
                             />
                           </div>
                           
                           {/* Bottom Left - Graduation Cap and Diploma */}
-                          <div className="absolute bottom-4 md:bottom-8 lg:bottom-12 xl:bottom-16 left-8 md:left-8 lg:left-16 xl:left-24">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 left-8 lg:left-16 xl:left-24">
                             <Image 
                               src="/cap_landing.png" 
                               alt="Graduation Cap and Diploma" 
@@ -392,7 +394,7 @@ export default function Home() {
                           </div>
                           
                           {/* Bottom Right - Robot Teaching */}
-                          <div className="absolute bottom-8 md:bottom-16 lg:bottom-20 xl:bottom-24 right-8 md:right-8 lg:right-16 xl:right-24">
+                          <div className="absolute bottom-8 lg:bottom-16 xl:bottom-24 right-8 lg:right-16 xl:right-24">
                             <Image 
                               src="/robo_landing.png" 
                               alt="Robot Teaching" 
@@ -405,266 +407,311 @@ export default function Home() {
                       </>
                     )}
                   
-                                     {cards[currentCard].illustration === "ai" && (
-                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                       {/* Top Left - Books */}
-                       <div className="absolute top-8 sm:top-12 md:top-16 lg:top-20 left-2 sm:left-4 md:left-8 lg:left-16 xl:left-24">
-                         <Image 
-                           src="/book_landing.png" 
-                           alt="Books" 
-                           width={180} 
-                           height={180} 
-                           className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[180px] 2xl:h-[180px] object-contain"
-                         />
-                       </div>
-                       
-                                               {/* Top Right - Robot Star */}
-                        <div className="absolute top-8 sm:top-12 md:top-16 lg:top-20 right-2 sm:right-4 md:right-8 lg:right-16 xl:right-24">
+                    {cards[currentCard].illustration === "ai" && (
+                      <>
+                        {/* Mobile Layout - Only Central Robot Class Image */}
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
                           <Image 
-                            src="/robot_star_landing.png" 
-                            alt="Robot Star" 
-                            width={180} 
-                            height={180} 
-                            className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[180px] 2xl:h-[180px] object-contain transform rotate-[8.37deg]"
+                            src="/robo_class_landing.png" 
+                            alt="Robot Class" 
+                            width={300} 
+                            height={300} 
+                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                            priority
                           />
                         </div>
-                       
-                       {/* Center - Robot Class */}
-                       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                         <Image 
-                           src="/robo_class_landing.png" 
-                           alt="Robot Class" 
-                           width={300} 
-                           height={300} 
-                           className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 2xl:w-[300px] 2xl:h-[300px] object-contain"
-                         />
-                       </div>
-                       
-                       {/* Bottom Right - Bulb Books */}
-                       <div className="absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 xl:bottom-24 right-2 sm:right-4 md:right-8 lg:right-16 xl:right-24">
-                         <Image 
-                           src="/bulbook_landing.png" 
-                           alt="Bulb Books" 
-                           width={180} 
-                           height={180} 
-                           className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[180px] 2xl:h-[180px] object-contain transform -rotate-[9.6deg]"
-                         />
-                       </div>
-                     </div>
-                   )}
+
+                        {/* Desktop Layout - All Images */}
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
+                          {/* Top Left - Books */}
+                          <div className="absolute top-8 lg:top-16 xl:top-20 left-8 lg:left-16 xl:left-24">
+                            <Image 
+                              src="/book_landing.png" 
+                              alt="Books" 
+                              width={180} 
+                              height={180} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[180px] 2xl:h-[180px] object-contain"
+                            />
+                          </div>
+                          
+                          {/* Top Right - Robot Star */}
+                          <div className="absolute top-8 lg:top-16 xl:top-20 right-8 lg:right-16 xl:right-24">
+                            <Image 
+                              src="/robot_star_landing.png" 
+                              alt="Robot Star" 
+                              width={180} 
+                              height={180} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[180px] 2xl:h-[180px] object-contain transform rotate-[8.37deg]"
+                            />
+                          </div>
+                          
+                          {/* Center - Robot Class */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <Image 
+                              src="/robo_class_landing.png" 
+                              alt="Robot Class" 
+                              width={300} 
+                              height={300} 
+                              className="w-56 h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 2xl:w-[300px] 2xl:h-[300px] object-contain"
+                            />
+                          </div>
+                          
+                          {/* Bottom Right - Bulb Books */}
+                          <div className="absolute bottom-8 lg:bottom-16 xl:bottom-24 right-8 lg:right-16 xl:right-24">
+                            <Image 
+                              src="/bulbook_landing.png" 
+                              alt="Bulb Books" 
+                              width={180} 
+                              height={180} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[180px] 2xl:h-[180px] object-contain transform -rotate-[9.6deg]"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   
-                                                                                                                                                       {cards[currentCard].illustration === "ready" && (
-                       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                         {/* Left Center - Computer */}
-                         <div className="absolute top-1/2 left-2 sm:left-4 md:left-8 lg:left-16 xl:left-24 transform -translate-y-1/2">
-                           <Image 
-                             src="/landing3_comp.png" 
-                             alt="Computer" 
-                             width={180} 
-                             height={180} 
-                             className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[180px] 2xl:h-[180px] object-contain"
-                           />
-                         </div>
-                         
-                         {/* Top Right - TV/Monitor */}
-                         <div className="absolute top-8 sm:top-12 md:top-16 lg:top-20 right-2 sm:right-4 md:right-8 lg:right-16 xl:right-24">
-                           <Image 
-                             src="/landing3_tv.png" 
-                             alt="TV/Monitor" 
-                             width={180} 
-                             height={180} 
-                             className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[180px] 2xl:h-[180px] object-contain transform rotate-[8.37deg]"
-                           />
-                         </div>
-                         
-                         {/* Center - Man with Laptop */}
-                         <div className="absolute top-4 sm:top-6 md:top-8 lg:top-12 xl:top-16 left-1/2 transform -translate-x-1/2">
-                           <Image 
-                             src="/landing3_man.png" 
-                             alt="Man with Laptop" 
-                             width={300} 
-                             height={300} 
-                             className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 2xl:w-[300px] 2xl:h-[300px] object-contain"
-                           />
-                         </div>
-                         
-                         {/* Bottom Right - Kid with Laptop */}
-                         <div className="absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 xl:bottom-24 right-2 sm:right-4 md:right-8 lg:right-16 xl:right-24">
-                           <Image 
-                             src="/landing3_kid.png" 
-                             alt="Kid with Laptop" 
-                             width={180} 
-                             height={180} 
-                             className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-[180px] 2xl:h-[180px] object-contain transform -rotate-[9.6deg]"
-                           />
-                         </div>
-                                               </div>
-                      )}
+                    {cards[currentCard].illustration === "ready" && (
+                      <>
+                        {/* Mobile Layout - Only Central Man with Laptop Image */}
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
+                          <Image 
+                            src="/landing3_man.png" 
+                            alt="Man with Laptop" 
+                            width={300} 
+                            height={300} 
+                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                            priority
+                          />
+                        </div>
+
+                        {/* Desktop Layout - All Images */}
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
+                          {/* Left Center - Computer */}
+                          <div className="absolute top-1/2 left-8 lg:left-16 xl:left-24 transform -translate-y-1/2">
+                            <Image 
+                              src="/landing3_comp.png" 
+                              alt="Computer" 
+                              width={180} 
+                              height={180} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[180px] 2xl:h-[180px] object-contain"
+                            />
+                          </div>
+                          
+                          {/* Top Right - TV/Monitor */}
+                          <div className="absolute top-8 lg:top-16 xl:top-20 right-8 lg:right-16 xl:right-24">
+                            <Image 
+                              src="/landing3_tv.png" 
+                              alt="TV/Monitor" 
+                              width={180} 
+                              height={180} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[180px] 2xl:h-[180px] object-contain transform rotate-[8.37deg]"
+                            />
+                          </div>
+                          
+                          {/* Center - Man with Laptop */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <Image 
+                              src="/landing3_man.png" 
+                              alt="Man with Laptop" 
+                              width={300} 
+                              height={300} 
+                              className="w-56 h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 2xl:w-[300px] 2xl:h-[300px] object-contain"
+                            />
+                          </div>
+                          
+                          {/* Bottom Right - Kid with Laptop */}
+                          <div className="absolute bottom-8 lg:bottom-16 xl:bottom-24 right-8 lg:right-16 xl:right-24">
+                            <Image 
+                              src="/landing3_kid.png" 
+                              alt="Kid with Laptop" 
+                              width={180} 
+                              height={180} 
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 2xl:w-[180px] 2xl:h-[180px] object-contain transform -rotate-[9.6deg]"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
                       
-                      {cards[currentCard].illustration === "testimonials" && (
-                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {cards[currentCard].illustration === "testimonials" && (
+                      <>
+                        {/* Mobile Layout - Only Central Icon */}
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
+                          <Image 
+                            src="/landing4_center.png" 
+                            alt="Center Icon" 
+                            width={500} 
+                            height={500} 
+                            className="w-40 h-40 sm:w-56 sm:h-56 object-contain"
+                            priority
+                          />
+                        </div>
+
+                        {/* Desktop Layout - All Images */}
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
                           {/* Top Right - Bell */}
-                          <div className="absolute top-4 sm:top-6 md:top-8 lg:top-12 xl:top-16 right-2 sm:right-4 md:right-8 lg:right-12 xl:right-20 z-20">
+                          <div className="absolute top-8 lg:top-12 xl:top-16 right-8 lg:right-12 xl:right-20 z-20">
                             <Image 
                               src="/landing4_bell.png" 
                               alt="Bell" 
                               width={120} 
                               height={120} 
-                              className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-[120px] xl:h-[120px] object-contain" 
+                              className="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 2xl:w-[120px] 2xl:h-[120px] object-contain" 
                             />
                           </div>
                           
-                          {/* Center Above Text - Center Icon */}
-                          <div className="absolute left-1/2 top-2 sm:top-4 md:top-6 lg:top-8 xl:top-10 transform -translate-x-1/2 z-20">
+                          {/* Center - Center Icon */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
                             <Image 
                               src="/landing4_center.png" 
                               alt="Center Icon" 
                               width={500} 
                               height={500} 
-                              className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 xl:w-96 xl:h-96 2xl:w-[500px] 2xl:h-[500px] object-contain" 
+                              className="w-40 h-40 lg:w-56 lg:h-56 xl:w-72 xl:h-72 2xl:w-96 2xl:h-96 3xl:w-[500px] 3xl:h-[500px] object-contain" 
                             />
                           </div>
                           
                           {/* Bottom Left - Message Icon */}
-                          <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 xl:bottom-16 left-2 sm:left-4 md:left-8 lg:left-12 xl:left-20 z-20">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 left-8 lg:left-12 xl:left-20 z-20">
                             <Image 
                               src="/landing4_msg.png" 
                               alt="Message Icon" 
                               width={200} 
                               height={200} 
-                              className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 xl:w-48 xl:h-48 2xl:w-[200px] 2xl:h-[200px] object-contain" 
+                              className="w-20 h-20 lg:w-28 lg:h-28 xl:w-36 xl:h-36 2xl:w-48 2xl:h-48 3xl:w-[200px] 3xl:h-[200px] object-contain" 
                             />
                           </div>
                           
-                          {/* Below Text Center - Avishkar Icon */}
-                          <div className="absolute left-1/2 bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 xl:bottom-20 transform -translate-x-1/2 z-20">
+                          {/* Below Center - Avishkar Icon */}
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-20 left-1/2 transform -translate-x-1/2 z-20">
                             <Image 
                               src="/landing4_avishkar.png" 
                               alt="Avishkar" 
                               width={160} 
                               height={160} 
-                              className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 xl:w-40 xl:h-40 2xl:w-[160px] 2xl:h-[160px] object-contain" 
+                              className="w-16 h-16 lg:w-20 lg:h-20 xl:w-28 xl:h-28 2xl:w-40 2xl:h-40 3xl:w-[160px] 3xl:h-[160px] object-contain" 
                             />
                           </div>
                         </div>
-                      )}
+                      </>
+                    )}
                  </motion.div>
 
                  {/* Title with Advanced Animations */}
                  <motion.div
-                   className="mt-4 sm:mt-6 mb-2 sm:mb-3 md:mb-4 px-2 sm:px-4"
+                   className="w-full mb-3 sm:mb-4 md:mb-5 lg:mb-6 px-4 sm:px-6"
                    initial={{ y: 20, opacity: 0 }}
                    animate={{ y: 0, opacity: 1 }}
                    transition={{ delay: 0.4, duration: 0.5 }}
                  >
-                 {currentCard === 0 && (
-                   <StaggeredText
-                     text="Welcome to the Future of Learning"
-                     className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black text-gray-900 tracking-wide leading-tight"
-                     delay={0.2}
-                     staggerDelay={0.08}
-                     animationType="fadeUp"
-                   />
-                 )}
-                 {currentCard === 1 && (
-                   <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black tracking-wide leading-tight">
-                     <span className="text-black">Dynamic </span>
+                   {currentCard === 0 && (
+                     <StaggeredText
+                       text="Welcome to the Future of Learning"
+                       className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 tracking-tight leading-tight sm:leading-tight md:leading-tight"
+                       delay={0.2}
+                       staggerDelay={0.08}
+                       animationType="fadeUp"
+                     />
+                   )}
+                   {currentCard === 1 && (
+                     <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight leading-tight sm:leading-tight md:leading-tight">
+                       <span className="text-black">Dynamic </span>
+                       <GradientText
+                         text="AI"
+                         className="text-blue-600"
+                         colors={['#2563eb', '#3b82f6', '#60a5fa']}
+                         speed={1.5}
+                       />
+                       <FloatingText
+                         text=" Learning Environments"
+                         className="text-black"
+                         intensity={3}
+                       />
+                     </div>
+                   )}
+                   {currentCard === 2 && (
+                     <StaggeredText
+                       text="Ready to Learn?"
+                       className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 tracking-tight leading-tight sm:leading-tight md:leading-tight"
+                       delay={0.1}
+                       staggerDelay={0.1}
+                       animationType="scale"
+                     />
+                   )}
+                   {currentCard === 3 && (
                      <GradientText
-                       text="AI"
-                       className="text-blue-600"
-                       colors={['#2563eb', '#3b82f6', '#60a5fa']}
-                       speed={1.5}
+                       text="Success Stories"
+                       className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight leading-tight sm:leading-tight md:leading-tight"
+                       colors={['#059669', '#10b981', '#34d399', '#6ee7b7']}
+                       speed={2}
                      />
-                     <FloatingText
-                       text=" Learning Environments"
-                       className="text-black"
-                       intensity={3}
-                     />
-                   </div>
-                 )}
-                 {currentCard === 2 && (
-                   <StaggeredText
-                     text="Ready to Learn?"
-                     className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black text-gray-900 tracking-wide leading-tight"
-                     delay={0.1}
-                     staggerDelay={0.1}
-                     animationType="scale"
-                   />
-                 )}
-                 {currentCard === 3 && (
-                   <GradientText
-                     text="Success Stories"
-                     className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black tracking-wide leading-tight"
-                     colors={['#059669', '#10b981', '#34d399', '#6ee7b7']}
-                     speed={2}
-                   />
-                 )}
-               </motion.div>
+                   )}
+                 </motion.div>
 
                  {/* Description with Typewriter Effect */}
                  <motion.div 
-                   className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-700 mb-3 sm:mb-4 md:mb-5 lg:mb-6 leading-relaxed max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl pl-8 pr-4 sm:px-6"
+                   className="w-full text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 mb-6 sm:mb-8 md:mb-10 leading-relaxed max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-4 sm:px-6"
                    initial={{ y: 20, opacity: 0 }}
                    animate={{ y: 0, opacity: 1 }}
                    transition={{ delay: 0.5, duration: 0.5 }}
                  >
-                  <TypewriterText
-                    text={cards[currentCard].description}
-                    delay={0.8}
-                    speed={0.02}
-                    cursor={false}
-                  />
-                </motion.div>
+                   <TypewriterText
+                     text={cards[currentCard].description}
+                     delay={0.8}
+                     speed={0.02}
+                     cursor={false}
+                   />
+                 </motion.div>
 
-                {/* Enhanced Interactive Buttons */}
-                <StaggerContainer 
-                  className="flex gap-3 sm:gap-4 md:gap-6 justify-center flex-wrap px-4"
-                  staggerDelay={0.1}
-                  initialDelay={0.6}
-                >
-                  {cards[currentCard].showBack && (
-                    <StaggerItem>
-                      <MagneticButton
-                        onClick={prevCard}
-                        className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 text-gray-700 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-xl touch-manipulation min-w-[100px] sm:min-w-[120px]"
-                        magnetStrength={0.2}
-                      >
-                        Back
-                      </MagneticButton>
-                    </StaggerItem>
-                  )}
-                  
-                  <StaggerItem>
-                    <RippleButton
-                      onClick={cards[currentCard].buttonAction}
-                      className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-black to-gray-800 text-white rounded-full font-semibold hover:shadow-xl transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-xl relative overflow-hidden touch-manipulation min-w-[120px] sm:min-w-[140px]"
-                      rippleColor="rgba(255, 255, 255, 0.3)"
-                    >
-                      <span className="relative z-10">{cards[currentCard].buttonText}</span>
-                    </RippleButton>
-                  </StaggerItem>
-                </StaggerContainer>
+                 {/* Enhanced Interactive Buttons */}
+                 <StaggerContainer 
+                   className="flex gap-3 sm:gap-4 md:gap-6 justify-center items-center flex-wrap w-full px-4 sm:px-6 mb-6 sm:mb-8"
+                   staggerDelay={0.1}
+                   initialDelay={0.6}
+                 >
+                   {cards[currentCard].showBack && (
+                     <StaggerItem>
+                       <MagneticButton
+                         onClick={prevCard}
+                         className="px-5 sm:px-6 md:px-8 lg:px-10 py-2.5 sm:py-3 md:py-4 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 text-gray-700 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-sm sm:text-base md:text-lg touch-manipulation min-w-[90px] sm:min-w-[110px] md:min-w-[130px]"
+                         magnetStrength={0.2}
+                       >
+                         Back
+                       </MagneticButton>
+                     </StaggerItem>
+                   )}
+                   
+                   <StaggerItem>
+                     <RippleButton
+                       onClick={cards[currentCard].buttonAction}
+                       className="px-5 sm:px-6 md:px-8 lg:px-10 py-2.5 sm:py-3 md:py-4 bg-gradient-to-r from-black to-gray-800 text-white rounded-full font-semibold hover:shadow-xl transition-all duration-300 text-sm sm:text-base md:text-lg relative overflow-hidden touch-manipulation min-w-[110px] sm:min-w-[130px] md:min-w-[150px]"
+                       rippleColor="rgba(255, 255, 255, 0.3)"
+                     >
+                       <span className="relative z-10">{cards[currentCard].buttonText}</span>
+                     </RippleButton>
+                   </StaggerItem>
+                 </StaggerContainer>
 
-                {/* Card Indicators */}
-                <motion.div 
-                  className="flex gap-2 sm:gap-3 justify-center mt-6 sm:mt-8 mb-4 sm:mb-6"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7, duration: 0.5 }}
-                >
-                  {[0, 1, 2, 3].map((index) => (
-                    <motion.button
-                      key={index}
-                      onClick={() => setCurrentCard(index)}
-                      className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full transition-all duration-300 touch-manipulation ${
-                        currentCard === index ? 'bg-blue-600 scale-125' : 'bg-gray-300'
-                      }`}
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
-                  ))}
-                </motion.div>
+                 {/* Card Indicators */}
+                 <motion.div 
+                   className="flex gap-2 sm:gap-3 justify-center items-center w-full mt-4 sm:mt-6 mb-2 sm:mb-4"
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   transition={{ delay: 0.7, duration: 0.5 }}
+                 >
+                   {[0, 1, 2, 3].map((index) => (
+                     <motion.button
+                       key={index}
+                       onClick={() => setCurrentCard(index)}
+                       className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-4 lg:h-4 rounded-full transition-all duration-300 touch-manipulation ${
+                         currentCard === index ? 'bg-blue-600 scale-125' : 'bg-gray-300'
+                       }`}
+                       whileHover={{ scale: 1.2 }}
+                       whileTap={{ scale: 0.9 }}
+                       aria-label={`Go to slide ${index + 1}`}
+                     />
+                   ))}
+                 </motion.div>
               </div>
 
                {/* Google Translate - Bottom Left */}

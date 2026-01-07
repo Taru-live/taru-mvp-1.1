@@ -131,7 +131,7 @@ export default function Login() {
 
   return (
     <motion.main 
-      className="min-h-screen flex items-center justify-center overflow-x-hidden overflow-y-auto bg-[#6D18CE] p-3 sm:p-4 md:p-6 relative w-full"
+      className="min-h-screen flex flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#6D18CE] p-2 sm:p-4 md:p-6 py-4 sm:py-6 md:py-8 lg:py-3 relative w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -220,9 +220,9 @@ export default function Login() {
         })}
       </div>
 
-      {/* Mobile Logo - Top Center */}
+      {/* Mobile Logo - Above White Box */}
       <motion.div
-        className="md:hidden absolute top-4 left-1/2 transform -translate-x-1/2 z-50 cursor-pointer"
+        className="lg:hidden mb-8 sm:mb-10 md:mb-12 cursor-pointer"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.6 }}
@@ -235,20 +235,24 @@ export default function Login() {
           alt="Logo" 
           width={48} 
           height={48} 
-          className="w-12 h-12 object-contain"
+          className="w-12 h-12 sm:w-14 sm:h-14 object-contain mx-auto"
         />
       </motion.div>
 
       {/* Main Login Popup Container */}
       <motion.div 
-        className="relative w-full max-w-[1400px] min-h-[600px] sm:min-h-[700px] md:min-h-[856px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row my-4 sm:my-6 md:my-8"
+        className="relative w-full max-w-[1400px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
                  {/* Left Section - Purple Background with Content */}
          <motion.section 
-           className="w-full lg:w-[577px] min-h-[300px] sm:min-h-[400px] lg:h-auto lg:min-h-[856px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12"
+           className="w-full lg:w-[577px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12"
+           style={{ 
+             minHeight: 'clamp(500px, 80vh, 856px)',
+             height: 'auto'
+           }}
            initial={{ x: -100, opacity: 0 }}
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.8 }}
@@ -307,7 +311,7 @@ export default function Login() {
 
                  {/* Right Section - White Form Card */}
          <motion.section 
-           className="w-full lg:w-[823px] lg:h-[856px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 min-h-[600px] sm:min-h-[700px]"
+           className="w-full lg:w-[823px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 lg:min-h-[856px]"
            initial={{ x: 100, opacity: 0 }}
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.8 }}
@@ -327,11 +331,11 @@ export default function Login() {
           </motion.button>
 
           {/* Main Content Container */}
-          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-0 py-3 sm:py-8 md:py-12 lg:py-0">
+          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-[155px] py-4 sm:py-5 md:py-6 lg:py-16 flex flex-col justify-center">
 
             {/* Welcome back Title */}
             <motion.h2 
-              className="mt-6 sm:mt-8 md:mt-10 lg:mt-0 lg:absolute lg:top-[258px] lg:left-[154px] text-xl sm:text-2xl md:text-[24.7297px] leading-tight sm:leading-snug md:leading-[30px] font-bold text-black w-auto lg:w-[190px] mb-2 sm:mb-3"
+              className="mt-0 sm:mt-2 text-xl sm:text-2xl md:text-[24.7297px] leading-tight sm:leading-snug md:leading-[30px] font-bold text-black w-full lg:w-[190px] mb-1.5 sm:mb-2 md:mb-3"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.5 }}
@@ -341,7 +345,7 @@ export default function Login() {
 
             {/* Welcome back Subtitle */}
             <motion.p 
-              className="mt-2 sm:mt-3 lg:mt-0 lg:absolute lg:top-[300px] lg:left-[155px] w-full lg:w-[433px] text-sm sm:text-base md:text-[16px] leading-relaxed sm:leading-7 md:leading-[32px] font-normal text-[#454545] mb-6 sm:mb-8"
+              className="mt-1.5 sm:mt-2 md:mt-3 w-full lg:w-[433px] text-sm sm:text-base md:text-[16px] leading-relaxed sm:leading-7 md:leading-[32px] font-normal text-[#454545] mb-3 sm:mb-4 md:mb-6 lg:mb-8"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.85, duration: 0.5 }}
@@ -352,13 +356,13 @@ export default function Login() {
             {/* Login Form */}
             <motion.form 
               onSubmit={handleSubmit}
-              className="mt-4 sm:mt-6 lg:mt-0 lg:absolute lg:top-[359px] lg:left-[155px] w-full lg:w-[514px]"
+              className="mt-1.5 sm:mt-2 md:mt-4 w-full lg:w-[514px]"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.1, duration: 0.6 }}
             >
               {/* Email Input */}
-              <div className="relative mb-3 sm:mb-4">
+              <div className="relative mb-2.5 sm:mb-3 md:mb-4">
                 <input
                   type="email"
                   value={email}
@@ -370,7 +374,7 @@ export default function Login() {
               </div>
 
               {/* Password Input */}
-              <div className="relative mb-4 sm:mb-5 md:mb-[21px]">
+              <div className="relative mb-3 sm:mb-4 md:mb-[21px]">
                 <input
                   type="password"
                   value={password}
@@ -382,7 +386,7 @@ export default function Login() {
               </div>
 
               {/* Remember me and Forgot password */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-0 mb-3 sm:mb-4 md:mb-5">
                 <div className="flex items-center gap-2 sm:gap-[6px]">
                   <input
                     type="checkbox"
@@ -414,7 +418,7 @@ export default function Login() {
               <motion.button
                 type="submit"
                 disabled={loading}
-                className="w-full lg:w-[514px] h-12 sm:h-14 md:h-16 lg:h-[69px] bg-gradient-to-r from-[#6D18CE] to-[#8B5CF6] text-white rounded-full sm:rounded-[90px] font-semibold text-sm sm:text-base md:text-[16.0016px] flex items-center justify-center mx-auto shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover-glow touch-manipulation"
+                className="w-full max-w-full lg:max-w-[514px] h-12 sm:h-14 md:h-16 lg:h-[69px] bg-gradient-to-r from-[#6D18CE] to-[#8B5CF6] text-white rounded-full sm:rounded-[90px] font-semibold text-sm sm:text-base md:text-[16.0016px] flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover-glow touch-manipulation"
                 whileHover={{ 
                   scale: 1.02,
                   boxShadow: "0 20px 25px -5px rgba(109, 24, 206, 0.4)"
@@ -455,7 +459,7 @@ export default function Login() {
 
             {/* Register Link */}
             <motion.div 
-              className="mt-6 sm:mt-8 lg:mt-0 lg:absolute lg:top-[700px] lg:left-[308px] text-center w-full lg:w-[205px] mb-4 sm:mb-6 lg:mb-0"
+              className="mt-3 sm:mt-4 md:mt-6 text-center w-full lg:w-[205px] mb-3 sm:mb-4 md:mb-6"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.3, duration: 0.4 }}
