@@ -323,12 +323,11 @@ export default function Home() {
               </motion.div>
 
                 {/* Content Container */}
-                <div className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8 sm:py-12 md:py-16 lg:py-20 pb-20 sm:pb-24 md:pb-32">
+                <div className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-2 sm:py-3 md:py-4 lg:py-5 pb-4 sm:pb-5 md:pb-6">
                  
                   {/* Illustration Area - Single Central Image on Mobile */}
                   <motion.div 
-                    className="mb-8 sm:mb-10 md:mb-12 lg:mb-16 xl:mb-20 2xl:mb-24 relative w-full flex items-center justify-center max-w-[1400px] mx-auto"
-                    style={{ minHeight: 'clamp(200px, 35vh, 700px)' }}
+                    className="mb-2 sm:mb-3 md:mb-4 lg:mb-5 relative w-full flex items-start justify-center max-w-[1400px] mx-auto"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
@@ -336,21 +335,21 @@ export default function Home() {
                     {cards[currentCard].illustration === "learning" && (
                       <>
                         {/* Mobile Layout - Only Central Teacher Image */}
-                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[120px] sm:min-h-[140px]">
                           <Image 
                             src="/teacher_landing.png" 
                             alt="Teacher" 
                             width={400} 
                             height={400} 
-                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                            className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
                             priority
                           />
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
+                        <div className="hidden md:block relative pointer-events-none overflow-visible w-full">
                           {/* Top Left - AI Logo */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-2 lg:left-4 xl:left-6 2xl:left-8">
+                          <div className="absolute top-0 left-2 lg:left-4 xl:left-6 2xl:left-8">
                             <Image 
                               src="/ai_landing.png" 
                               alt="AI Logo" 
@@ -361,7 +360,7 @@ export default function Home() {
                           </div>
                           
                           {/* Top Right - Computer Monitor */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
+                          <div className="absolute top-0 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/comcap_landing.png" 
                               alt="Computer Monitor" 
@@ -372,18 +371,18 @@ export default function Home() {
                           </div>
                           
                           {/* Center - Teacher/Presentation - Above Titles */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2">
+                          <div className="relative flex justify-center">
                             <Image 
                               src="/teacher_landing.png" 
                               alt="Teacher" 
                               width={400} 
                               height={400}
-                              className="w-56 h-56 lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-[400px] 2xl:h-[400px] object-contain"
+                              className="w-48 h-48 lg:w-64 lg:h-64 xl:w-72 xl:h-72 2xl:w-80 2xl:h-80 object-contain"
                             />
                           </div>
                           
                           {/* Bottom Left - Graduation Cap and Diploma */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 left-2 lg:left-4 xl:left-6 2xl:left-8">
+                          <div className="absolute bottom-0 left-0 translate-y-[calc(100%+0.5rem)] sm:translate-y-[calc(100%+0.75rem)] md:translate-y-[calc(100%+1rem)] lg:translate-y-[calc(100%+1.25rem)]">
                             <Image 
                               src="/cap_landing.png" 
                               alt="Graduation Cap and Diploma" 
@@ -394,7 +393,7 @@ export default function Home() {
                           </div>
                           
                           {/* Bottom Right - Robot Teaching */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
+                          <div className="absolute bottom-0 right-0 translate-y-[calc(100%+0.5rem)] sm:translate-y-[calc(100%+0.75rem)] md:translate-y-[calc(100%+1rem)] lg:translate-y-[calc(100%+1.25rem)]">
                             <Image 
                               src="/robo_landing.png" 
                               alt="Robot Teaching" 
@@ -410,21 +409,21 @@ export default function Home() {
                     {cards[currentCard].illustration === "ai" && (
                       <>
                         {/* Mobile Layout - Only Central Robot Class Image */}
-                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[120px] sm:min-h-[140px]">
                           <Image 
                             src="/robo_class_landing.png" 
                             alt="Robot Class" 
                             width={300} 
                             height={300} 
-                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                            className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
                             priority
                           />
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
+                        <div className="hidden md:block relative pointer-events-none overflow-visible w-full">
                           {/* Top Left - Books */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-2 lg:left-4 xl:left-6 2xl:left-8">
+                          <div className="absolute top-0 left-2 lg:left-4 xl:left-6 2xl:left-8">
                             <Image 
                               src="/book_landing.png" 
                               alt="Books" 
@@ -435,7 +434,7 @@ export default function Home() {
                           </div>
                           
                           {/* Top Right - Robot Star */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
+                          <div className="absolute top-0 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/robot_star_landing.png" 
                               alt="Robot Star" 
@@ -446,18 +445,18 @@ export default function Home() {
                           </div>
                           
                           {/* Center - Robot Class - Above Titles */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2">
+                          <div className="relative flex justify-center">
                             <Image 
                               src="/robo_class_landing.png" 
                               alt="Robot Class" 
                               width={300} 
                               height={300} 
-                              className="w-56 h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 2xl:w-[300px] 2xl:h-[300px] object-contain"
+                              className="w-48 h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 2xl:w-72 2xl:h-72 object-contain"
                             />
                           </div>
                           
                           {/* Bottom Right - Bulb Books */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
+                          <div className="absolute bottom-0 right-0 translate-y-[calc(100%+0.5rem)] sm:translate-y-[calc(100%+0.75rem)] md:translate-y-[calc(100%+1rem)] lg:translate-y-[calc(100%+1.25rem)]">
                             <Image 
                               src="/bulbook_landing.png" 
                               alt="Bulb Books" 
@@ -473,19 +472,19 @@ export default function Home() {
                     {cards[currentCard].illustration === "ready" && (
                       <>
                         {/* Mobile Layout - Only Central Man with Laptop Image */}
-                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[120px] sm:min-h-[140px]">
                           <Image 
                             src="/landing3_man.png" 
                             alt="Man with Laptop" 
                             width={300} 
                             height={300} 
-                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                            className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
                             priority
                           />
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
+                        <div className="hidden md:block relative pointer-events-none overflow-visible w-full">
                           {/* Left Center - Computer */}
                           <div className="absolute top-1/2 left-2 lg:left-4 xl:left-6 2xl:left-8 transform -translate-y-1/2">
                             <Image 
@@ -498,7 +497,7 @@ export default function Home() {
                           </div>
                           
                           {/* Top Right - TV/Monitor */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
+                          <div className="absolute top-0 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/landing3_tv.png" 
                               alt="TV/Monitor" 
@@ -509,18 +508,18 @@ export default function Home() {
                           </div>
                           
                           {/* Center - Man with Laptop - Above Titles */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2">
+                          <div className="relative flex justify-center">
                             <Image 
                               src="/landing3_man.png" 
                               alt="Man with Laptop" 
                               width={300} 
                               height={300} 
-                              className="w-56 h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 2xl:w-[300px] 2xl:h-[300px] object-contain"
+                              className="w-48 h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 2xl:w-72 2xl:h-72 object-contain"
                             />
                           </div>
                           
                           {/* Bottom Right - Kid with Laptop */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
+                          <div className="absolute bottom-0 right-0 translate-y-[calc(100%+0.5rem)] sm:translate-y-[calc(100%+0.75rem)] md:translate-y-[calc(100%+1rem)] lg:translate-y-[calc(100%+1.25rem)]">
                             <Image 
                               src="/landing3_kid.png" 
                               alt="Kid with Laptop" 
@@ -536,21 +535,21 @@ export default function Home() {
                     {cards[currentCard].illustration === "testimonials" && (
                       <>
                         {/* Mobile Layout - Only Central Icon */}
-                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[200px] sm:min-h-[250px]">
+                        <div className="md:hidden flex items-center justify-center w-full h-full min-h-[120px] sm:min-h-[140px]">
                           <Image 
                             src="/landing4_center.png" 
                             alt="Center Icon" 
                             width={500} 
                             height={500} 
-                            className="w-40 h-40 sm:w-56 sm:h-56 object-contain"
+                            className="w-32 h-32 sm:w-40 sm:h-40 object-contain"
                             priority
                           />
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
+                        <div className="hidden md:block relative pointer-events-none overflow-visible w-full">
                           {/* Top Right - Bell */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8 z-20">
+                          <div className="absolute top-0 right-2 lg:right-4 xl:right-6 2xl:right-8 z-20">
                             <Image 
                               src="/landing4_bell.png" 
                               alt="Bell" 
@@ -561,18 +560,18 @@ export default function Home() {
                           </div>
                           
                           {/* Center - Center Icon - Above Titles */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2 z-20">
+                          <div className="relative flex justify-center z-20">
                             <Image 
                               src="/landing4_center.png" 
                               alt="Center Icon" 
                               width={500} 
                               height={500} 
-                              className="w-40 h-40 lg:w-56 lg:h-56 xl:w-72 xl:h-72 2xl:w-96 2xl:h-96 object-contain" 
+                              className="w-32 h-32 lg:w-48 lg:h-48 xl:w-64 xl:h-64 2xl:w-80 2xl:h-80 object-contain" 
                             />
                           </div>
                           
                           {/* Bottom Left - Message Icon */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 left-2 lg:left-4 xl:left-6 2xl:left-8 z-20">
+                          <div className="absolute bottom-0 left-0 z-20 translate-y-[calc(100%+0.5rem)] sm:translate-y-[calc(100%+0.75rem)] md:translate-y-[calc(100%+1rem)] lg:translate-y-[calc(100%+1.25rem)]">
                             <Image 
                               src="/landing4_msg.png" 
                               alt="Message Icon" 
@@ -583,7 +582,7 @@ export default function Home() {
                           </div>
                           
                           {/* Below Center - Avishkar Icon */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 left-1/2 transform -translate-x-1/2 z-20">
+                          <div className="absolute -bottom-8 lg:-bottom-10 xl:-bottom-12 2xl:-bottom-14 left-1/2 transform -translate-x-1/2 z-20">
                             <Image 
                               src="/landing4_avishkar.png" 
                               alt="Avishkar" 
@@ -599,7 +598,7 @@ export default function Home() {
 
                  {/* Title with Advanced Animations */}
                  <motion.div
-                   className="w-full mb-6 sm:mb-8 md:mb-10 lg:mb-12 xl:mb-14 2xl:mb-16 px-4 sm:px-6"
+                   className="w-full mb-1 sm:mb-2 md:mb-2 lg:mb-3 px-4 sm:px-6"
                    initial={{ y: 20, opacity: 0 }}
                    animate={{ y: 0, opacity: 1 }}
                    transition={{ delay: 0.4, duration: 0.5 }}
@@ -607,14 +606,14 @@ export default function Home() {
                    {currentCard === 0 && (
                      <StaggeredText
                        text="Welcome to the Future of Learning"
-                       className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 tracking-tight leading-tight sm:leading-tight md:leading-tight"
+                       className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-900 tracking-tight leading-tight sm:leading-tight md:leading-tight"
                        delay={0.2}
                        staggerDelay={0.08}
                        animationType="fadeUp"
                      />
                    )}
                    {currentCard === 1 && (
-                     <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight leading-tight sm:leading-tight md:leading-tight">
+                     <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight sm:leading-tight md:leading-tight">
                        <span className="text-black">Dynamic </span>
                        <GradientText
                          text="AI"
@@ -632,7 +631,7 @@ export default function Home() {
                    {currentCard === 2 && (
                      <StaggeredText
                        text="Ready to Learn?"
-                       className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 tracking-tight leading-tight sm:leading-tight md:leading-tight"
+                       className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-900 tracking-tight leading-tight sm:leading-tight md:leading-tight"
                        delay={0.1}
                        staggerDelay={0.1}
                        animationType="scale"
@@ -641,7 +640,7 @@ export default function Home() {
                    {currentCard === 3 && (
                      <GradientText
                        text="Success Stories"
-                       className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight leading-tight sm:leading-tight md:leading-tight"
+                       className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight sm:leading-tight md:leading-tight"
                        colors={['#059669', '#10b981', '#34d399', '#6ee7b7']}
                        speed={2}
                      />
@@ -650,7 +649,7 @@ export default function Home() {
 
                  {/* Description with Typewriter Effect */}
                  <motion.div 
-                   className="w-full text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 mb-8 sm:mb-10 md:mb-12 lg:mb-14 xl:mb-16 2xl:mb-20 leading-relaxed max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-4 sm:px-6"
+                   className="w-full text-xs sm:text-sm md:text-base lg:text-lg text-gray-700 mb-2 sm:mb-2 md:mb-3 lg:mb-4 leading-relaxed max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-4 sm:px-6"
                    initial={{ y: 20, opacity: 0 }}
                    animate={{ y: 0, opacity: 1 }}
                    transition={{ delay: 0.5, duration: 0.5 }}
@@ -665,7 +664,7 @@ export default function Home() {
 
                  {/* Enhanced Interactive Buttons */}
                  <StaggerContainer 
-                   className="flex gap-3 sm:gap-4 md:gap-6 justify-center items-center flex-wrap w-full px-4 sm:px-6 mb-4 sm:mb-5 md:mb-6"
+                   className="flex gap-2 sm:gap-3 md:gap-4 justify-center items-center flex-wrap w-full px-4 sm:px-6 mb-1 sm:mb-2 md:mb-2"
                    staggerDelay={0.1}
                    initialDelay={0.6}
                  >
@@ -673,7 +672,7 @@ export default function Home() {
                      <StaggerItem>
                        <MagneticButton
                          onClick={prevCard}
-                         className="px-5 sm:px-6 md:px-8 lg:px-10 py-2.5 sm:py-3 md:py-4 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 text-gray-700 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-sm sm:text-base md:text-lg touch-manipulation min-w-[90px] sm:min-w-[110px] md:min-w-[130px]"
+                         className="px-4 sm:px-5 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 text-gray-700 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-xs sm:text-sm md:text-base touch-manipulation min-w-[80px] sm:min-w-[100px] md:min-w-[120px]"
                          magnetStrength={0.2}
                        >
                          Back
@@ -684,7 +683,7 @@ export default function Home() {
                    <StaggerItem>
                      <RippleButton
                        onClick={cards[currentCard].buttonAction}
-                       className="px-5 sm:px-6 md:px-8 lg:px-10 py-2.5 sm:py-3 md:py-4 bg-gradient-to-r from-black to-gray-800 text-white rounded-full font-semibold hover:shadow-xl transition-all duration-300 text-sm sm:text-base md:text-lg relative overflow-hidden touch-manipulation min-w-[110px] sm:min-w-[130px] md:min-w-[150px]"
+                       className="px-4 sm:px-5 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-black to-gray-800 text-white rounded-full font-semibold hover:shadow-xl transition-all duration-300 text-xs sm:text-sm md:text-base relative overflow-hidden touch-manipulation min-w-[100px] sm:min-w-[120px] md:min-w-[140px]"
                        rippleColor="rgba(255, 255, 255, 0.3)"
                      >
                        <span className="relative z-10">{cards[currentCard].buttonText}</span>
@@ -694,7 +693,7 @@ export default function Home() {
 
                  {/* Card Indicators - Below Continue Button */}
                  <motion.div 
-                   className="flex gap-2 sm:gap-3 justify-center items-center w-full"
+                   className="flex gap-2 sm:gap-3 justify-center items-center w-full mt-3 sm:mt-4 md:mt-5"
                    initial={{ opacity: 0 }}
                    animate={{ opacity: 1 }}
                    transition={{ delay: 0.7, duration: 0.5 }}
