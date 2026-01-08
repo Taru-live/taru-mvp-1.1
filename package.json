@@ -26,6 +26,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.2",
     "canvas-confetti": "^1.9.3",
+    "clsx": "^2.1.1",
     "dotenv": "^17.2.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.23.12",
@@ -43,7 +44,8 @@
     "react-pdf": "^10.0.1",
     "react-speech-recognition": "^4.0.1",
     "react-youtube": "^10.1.0",
-    "recharts": "^3.1.0"
+    "recharts": "^3.1.0",
+    "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

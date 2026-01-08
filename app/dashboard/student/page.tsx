@@ -8,6 +8,7 @@ import ProgressTab from './components/ProgressTab';
 import RewardsTab from './components/RewardsTab';
 import SettingsTab from './components/SettingsTab';
 import LearningPathTab from './components/LearningPathTab';
+import EnhancedLearningTab from './components/EnhancedLearningTab';
 import ChatModal from './components/ChatModal';
 import StatsCards from './components/StatsCards';
 import Image from 'next/image';
@@ -1576,6 +1577,7 @@ export default function StudentDashboard() {
               )}
               {activeTab === 'learning-path' && <LearningPathTab user={user ? { uniqueId: user.uniqueId ?? undefined, name: user.name ?? undefined } : null} onTabChange={setActiveTab} />}
               {activeTab === 'modules' && <ModulesTab user={user} />}
+              {activeTab === 'enhanced-learning' && <EnhancedLearningTab />}
               {activeTab === 'progress' && (
                 <div>
                   {dashboardLoading ? (
@@ -1615,6 +1617,7 @@ export default function StudentDashboard() {
                 'overview',
                 'learning-path',
                 'modules',
+                'enhanced-learning',
                 'progress',
                 'rewards',
                 'settings',
