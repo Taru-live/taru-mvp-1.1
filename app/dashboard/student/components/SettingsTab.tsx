@@ -139,15 +139,15 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
   if (!profile.name && !profile.email) {
     return (
       <motion.div 
-        className="bg-white rounded-2xl shadow-xl p-8 max-w-6xl mx-auto"
+        className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 max-w-6xl mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-48 sm:h-64">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading profile data...</p>
+            <p className="text-sm sm:text-base text-gray-600">Loading profile data...</p>
           </div>
         </div>
       </motion.div>
@@ -156,41 +156,42 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
   return (
     <motion.div 
-      className="bg-white rounded-2xl shadow-xl p-8 max-w-6xl mx-auto"
+      className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 max-w-6xl mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
       {/* Header with title and edit button */}
       <motion.div 
-        className="flex justify-between items-center mb-8"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <motion.div
-            className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center"
+            className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0"
             whileHover={{ rotate: 10, scale: 1.1 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <Settings className="w-8 h-8 text-blue-600" />
+            <Settings className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600" />
           </motion.div>
           <div>
-            <h2 className="text-4xl font-bold text-gray-900">{profile.name}</h2>
-            <p className="text-gray-600 text-lg">Update your Details!</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{profile.name}</h2>
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg">Update your Details!</p>
           </div>
         </div>
         
         {!isEditing && (
           <motion.button
             onClick={() => setIsEditing(true)}
-            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl"
+            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto justify-center"
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Edit3 className="w-5 h-5" />
-            Edit Profile
+            <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Edit Profile</span>
+            <span className="sm:hidden">Edit</span>
           </motion.button>
         )}
       </motion.div>
@@ -199,70 +200,70 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
       <AnimatePresence>
         {error && (
           <motion.div 
-            className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-3"
+            className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs sm:text-sm flex items-center gap-2 sm:gap-3"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
-            <AlertCircle className="w-5 h-5 text-red-500" />
-            {error}
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
+            <span className="break-words">{error}</span>
           </motion.div>
         )}
         {success && (
           <motion.div 
-            className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm flex items-center gap-3"
+            className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs sm:text-sm flex items-center gap-2 sm:gap-3"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
-            <Check className="w-5 h-5 text-green-500" />
-            {success}
+            <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+            <span className="break-words">{success}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Profile Content */}
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8">
         {/* Left Column - Avatar and Basic Info */}
         <div className="lg:w-1/3">
           {/* Avatar Section */}
-          <div className="text-center mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">
+          <div className="text-center mb-4 sm:mb-6">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
               {profile.name.charAt(0).toUpperCase()}
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{profile.name}</h3>
-            <p className="text-sm text-gray-500">Student</p>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">{profile.name}</h3>
+            <p className="text-xs sm:text-sm text-gray-500">Student</p>
           </div>
 
           {/* Student Key Display */}
-          <div className="bg-purple-50 rounded-lg p-4 mb-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">Student ID</p>
-            <p className="font-mono text-purple-700 text-lg font-bold">{profile.studentKey || 'Not available'}</p>
+          <div className="bg-purple-50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+            <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Student ID</p>
+            <p className="font-mono text-purple-700 text-base sm:text-lg font-bold break-all">{profile.studentKey || 'Not available'}</p>
             <p className="text-xs text-gray-500 mt-1">This ID is unique and cannot be changed</p>
           </div>
 
           {/* Additional Student Information */}
           {(profile.nickname || profile.learningModePreference || profile.interestsOutsideClass || profile.preferredCareerDomains) && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {profile.nickname && (
-                <div className="bg-blue-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Nickname</p>
-                  <p className="text-blue-700 font-medium">{profile.nickname}</p>
+                <div className="bg-blue-50 rounded-lg p-2.5 sm:p-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Nickname</p>
+                  <p className="text-blue-700 font-medium text-sm sm:text-base">{profile.nickname}</p>
                 </div>
               )}
               
               {profile.learningModePreference && (
-                <div className="bg-green-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Learning Mode</p>
-                  <p className="text-green-700 font-medium">{profile.learningModePreference}</p>
+                <div className="bg-green-50 rounded-lg p-2.5 sm:p-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Learning Mode</p>
+                  <p className="text-green-700 font-medium text-sm sm:text-base">{profile.learningModePreference}</p>
                 </div>
               )}
               
               {profile.interestsOutsideClass && profile.interestsOutsideClass.length > 0 && (
-                <div className="bg-orange-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Interests</p>
+                <div className="bg-orange-50 rounded-lg p-2.5 sm:p-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Interests</p>
                   <div className="flex flex-wrap gap-1">
                     {profile.interestsOutsideClass.map((interest, index) => (
                       <span key={index} className="px-2 py-1 bg-orange-200 text-orange-800 text-xs rounded-full">
@@ -274,8 +275,8 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
               )}
               
               {profile.preferredCareerDomains && profile.preferredCareerDomains.length > 0 && (
-                <div className="bg-indigo-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Career Interests</p>
+                <div className="bg-indigo-50 rounded-lg p-2.5 sm:p-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Career Interests</p>
                   <div className="flex flex-wrap gap-1">
                     {profile.preferredCareerDomains.map((domain, index) => (
                       <span key={index} className="px-2 py-1 bg-indigo-200 text-indigo-800 text-xs rounded-full">
@@ -291,12 +292,12 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
         {/* Right Column - Form Fields */}
         <div className="lg:w-2/3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
             {/* Left Column Fields */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Full Name Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Full Name
                 </label>
                 {isEditing ? (
@@ -304,11 +305,11 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                     type="text"
                     value={editedProfile.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     placeholder="Enter your full name"
                   />
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     {profile.name || 'Not provided'}
                   </div>
                 )}
@@ -316,24 +317,24 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
               {/* Date of Birth Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Date of Birth
                 </label>
                 {isEditing ? (
                   <div className="relative">
                     <input
                       type="date"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                       placeholder="dd/mm/yyyy"
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                   </div>
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     dd/mm/yyyy
                   </div>
                 )}
@@ -341,12 +342,12 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
               {/* Location Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Location / City
                 </label>
                 {isEditing ? (
                   <div className="relative">
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none">
+                    <select className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none">
                       <option value="">Select City</option>
                       <option value="Mumbai">Mumbai</option>
                       <option value="Delhi">Delhi</option>
@@ -358,13 +359,13 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                       <option value="Ahmedabad">Ahmedabad</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
                   </div>
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     Select City
                   </div>
                 )}
@@ -372,20 +373,20 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
             </div>
 
             {/* Right Column Fields */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Guardian Name Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Guardian Name
                 </label>
                 {isEditing ? (
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     placeholder="Enter guardian name"
                   />
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     Enter guardian name
                   </div>
                 )}
@@ -393,25 +394,25 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
               {/* Gender Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Gender
                 </label>
                 {isEditing ? (
                   <div className="relative">
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none">
+                    <select className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none">
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
                   </div>
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     Select Gender
                   </div>
                 )}
@@ -419,7 +420,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
               {/* Language Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Language
                 </label>
                 {isEditing ? (
@@ -427,7 +428,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                     <select
                       value={editedProfile.language}
                       onChange={(e) => handleInputChange('language', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none"
+                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none"
                     >
                       <option value="">Select Language</option>
                       <option value="English">English</option>
@@ -442,13 +443,13 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                       <option value="Punjabi">Punjabi</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
                   </div>
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     {profile.language || 'Not provided'}
                   </div>
                 )}
@@ -456,7 +457,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
               {/* Grade Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Grade
                 </label>
                 {isEditing ? (
@@ -464,7 +465,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                     <select
                       value={editedProfile.grade}
                       onChange={(e) => handleInputChange('grade', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none"
+                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none"
                     >
                       <option value="">Select Grade</option>
                       <option value="1st Grade">1st Grade</option>
@@ -481,13 +482,13 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                       <option value="12th Grade">12th Grade</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
                   </div>
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     {profile.grade || 'Not provided'}
                   </div>
                 )}
@@ -495,7 +496,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
               {/* School Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   School
                 </label>
                 {isEditing ? (
@@ -503,11 +504,11 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                     type="text"
                     value={editedProfile.school}
                     onChange={(e) => handleInputChange('school', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     placeholder="Enter your school name"
                   />
                 ) : (
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+                  <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                     {profile.school || 'Not provided'}
                   </div>
                 )}
@@ -516,11 +517,11 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
           </div>
 
           {/* Email Field (Read-only) */}
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="mt-4 sm:mt-6">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
               Email Address
             </label>
-            <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
+            <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900 break-all">
               {profile.email || 'Not provided'}
             </div>
             <p className="text-xs text-gray-500 mt-1">Email address cannot be changed</p>
@@ -530,18 +531,18 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
 
       {/* Edit Mode Buttons */}
       {isEditing && (
-        <div className="mt-8 flex gap-3 justify-center">
+        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={handleCancel}
             disabled={isLoading}
-            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 font-medium"
+            className="px-5 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 font-medium text-sm sm:text-base w-full sm:w-auto"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isLoading}
-            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm font-medium"
+            className="px-5 py-2.5 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm font-medium text-sm sm:text-base w-full sm:w-auto"
           >
             {isLoading && (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

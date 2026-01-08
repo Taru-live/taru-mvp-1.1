@@ -89,68 +89,73 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
 
   return (
     <motion.div 
-      className="space-y-8"
+      className="space-y-4 sm:space-y-6 md:space-y-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
       {/* Header */}
       <motion.div 
-        className="flex justify-between items-center"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <motion.div
-            className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center"
+            className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center flex-shrink-0"
             whileHover={{ rotate: 10, scale: 1.1 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <Trophy className="w-6 h-6 text-purple-600" />
+            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
           </motion.div>
           <div>
-            <h2 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-              <Sparkles className="w-8 h-8 text-yellow-500" />
-              My Magical Progress!
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-yellow-500" />
+                My Magical Progress!
+              </span>
             </h2>
-            <p className="text-gray-600 text-lg">Track your learning journey and achievements</p>
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg">Track your learning journey and achievements</p>
           </div>
         </div>
         
         {hasData && (
           <motion.button
-            className="group bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+            className="group bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-4 py-2 sm:px-6 sm:py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
             onClick={handleDownloadCSV}
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Download className="w-5 h-5" />
-            Download Report
+            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Download Report</span>
+            <span className="sm:hidden">Download</span>
           </motion.button>
         )}
       </motion.div>
 
       {/* Weekly Goal & XP Progress */}
       <motion.div 
-        className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200"
+        className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3, duration: 0.6 }}
         whileHover={{ scale: 1.02 }}
       >
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <motion.h3 
-            className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3"
+            className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Target className="w-7 h-7 text-purple-600" />
-            Weekly Goal: {weeklyGoal.toLocaleString()} XP
+            <span className="flex items-center gap-2">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-purple-600" />
+              Weekly Goal: {weeklyGoal.toLocaleString()} XP
+            </span>
           </motion.h3>
           <motion.p 
-            className="text-lg text-gray-600 mb-6"
+            className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -203,10 +208,10 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
       </motion.div>
 
       {/* Progress Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {/* Time Spent Card */}
         <motion.div 
-          className="group bg-white rounded-2xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
+          className="group bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -216,17 +221,17 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
         >
           <div className="text-center">
             <motion.div
-              className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mx-auto mb-6"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mx-auto mb-4 sm:mb-6"
               whileHover={{ rotate: 10, scale: 1.1 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Clock className="w-8 h-8 text-purple-600" />
+              <Clock className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-purple-600" />
             </motion.div>
             
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Time Spent</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Time Spent</h3>
             
-            <div className="relative w-40 h-40 mx-auto mb-6">
-              <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 36 36">
+            <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 mx-auto mb-4 sm:mb-6">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <path
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
@@ -251,10 +256,10 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
                   animate={{ scale: 1 }}
                   transition={{ delay: 1, type: "spring", stiffness: 200 }}
                 >
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {Math.floor(progress.totalTimeSpent / 60)}h
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs sm:text-sm text-gray-500">
                     {Math.max(6, Math.floor(progress.totalTimeSpent / 60) + 2)}h goal
                   </div>
                 </motion.div>
@@ -262,7 +267,7 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
             </div>
             
             <motion.p 
-              className="text-lg text-gray-600 font-medium"
+              className="text-base sm:text-lg text-gray-600 font-medium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
@@ -274,7 +279,7 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
 
         {/* Modules Completed Card */}
         <motion.div 
-          className="group bg-white rounded-2xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
+          className="group bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -284,17 +289,17 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
         >
           <div className="text-center">
             <motion.div
-              className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mx-auto mb-6"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mx-auto mb-4 sm:mb-6"
               whileHover={{ rotate: 10, scale: 1.1 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <CheckCircle className="w-8 h-8 text-green-600" />
+              <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-green-600" />
             </motion.div>
             
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Modules Completed</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Modules Completed</h3>
             
-            <div className="relative w-40 h-40 mx-auto mb-6">
-              <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 36 36">
+            <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 mx-auto mb-4 sm:mb-6">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <path
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
@@ -319,10 +324,10 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
                   animate={{ scale: 1 }}
                   transition={{ delay: 1, type: "spring", stiffness: 200 }}
                 >
-                  <div className="text-4xl font-bold text-gray-900">
+                  <div className="text-3xl sm:text-4xl font-bold text-gray-900">
                     {progress.completedModules}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs sm:text-sm text-gray-500">
                     of {progress.totalModules}
                   </div>
                 </motion.div>
@@ -335,10 +340,10 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
             >
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-xl sm:text-2xl font-bold text-green-600">
                 {percent}% Complete
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-xs sm:text-sm text-gray-600">
                 {progress.totalModules - progress.completedModules} modules remaining
               </div>
             </motion.div>
@@ -347,7 +352,7 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
 
         {/* Badges Earned Card */}
         <motion.div 
-          className="group bg-white rounded-2xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
+          className="group bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -357,14 +362,14 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
         >
           <div className="text-center">
             <motion.div
-              className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center mx-auto mb-6"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center mx-auto mb-4 sm:mb-6"
               whileHover={{ rotate: 10, scale: 1.1 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Award className="w-8 h-8 text-yellow-600" />
+              <Award className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-yellow-600" />
             </motion.div>
             
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Badges Earned</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Badges Earned</h3>
             
             <div className="space-y-3">
               {progress.badgesEarned && progress.badgesEarned.length > 0 ? (
@@ -403,29 +408,31 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
       {/* Recent Scores Section */}
       {progress.recentScores && progress.recentScores.length > 0 && (
         <motion.div 
-          className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200"
+          className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <div className="text-center mb-6">
+          <div className="text-center mb-4 sm:mb-6">
             <motion.h3 
-              className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3"
+              className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
             >
-              <TrendingUp className="w-7 h-7 text-green-600" />
-              Recent Quiz Scores
+              <span className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-green-600" />
+                Recent Quiz Scores
+              </span>
             </motion.h3>
-            <p className="text-gray-600">Your latest quiz performance</p>
+            <p className="text-sm sm:text-base text-gray-600">Your latest quiz performance</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {progress.recentScores.slice(0, 6).map((score, index) => (
               <motion.div
                 key={index}
-                className={`p-4 rounded-xl text-center font-bold text-lg ${
+                className={`p-3 sm:p-4 rounded-xl text-center font-bold text-base sm:text-lg ${
                   score >= 75 
                     ? 'bg-green-100 text-green-800 border border-green-200' 
                     : score >= 50 
@@ -437,15 +444,15 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
                 transition={{ delay: 1 + index * 0.1 }}
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-1 sm:gap-2">
                   {score >= 75 ? (
-                    <CheckCircle className="w-5 h-5" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                   ) : (
-                    <Target className="w-5 h-5" />
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                   {score}%
                 </div>
-                <div className="text-sm font-normal mt-1">
+                <div className="text-xs sm:text-sm font-normal mt-1">
                   {score >= 75 ? 'Excellent!' : score >= 50 ? 'Good!' : 'Keep practicing!'}
                 </div>
               </motion.div>
@@ -457,7 +464,7 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
       {/* Continue Learning Button */}
       <div className="text-center">
         <motion.button 
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-medium text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-medium text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
           onClick={() => onTabChange?.('modules')}
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
@@ -475,70 +482,72 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
       {/* Additional Progress Details */}
       {hasData && (
         <motion.div 
-          className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200"
+          className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.3 }}
         >
-          <div className="text-center mb-6">
+          <div className="text-center mb-4 sm:mb-6">
             <motion.h3 
-              className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3"
+              className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.4 }}
             >
-              <BarChart3 className="w-7 h-7 text-blue-600" />
-              Detailed Progress
+              <span className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-blue-600" />
+                Detailed Progress
+              </span>
             </motion.h3>
-            <p className="text-gray-600">Your learning journey in numbers</p>
+            <p className="text-sm sm:text-base text-gray-600">Your learning journey in numbers</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             <motion.div 
-              className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200"
+              className="text-center p-4 sm:p-5 md:p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.5 }}
               whileHover={{ scale: 1.05 }}
             >
-              <div className="text-4xl font-bold text-purple-600 mb-2">{progress.completedModules}</div>
-              <div className="text-sm text-gray-600 font-medium">Modules Completed</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-purple-600 mb-1 sm:mb-2">{progress.completedModules}</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Modules Completed</div>
               <div className="text-xs text-gray-500 mt-1">Quiz score ≥ 75%</div>
             </motion.div>
             
             <motion.div 
-              className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200"
+              className="text-center p-4 sm:p-5 md:p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.6 }}
               whileHover={{ scale: 1.05 }}
             >
-              <div className="text-4xl font-bold text-blue-600 mb-2">{progress.totalModules}</div>
-              <div className="text-sm text-gray-600 font-medium">Total Modules</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600 mb-1 sm:mb-2">{progress.totalModules}</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Total Modules</div>
               <div className="text-xs text-gray-500 mt-1">Available chapters</div>
             </motion.div>
             
             <motion.div 
-              className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200"
+              className="text-center p-4 sm:p-5 md:p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.7 }}
               whileHover={{ scale: 1.05 }}
             >
-              <div className="text-4xl font-bold text-green-600 mb-2">{percent}%</div>
-              <div className="text-sm text-gray-600 font-medium">Completion Rate</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600 mb-1 sm:mb-2">{percent}%</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Completion Rate</div>
               <div className="text-xs text-gray-500 mt-1">Overall progress</div>
             </motion.div>
             
             <motion.div 
-              className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200"
+              className="text-center p-4 sm:p-5 md:p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.8 }}
               whileHover={{ scale: 1.05 }}
             >
-              <div className="text-4xl font-bold text-orange-600 mb-2">{Math.floor(progress.totalTimeSpent / 60)}h</div>
-              <div className="text-sm text-gray-600 font-medium">Time Spent</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-orange-600 mb-1 sm:mb-2">{Math.floor(progress.totalTimeSpent / 60)}h</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Time Spent</div>
               <div className="text-xs text-gray-500 mt-1">Learning hours</div>
             </motion.div>
           </div>

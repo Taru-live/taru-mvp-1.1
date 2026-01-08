@@ -487,7 +487,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
             </motion.div>
             
             {/* Navigation */}
-            <nav className="flex flex-col gap-4">
+            <nav className={`flex flex-col ${isHovered ? 'gap-4' : 'gap-1'}`}>
               {items.map((item, index) => (
                 <motion.button
                   key={item.id}

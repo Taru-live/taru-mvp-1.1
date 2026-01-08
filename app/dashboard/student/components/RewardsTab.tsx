@@ -114,7 +114,7 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
 
   return (
     <motion.div 
-      className="space-y-8"
+      className="space-y-4 sm:space-y-6 md:space-y-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
@@ -126,56 +126,58 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
       >
-        <div className="flex items-center justify-center gap-4 mb-6">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="hidden sm:block"
           >
-            <Sparkles className="w-12 h-12 text-yellow-500" />
+            <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-500" />
           </motion.div>
-          <h2 className="text-5xl font-bold text-gray-900 flex items-center gap-3">
-            <Crown className="w-12 h-12 text-purple-600" />
-            My Rewards & Badges
-            <Crown className="w-12 h-12 text-purple-600" />
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+            <Crown className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-purple-600" />
+            <span>My Rewards & Badges</span>
+            <Crown className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-purple-600" />
           </h2>
           <motion.div
             animate={{ rotate: [0, -10, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="hidden sm:block"
           >
-            <Sparkles className="w-12 h-12 text-yellow-500" />
+            <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-500" />
           </motion.div>
         </div>
         <motion.p 
-          className="text-gray-600 text-xl"
+          className="text-gray-600 text-base sm:text-lg md:text-xl px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          You&apos;ve earned <span className="font-bold text-purple-600 text-2xl">{earnedBadges.length}</span> badges so far!
+          You&apos;ve earned <span className="font-bold text-purple-600 text-xl sm:text-2xl">{earnedBadges.length}</span> badges so far!
         </motion.p>
       </motion.div>
 
       {/* Progress Overview */}
-      <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl p-6 text-white">
-        <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl p-4 sm:p-5 md:p-6 text-white">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 text-center">
           <div>
-            <div className="text-3xl font-bold">{earnedBadges.length}</div>
-            <div className="text-purple-100 text-sm">Badges Earned</div>
+            <div className="text-2xl sm:text-3xl font-bold">{earnedBadges.length}</div>
+            <div className="text-purple-100 text-xs sm:text-sm">Badges Earned</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">{availableBadges.length}</div>
-            <div className="text-purple-100 text-sm">Available</div>
+            <div className="text-2xl sm:text-3xl font-bold">{availableBadges.length}</div>
+            <div className="text-purple-100 text-xs sm:text-sm">Available</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">{Math.round((earnedBadges.length / (earnedBadges.length + availableBadges.length)) * 100)}%</div>
-            <div className="text-purple-100 text-sm">Completion</div>
+            <div className="text-2xl sm:text-3xl font-bold">{Math.round((earnedBadges.length / (earnedBadges.length + availableBadges.length)) * 100)}%</div>
+            <div className="text-purple-100 text-xs sm:text-sm">Completion</div>
           </div>
         </div>
       </div>
 
       {/* Category Filter */}
       <motion.div 
-        className="flex flex-wrap gap-3 justify-center"
+        className="flex flex-wrap gap-2 sm:gap-3 justify-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -184,7 +186,7 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
           <motion.button
             key={category.id}
             onClick={() => setActiveCategory(category.id)}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+            className={`flex items-center space-x-1 sm:space-x-2 px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3 rounded-xl font-medium transition-all duration-300 text-xs sm:text-sm ${
               activeCategory === category.id
                 ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -195,8 +197,8 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <span className="text-lg">{category.icon}</span>
-            <span className="text-sm font-medium">{category.label}</span>
+            <span className="text-base sm:text-lg">{category.icon}</span>
+            <span className="font-medium">{category.label}</span>
           </motion.button>
         ))}
       </motion.div>
@@ -204,7 +206,7 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
       {/* Badges Grid */}
       {displayBadges.length > 0 ? (
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -225,25 +227,25 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
               onHoverEnd={() => setHoveredBadge(null)}
             >
               {/* Badge Card */}
-              <div className="p-6">
+              <div className="p-4 sm:p-5 md:p-6">
                 {/* Badge Icon */}
-                <div className="text-center mb-6">
+                <div className="text-center mb-4 sm:mb-6">
                   {badge.isLocked ? (
                     <motion.div 
                       className="relative"
                       whileHover={{ scale: 1.1 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     >
-                      <div className="w-24 h-24 mx-auto bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center shadow-lg">
-                        <Lock className="w-12 h-12 text-gray-500" />
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center shadow-lg">
+                        <Lock className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-gray-500" />
                       </div>
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs font-bold">!</span>
                       </div>
                     </motion.div>
                   ) : (
                     <motion.div 
-                      className="w-24 h-24 mx-auto text-6xl flex items-center justify-center"
+                      className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto text-4xl sm:text-5xl md:text-6xl flex items-center justify-center"
                       whileHover={{ 
                         scale: 1.2, 
                         rotate: [0, -10, 10, 0],
@@ -261,7 +263,7 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
 
                 {/* Badge Name */}
                 <motion.h3 
-                  className="text-xl font-bold text-center text-gray-900 mb-4"
+                  className="text-lg sm:text-xl font-bold text-center text-gray-900 mb-3 sm:mb-4"
                   whileHover={{ scale: 1.05 }}
                 >
                   {badge.name}
@@ -269,25 +271,25 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
 
                 {/* Date and XP Row */}
                 <motion.div 
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between gap-2"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 + index * 0.1 }}
                 >
                   {/* Date */}
                   <motion.div 
-                    className="bg-white rounded-full px-4 py-2 shadow-sm"
+                    className="bg-white rounded-full px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 shadow-sm flex-1"
                     whileHover={{ scale: 1.05 }}
                   >
-                    <span className="text-xs text-gray-600 font-medium flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {badge.earned && 'earnedAt' in badge ? formatDate(badge.earnedAt) : 'Coming Soon'}
+                    <span className="text-xs text-gray-600 font-medium flex items-center justify-center gap-1">
+                      <Calendar className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate text-[10px] sm:text-xs">{badge.earned && 'earnedAt' in badge ? formatDate(badge.earnedAt) : 'Coming Soon'}</span>
                     </span>
                   </motion.div>
                   
                   {/* XP */}
                   <motion.div 
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-full px-4 py-2 shadow-sm"
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-full px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 shadow-sm flex-shrink-0"
                     whileHover={{ scale: 1.05 }}
                   >
                     <span className="text-xs text-white font-medium flex items-center gap-1">
@@ -312,10 +314,10 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
           ))}
         </motion.div>
       ) : (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🏆</div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">No badges in this category yet</h3>
-          <p className="text-gray-600">
+        <div className="text-center py-8 sm:py-12">
+          <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">🏆</div>
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">No badges in this category yet</h3>
+          <p className="text-sm sm:text-base text-gray-600 px-4">
             Keep learning to earn your first badge!
           </p>
         </div>
@@ -323,14 +325,14 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
 
       {/* Encouragement Section */}
       {earnedBadges.length === 0 && (
-        <div className="bg-blue-50 rounded-xl p-6 text-center">
-          <div className="text-4xl mb-4">🌟</div>
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Start Your Badge Collection!</h3>
-          <p className="text-blue-700 mb-4">
+        <div className="bg-blue-50 rounded-xl p-4 sm:p-5 md:p-6 text-center">
+          <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🌟</div>
+          <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2">Start Your Badge Collection!</h3>
+          <p className="text-sm sm:text-base text-blue-700 mb-4 px-4">
             Complete learning modules, take tests, and participate in activities to earn your first badge.
           </p>
           <button 
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-5 py-2 sm:px-6 sm:py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
             onClick={() => onTabChange?.('modules')}
           >
             View Learning Modules
