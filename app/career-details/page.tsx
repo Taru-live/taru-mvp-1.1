@@ -65,8 +65,8 @@ function CareerDetailsContent() {
   const [savedPathId, setSavedPathId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const careerPath = searchParams.get('careerPath');
-  const description = searchParams.get('description');
+  const careerPath = searchParams?.get('careerPath') || null;
+  const description = searchParams?.get('description') || null;
 
   useEffect(() => {
     // Track mouse position for interactive effects
@@ -103,7 +103,7 @@ function CareerDetailsContent() {
         },
         body: JSON.stringify({
           careerDetails: careerDetails,
-          careerPath: searchParams.get('careerPath') || 'Unknown Career',
+          careerPath: searchParams?.get('careerPath') || 'Unknown Career',
           description: careerDetails.output.overview?.join(' ') || 'Career learning path'
         }),
       });
@@ -122,7 +122,7 @@ function CareerDetailsContent() {
         },
         body: JSON.stringify({
           studentId: userInfo.id,
-          careerPath: searchParams.get('careerPath') || 'Unknown Career',
+          careerPath: searchParams?.get('careerPath') || 'Unknown Career',
           description: careerDetails.output.overview?.join(' ') || 'Career learning path',
           learningModules: careerDetails.output.learningPath || [],
           timeRequired: careerDetails.output.timeRequired || 'Not specified',
