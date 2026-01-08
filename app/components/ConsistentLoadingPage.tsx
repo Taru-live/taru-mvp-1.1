@@ -320,6 +320,13 @@ const ConsistentLoadingPage: React.FC<ConsistentLoadingPageProps> = ({
   return (
     <VantaBackground
       className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${className}`}
+      highlightColor={0xA855F7}  // Bright purple
+      midtoneColor={0x8B5CF6}    // Purple
+      lowlightColor={0x7c3aed}   // Primary purple
+      baseColor={0x6D18CE}       // Dark purple
+      blurFactor={0.40}
+      speed={0.30}
+      zoom={0.50}
       mouseControls={true}
       touchControls={true}
       gyroControls={false}

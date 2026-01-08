@@ -42,13 +42,13 @@ declare global {
 const VantaBackground: React.FC<VantaBackgroundProps> = ({
   children,
   className = '',
-  highlightColor = 0x8B5CF6, // Purple highlight (#8B5CF6)
-  midtoneColor = 0x7c3aed,    // Primary purple (#7c3aed)
-  lowlightColor = 0x6D18CE,   // Darker purple (#6D18CE)
-  baseColor = 0x3b82f6,       // Blue base (#3b82f6)
-  blurFactor = 0.56,
-  speed = 0.00,
-  zoom = 0.20,
+  highlightColor = 0xA855F7,  // Brighter purple highlight (#A855F7) - more visible
+  midtoneColor = 0x8B5CF6,    // Purple midtone (#8B5CF6) - more visible
+  lowlightColor = 0x7c3aed,   // Primary purple (#7c3aed) - more visible
+  baseColor = 0x6D18CE,       // Darker purple base (#6D18CE) - better contrast
+  blurFactor = 0.40,          // Reduced for more visibility
+  speed = 0.30,               // Slight animation for visibility
+  zoom = 0.50,                // Increased for better visibility
   mouseControls = true,
   touchControls = true,
   gyroControls = false,
@@ -91,21 +91,46 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({
           vantaRef.current.destroy();
         }
 
-        vantaRef.current = window.VANTA.FOG({
-          el: containerRef.current,
-          mouseControls,
-          touchControls,
-          gyroControls,
-          minHeight,
-          minWidth,
-          highlightColor,
-          midtoneColor,
-          lowlightColor,
-          baseColor,
-          blurFactor,
-          speed,
-          zoom
-        });
+        // Ensure container has proper dimensions
+        const container = containerRef.current;
+        if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+          // Wait a bit for container to get dimensions
+          setTimeout(() => {
+            if (container.offsetWidth > 0 && container.offsetHeight > 0) {
+              vantaRef.current = window.VANTA.FOG({
+                el: container,
+                mouseControls,
+                touchControls,
+                gyroControls,
+                minHeight,
+                minWidth,
+                highlightColor,
+                midtoneColor,
+                lowlightColor,
+                baseColor,
+                blurFactor,
+                speed,
+                zoom
+              });
+            }
+          }, 100);
+        } else {
+          vantaRef.current = window.VANTA.FOG({
+            el: container,
+            mouseControls,
+            touchControls,
+            gyroControls,
+            minHeight,
+            minWidth,
+            highlightColor,
+            midtoneColor,
+            lowlightColor,
+            baseColor,
+            blurFactor,
+            speed,
+            zoom
+          });
+        }
       }
     };
 
@@ -136,9 +161,17 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({
     <div 
       ref={containerRef} 
       className={`w-full h-full ${className}`}
-      style={{ position: 'relative', pointerEvents: 'none' }}
+      style={{ 
+        position: 'relative', 
+        pointerEvents: 'none',
+        overflow: 'hidden',
+        zIndex: 0,
+        minHeight: '100vh',
+        width: '100%'
+      }}
     >
-      <div style={{ pointerEvents: 'auto' }}>
+      {/* Fog effect canvas will be inserted here by Vanta */}
+      <div style={{ pointerEvents: 'auto', position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
         {children}
       </div>
     </div>
