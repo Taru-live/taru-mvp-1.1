@@ -118,6 +118,17 @@ export default function SubjectSelection() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect to login even if logout API fails
+      router.push('/login');
+    }
+  };
+
   return (
     <motion.main 
       className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col"
@@ -183,10 +194,13 @@ export default function SubjectSelection() {
               <span>⚙️</span>
               <span>Profile & Settings</span>
             </div>
-            <div className="flex items-center gap-3 text-gray-600 p-2 rounded-lg">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors w-full text-left"
+            >
               <span>🚪</span>
               <span>Logout</span>
-            </div>
+            </button>
           </nav>
 
           {/* AI Buddy */}

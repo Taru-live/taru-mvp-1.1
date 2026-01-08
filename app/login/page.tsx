@@ -8,6 +8,7 @@ import { TypewriterText, StaggeredText, FloatingText } from '../components/TextA
 import { MagneticButton, TiltCard } from '../components/InteractiveElements';
 import { ScrollFade, ParallaxScroll } from '../components/ScrollAnimations';
 import ConsistentLoadingPage from '../components/ConsistentLoadingPage';
+import { useMinimumDisplayTime } from '../components/useMinimumDisplayTime';
 
 
 
@@ -19,6 +20,9 @@ export default function Login() {
   const [error, setError] = useState('');
   const [selectedRole, setSelectedRole] = useState('Student');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  
+  // Ensure loading page displays for at least 3 seconds
+  const shouldShowLoading = useMinimumDisplayTime(loading, 3000);
 
   useEffect(() => {
     // Track mouse position for interactive effects
@@ -113,8 +117,8 @@ export default function Login() {
     }
   };
 
-  // Show loading screen during authentication
-  if (loading) {
+  // Show loading screen during authentication (with minimum 3 second display time)
+  if (shouldShowLoading) {
     return (
       <ConsistentLoadingPage
         type="auth"
@@ -335,17 +339,17 @@ export default function Login() {
 
             {/* Welcome back Title */}
             <motion.h2 
-              className="mt-0 sm:mt-2 text-xl sm:text-2xl md:text-[24.7297px] leading-tight sm:leading-snug md:leading-[30px] font-bold text-black w-full lg:w-[190px] mb-1.5 sm:mb-2 md:mb-3"
+              className="mt-0 sm:mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-[32px] leading-tight sm:leading-snug md:leading-[38px] font-bold text-black w-full lg:w-[250px] mx-auto text-center mb-1.5 sm:mb-2 md:mb-3"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.5 }}
             >
-              Welcome back
+              Welcome back!
             </motion.h2>
 
             {/* Welcome back Subtitle */}
             <motion.p 
-              className="mt-1.5 sm:mt-2 md:mt-3 w-full lg:w-[433px] text-sm sm:text-base md:text-[16px] leading-relaxed sm:leading-7 md:leading-[32px] font-normal text-[#454545] mb-3 sm:mb-4 md:mb-6 lg:mb-8"
+              className="mt-1.5 sm:mt-2 md:mt-3 w-full lg:w-[500px] mx-auto text-center text-base sm:text-lg md:text-xl leading-relaxed sm:leading-7 md:leading-[32px] font-normal text-[#454545] mb-3 sm:mb-4 md:mb-6 lg:mb-8"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.85, duration: 0.5 }}

@@ -20,6 +20,22 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
   progress = 0,
   showProgress = false
 }) => {
+  const [mountedAt] = React.useState(() => Date.now());
+  const [minDisplayTimeElapsed, setMinDisplayTimeElapsed] = React.useState(false);
+
+  // Ensure minimum 3 second display time
+  React.useEffect(() => {
+    const minDisplayTime = 3000; // 3 seconds minimum
+    const elapsed = Date.now() - mountedAt;
+    const remainingTime = Math.max(0, minDisplayTime - elapsed);
+    
+    const timer = setTimeout(() => {
+      setMinDisplayTimeElapsed(true);
+    }, remainingTime);
+
+    return () => clearTimeout(timer);
+  }, [mountedAt]);
+
   const getLoadingConfig = () => {
     switch (type) {
       case 'modules':
@@ -72,23 +88,16 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
   const config = getLoadingConfig();
   const Icon = config.icon;
 
+  // Component will always render - minimum display time is tracked internally
+  // Suspense will control when to hide it, but we ensure it's visible for at least 3 seconds
   return (
     <VantaBackground
       className="min-h-screen flex items-center justify-center p-4"
-      color2={0x1c00ff}
-      colorMode="lerpGradient"
-      birdSize={1.70}
-      wingSpan={19.00}
-      separation={24.00}
-      cohesion={22.00}
-      quantity={4.00}
       mouseControls={true}
       touchControls={true}
       gyroControls={false}
       minHeight={200}
       minWidth={200}
-      scale={1}
-      scaleMobile={1}
     >
       <div className="w-full h-full flex items-center justify-center">
         <div className="max-w-md w-full">

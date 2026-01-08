@@ -794,6 +794,7 @@ export default function OrganizationAdminDashboard() {
   const router = useRouter();
   const { width: windowWidth } = useWindowSize();
   const isMobile = windowWidth < 768;
+  const logoutTriggered = useRef(false);
 
   // Fetch organization and user settings
   const fetchSettings = async () => {
@@ -848,6 +849,29 @@ export default function OrganizationAdminDashboard() {
   useEffect(() => {
     if (activeTab === 'users') {
       fetchStudents();
+    }
+  }, [activeTab]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect to login even if logout API fails
+      router.push('/login');
+    }
+  };
+
+  // Fix React Hook dependency - handle logout tab change
+  useEffect(() => {
+    if (activeTab === 'logout' && !logoutTriggered.current) {
+      logoutTriggered.current = true;
+      handleLogout();
+    }
+    if (activeTab !== 'logout') {
+      logoutTriggered.current = false;
     }
   }, [activeTab]);
 

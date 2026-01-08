@@ -6,20 +6,18 @@ import { motion } from 'framer-motion';
 interface VantaBackgroundProps {
   children: React.ReactNode;
   className?: string;
-  color2?: number;
-  colorMode?: string;
-  birdSize?: number;
-  wingSpan?: number;
-  separation?: number;
-  cohesion?: number;
-  quantity?: number;
+  highlightColor?: number;
+  midtoneColor?: number;
+  lowlightColor?: number;
+  baseColor?: number;
+  blurFactor?: number;
+  speed?: number;
+  zoom?: number;
   mouseControls?: boolean;
   touchControls?: boolean;
   gyroControls?: boolean;
   minHeight?: number;
   minWidth?: number;
-  scale?: number;
-  scaleMobile?: number;
 }
 
 interface FloatingParticlesProps {
@@ -44,20 +42,18 @@ declare global {
 const VantaBackground: React.FC<VantaBackgroundProps> = ({
   children,
   className = '',
-  color2 = 0x1c00ff,
-  colorMode = "lerpGradient",
-  birdSize = 1.70,
-  wingSpan = 19.00,
-  separation = 24.00,
-  cohesion = 22.00,
-  quantity = 4.00,
+  highlightColor = 0x8B5CF6, // Purple highlight (#8B5CF6)
+  midtoneColor = 0x7c3aed,    // Primary purple (#7c3aed)
+  lowlightColor = 0x6D18CE,   // Darker purple (#6D18CE)
+  baseColor = 0x3b82f6,       // Blue base (#3b82f6)
+  blurFactor = 0.56,
+  speed = 0.00,
+  zoom = 0.20,
   mouseControls = true,
   touchControls = true,
   gyroControls = false,
   minHeight = 200,
-  minWidth = 200,
-  scale = 1,
-  scaleMobile = 1
+  minWidth = 200
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const vantaRef = useRef<any>(null);
@@ -76,10 +72,10 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({
         });
       }
 
-      // Load Vanta.js
-      if (!window.VANTA) {
+      // Load Vanta.js FOG effect
+      if (!window.VANTA || !window.VANTA.FOG) {
         const vantaScript = document.createElement('script');
-        vantaScript.src = '/vanta.birds.min.js';
+        vantaScript.src = '/vanta.fog.min.js';
         vantaScript.async = true;
         document.head.appendChild(vantaScript);
         
@@ -88,30 +84,27 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({
         });
       }
 
-      // Initialize Vanta BIRDS effect
-      if (containerRef.current && window.VANTA && window.THREE) {
+      // Initialize Vanta FOG effect
+      if (containerRef.current && window.VANTA && window.VANTA.FOG && window.THREE) {
         // Clean up previous instance
         if (vantaRef.current) {
           vantaRef.current.destroy();
         }
 
-        vantaRef.current = window.VANTA.BIRDS({
+        vantaRef.current = window.VANTA.FOG({
           el: containerRef.current,
-          THREE: window.THREE,
           mouseControls,
           touchControls,
           gyroControls,
           minHeight,
           minWidth,
-          scale,
-          scaleMobile,
-          color2,
-          colorMode,
-          birdSize,
-          wingSpan,
-          separation,
-          cohesion,
-          quantity
+          highlightColor,
+          midtoneColor,
+          lowlightColor,
+          baseColor,
+          blurFactor,
+          speed,
+          zoom
         });
       }
     };
@@ -125,20 +118,18 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({
       }
     };
   }, [
-    color2,
-    colorMode,
-    birdSize,
-    wingSpan,
-    separation,
-    cohesion,
-    quantity,
+    highlightColor,
+    midtoneColor,
+    lowlightColor,
+    baseColor,
+    blurFactor,
+    speed,
+    zoom,
     mouseControls,
     touchControls,
     gyroControls,
     minHeight,
-    minWidth,
-    scale,
-    scaleMobile
+    minWidth
   ]);
 
   return (

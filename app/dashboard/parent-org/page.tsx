@@ -82,6 +82,8 @@ export default function ParentOrgDashboard() {
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
+      // Still redirect to login even if logout API fails
+      router.push('/login');
     }
   };
 
