@@ -327,8 +327,8 @@ export default function Home() {
                  
                   {/* Illustration Area - Single Central Image on Mobile */}
                   <motion.div 
-                    className="mb-4 sm:mb-6 md:mb-8 lg:mb-10 relative w-full flex items-center justify-center"
-                    style={{ minHeight: 'clamp(200px, 30vh, 500px)' }}
+                    className="mb-8 sm:mb-10 md:mb-12 lg:mb-16 xl:mb-20 2xl:mb-24 relative w-full flex items-center justify-center max-w-[1400px] mx-auto"
+                    style={{ minHeight: 'clamp(200px, 35vh, 700px)' }}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
@@ -348,31 +348,31 @@ export default function Home() {
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
                           {/* Top Left - AI Logo */}
-                          <div className="absolute top-8 lg:top-16 xl:top-20 left-8 lg:left-16 xl:left-24">
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-2 lg:left-4 xl:left-6 2xl:left-8">
                             <Image 
                               src="/ai_landing.png" 
                               alt="AI Logo" 
                               width={142} 
                               height={142} 
-                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-[142px] xl:h-[142px] object-contain"
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-[142px] xl:h-[142px] 2xl:w-[160px] 2xl:h-[160px] object-contain"
                             />
                           </div>
                           
                           {/* Top Right - Computer Monitor */}
-                          <div className="absolute top-8 lg:top-16 xl:top-20 right-8 lg:right-16 xl:right-24">
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/comcap_landing.png" 
                               alt="Computer Monitor" 
                               width={164} 
                               height={164} 
-                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-[164px] xl:h-[164px] object-contain transform rotate-[8.37deg]"
+                              className="w-24 h-24 lg:w-32 lg:h-32 xl:w-[164px] xl:h-[164px] 2xl:w-[180px] 2xl:h-[180px] object-contain transform rotate-[8.37deg]"
                             />
                           </div>
                           
-                          {/* Center - Teacher/Presentation */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          {/* Center - Teacher/Presentation - Above Titles */}
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2">
                             <Image 
                               src="/teacher_landing.png" 
                               alt="Teacher" 
@@ -383,7 +383,7 @@ export default function Home() {
                           </div>
                           
                           {/* Bottom Left - Graduation Cap and Diploma */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 left-8 lg:left-16 xl:left-24">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 left-2 lg:left-4 xl:left-6 2xl:left-8">
                             <Image 
                               src="/cap_landing.png" 
                               alt="Graduation Cap and Diploma" 
@@ -394,7 +394,7 @@ export default function Home() {
                           </div>
                           
                           {/* Bottom Right - Robot Teaching */}
-                          <div className="absolute bottom-8 lg:bottom-16 xl:bottom-24 right-8 lg:right-16 xl:right-24">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/robo_landing.png" 
                               alt="Robot Teaching" 
@@ -422,9 +422,9 @@ export default function Home() {
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
                           {/* Top Left - Books */}
-                          <div className="absolute top-8 lg:top-16 xl:top-20 left-8 lg:left-16 xl:left-24">
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-2 lg:left-4 xl:left-6 2xl:left-8">
                             <Image 
                               src="/book_landing.png" 
                               alt="Books" 
@@ -435,7 +435,7 @@ export default function Home() {
                           </div>
                           
                           {/* Top Right - Robot Star */}
-                          <div className="absolute top-8 lg:top-16 xl:top-20 right-8 lg:right-16 xl:right-24">
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/robot_star_landing.png" 
                               alt="Robot Star" 
@@ -445,8 +445,8 @@ export default function Home() {
                             />
                           </div>
                           
-                          {/* Center - Robot Class */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          {/* Center - Robot Class - Above Titles */}
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2">
                             <Image 
                               src="/robo_class_landing.png" 
                               alt="Robot Class" 
@@ -457,7 +457,7 @@ export default function Home() {
                           </div>
                           
                           {/* Bottom Right - Bulb Books */}
-                          <div className="absolute bottom-8 lg:bottom-16 xl:bottom-24 right-8 lg:right-16 xl:right-24">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/bulbook_landing.png" 
                               alt="Bulb Books" 
@@ -485,9 +485,9 @@ export default function Home() {
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
                           {/* Left Center - Computer */}
-                          <div className="absolute top-1/2 left-8 lg:left-16 xl:left-24 transform -translate-y-1/2">
+                          <div className="absolute top-1/2 left-2 lg:left-4 xl:left-6 2xl:left-8 transform -translate-y-1/2">
                             <Image 
                               src="/landing3_comp.png" 
                               alt="Computer" 
@@ -498,7 +498,7 @@ export default function Home() {
                           </div>
                           
                           {/* Top Right - TV/Monitor */}
-                          <div className="absolute top-8 lg:top-16 xl:top-20 right-8 lg:right-16 xl:right-24">
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/landing3_tv.png" 
                               alt="TV/Monitor" 
@@ -508,8 +508,8 @@ export default function Home() {
                             />
                           </div>
                           
-                          {/* Center - Man with Laptop */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          {/* Center - Man with Laptop - Above Titles */}
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2">
                             <Image 
                               src="/landing3_man.png" 
                               alt="Man with Laptop" 
@@ -520,7 +520,7 @@ export default function Home() {
                           </div>
                           
                           {/* Bottom Right - Kid with Laptop */}
-                          <div className="absolute bottom-8 lg:bottom-16 xl:bottom-24 right-8 lg:right-16 xl:right-24">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 right-2 lg:right-4 xl:right-6 2xl:right-8">
                             <Image 
                               src="/landing3_kid.png" 
                               alt="Kid with Laptop" 
@@ -548,9 +548,9 @@ export default function Home() {
                         </div>
 
                         {/* Desktop Layout - All Images */}
-                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[400px] lg:min-h-[500px]">
+                        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden h-full min-h-[450px] lg:min-h-[550px] xl:min-h-[650px] 2xl:min-h-[750px]">
                           {/* Top Right - Bell */}
-                          <div className="absolute top-8 lg:top-12 xl:top-16 right-8 lg:right-12 xl:right-20 z-20">
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 right-2 lg:right-4 xl:right-6 2xl:right-8 z-20">
                             <Image 
                               src="/landing4_bell.png" 
                               alt="Bell" 
@@ -560,36 +560,36 @@ export default function Home() {
                             />
                           </div>
                           
-                          {/* Center - Center Icon */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                          {/* Center - Center Icon - Above Titles */}
+                          <div className="absolute top-8 lg:top-12 xl:top-16 2xl:top-20 left-1/2 transform -translate-x-1/2 z-20">
                             <Image 
                               src="/landing4_center.png" 
                               alt="Center Icon" 
                               width={500} 
                               height={500} 
-                              className="w-40 h-40 lg:w-56 lg:h-56 xl:w-72 xl:h-72 2xl:w-96 2xl:h-96 3xl:w-[500px] 3xl:h-[500px] object-contain" 
+                              className="w-40 h-40 lg:w-56 lg:h-56 xl:w-72 xl:h-72 2xl:w-96 2xl:h-96 object-contain" 
                             />
                           </div>
                           
                           {/* Bottom Left - Message Icon */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 left-8 lg:left-12 xl:left-20 z-20">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 left-2 lg:left-4 xl:left-6 2xl:left-8 z-20">
                             <Image 
                               src="/landing4_msg.png" 
                               alt="Message Icon" 
                               width={200} 
                               height={200} 
-                              className="w-20 h-20 lg:w-28 lg:h-28 xl:w-36 xl:h-36 2xl:w-48 2xl:h-48 3xl:w-[200px] 3xl:h-[200px] object-contain" 
+                              className="w-20 h-20 lg:w-28 lg:h-28 xl:w-36 xl:h-36 2xl:w-48 2xl:h-48 object-contain" 
                             />
                           </div>
                           
                           {/* Below Center - Avishkar Icon */}
-                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-20 left-1/2 transform -translate-x-1/2 z-20">
+                          <div className="absolute bottom-8 lg:bottom-12 xl:bottom-16 2xl:bottom-20 left-1/2 transform -translate-x-1/2 z-20">
                             <Image 
                               src="/landing4_avishkar.png" 
                               alt="Avishkar" 
                               width={160} 
                               height={160} 
-                              className="w-16 h-16 lg:w-20 lg:h-20 xl:w-28 xl:h-28 2xl:w-40 2xl:h-40 3xl:w-[160px] 3xl:h-[160px] object-contain" 
+                              className="w-16 h-16 lg:w-20 lg:h-20 xl:w-28 xl:h-28 2xl:w-40 2xl:h-40 object-contain" 
                             />
                           </div>
                         </div>
@@ -599,7 +599,7 @@ export default function Home() {
 
                  {/* Title with Advanced Animations */}
                  <motion.div
-                   className="w-full mb-3 sm:mb-4 md:mb-5 lg:mb-6 px-4 sm:px-6"
+                   className="w-full mb-6 sm:mb-8 md:mb-10 lg:mb-12 xl:mb-14 2xl:mb-16 px-4 sm:px-6"
                    initial={{ y: 20, opacity: 0 }}
                    animate={{ y: 0, opacity: 1 }}
                    transition={{ delay: 0.4, duration: 0.5 }}
@@ -650,7 +650,7 @@ export default function Home() {
 
                  {/* Description with Typewriter Effect */}
                  <motion.div 
-                   className="w-full text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 mb-6 sm:mb-8 md:mb-10 leading-relaxed max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-4 sm:px-6"
+                   className="w-full text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 mb-8 sm:mb-10 md:mb-12 lg:mb-14 xl:mb-16 2xl:mb-20 leading-relaxed max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-4 sm:px-6"
                    initial={{ y: 20, opacity: 0 }}
                    animate={{ y: 0, opacity: 1 }}
                    transition={{ delay: 0.5, duration: 0.5 }}
@@ -665,7 +665,7 @@ export default function Home() {
 
                  {/* Enhanced Interactive Buttons */}
                  <StaggerContainer 
-                   className="flex gap-3 sm:gap-4 md:gap-6 justify-center items-center flex-wrap w-full px-4 sm:px-6 mb-6 sm:mb-8"
+                   className="flex gap-3 sm:gap-4 md:gap-6 justify-center items-center flex-wrap w-full px-4 sm:px-6 mb-4 sm:mb-5 md:mb-6"
                    staggerDelay={0.1}
                    initialDelay={0.6}
                  >
@@ -692,9 +692,9 @@ export default function Home() {
                    </StaggerItem>
                  </StaggerContainer>
 
-                 {/* Card Indicators */}
+                 {/* Card Indicators - Below Continue Button */}
                  <motion.div 
-                   className="flex gap-2 sm:gap-3 justify-center items-center w-full mt-4 sm:mt-6 mb-2 sm:mb-4"
+                   className="flex gap-2 sm:gap-3 justify-center items-center w-full"
                    initial={{ opacity: 0 }}
                    animate={{ opacity: 1 }}
                    transition={{ delay: 0.7, duration: 0.5 }}
