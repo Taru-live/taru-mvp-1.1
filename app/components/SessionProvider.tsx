@@ -36,6 +36,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const pathname = usePathname();
+  const safePathname = pathname || '/';
   const autoSaveInterval = useRef<NodeJS.Timeout | null>(null);
   const pendingData = useRef<any>(null);
 
@@ -96,7 +97,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
             // Use sendBeacon for reliable data sending
             const data = JSON.stringify({
               userId,
-              page: pathname,
+              page: safePathname,
               data: pendingData.current,
               timestamp: new Date().toISOString()
             });
@@ -157,20 +158,20 @@ export function SessionProvider({ children }: SessionProviderProps) {
       const userId = localStorage.getItem('userId');
       if (!userId) {
         if (fallback) {
-          saveToLocalStorage(`page_data_${pathname}`, data);
+          saveToLocalStorage(`page_data_${safePathname}`, data);
         }
         return;
       }
 
       try {
-        await clientSessionService.savePageData(userId, pathname, data);
+        await clientSessionService.savePageData(userId, safePathname, data);
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
         pendingData.current = null;
       } catch (error) {
         console.error('Error saving page data to server:', error);
         if (fallback) {
-          saveToLocalStorage(`page_data_${pathname}`, data);
+          saveToLocalStorage(`page_data_${safePathname}`, data);
           console.log('Data saved to localStorage as fallback');
         }
         throw error;
@@ -190,7 +191,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
       // Try to load from server first
       if (userId) {
         try {
-          const serverData = await clientSessionService.loadPageData(userId, pathname);
+          const serverData = await clientSessionService.loadPageData(userId, safePathname);
           if (serverData) {
             setLastSaved(new Date());
             return serverData;
@@ -201,7 +202,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
       }
 
       // Fallback to localStorage
-      const localData = loadFromLocalStorage(`page_data_${pathname}`);
+      const localData = loadFromLocalStorage(`page_data_${safePathname}`);
       if (localData) {
         console.log('Loaded data from localStorage fallback');
         return localData;
@@ -220,9 +221,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
     try {
       const userId = localStorage.getItem('userId');
       if (userId) {
-        await clientSessionService.savePageData(userId, pathname, null);
+        await clientSessionService.savePageData(userId, safePathname, null);
       }
-      localStorage.removeItem(`page_data_${pathname}`);
+      localStorage.removeItem(`page_data_${safePathname}`);
       setHasUnsavedChanges(false);
       pendingData.current = null;
     } catch (error) {
@@ -240,7 +241,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
           try {
             const data = JSON.stringify({
               userId,
-              page: pathname,
+              page: safePathname,
               data: pendingData.current,
               timestamp: new Date().toISOString()
             });

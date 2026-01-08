@@ -237,7 +237,7 @@ export const RouteTransition: React.FC<{ children: React.ReactNode }> = ({ child
     return { type: 'slide', direction: 'right' as const };
   };
 
-  const transition = getTransitionForRoute(pathname);
+  const transition = getTransitionForRoute(pathname || '/');
 
   return (
     <PageTransition 

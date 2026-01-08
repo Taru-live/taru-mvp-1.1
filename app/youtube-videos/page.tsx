@@ -14,7 +14,7 @@ function YouTubeVideosContent() {
 
   useEffect(() => {
     // Get uniqueid from URL parameters or localStorage
-    const urlUniqueid = searchParams.get('uniqueid');
+    const urlUniqueid = searchParams?.get('uniqueid') || null;
     const storedUniqueid = localStorage.getItem('userUniqueId');
     
     if (urlUniqueid) {

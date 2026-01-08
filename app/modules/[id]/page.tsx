@@ -50,7 +50,7 @@ function ModuleDetailContent() {
   const [showYouTubeVideos, setShowYouTubeVideos] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const moduleId = params.id as string;
+  const moduleId = (params?.id as string) || '';
 
   useEffect(() => {
     fetchModuleData();
