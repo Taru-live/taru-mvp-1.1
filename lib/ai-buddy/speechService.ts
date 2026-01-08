@@ -75,7 +75,7 @@ class SpeechService {
     };
 
     loadVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = loadVoices;
     }
   }
@@ -249,7 +249,7 @@ class SpeechService {
         }
 
         // Check if speech synthesis is supported
-        if (!('speechSynthesis' in window)) {
+        if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
           console.error('🎤 Browser TTS - Speech synthesis not supported in this browser');
           reject(new Error('Speech synthesis not supported in this browser'));
           return;

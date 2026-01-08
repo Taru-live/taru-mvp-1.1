@@ -34,16 +34,25 @@ class MultilingualService {
   private availableVoices: SpeechSynthesisVoice[] = [];
 
   constructor() {
-    this.initializeVoices();
+    // Only initialize voices in the browser (client-side)
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      this.initializeVoices();
+    }
   }
 
   private initializeVoices() {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return;
+    }
+
     const loadVoices = () => {
-      this.availableVoices = speechSynthesis.getVoices();
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        this.availableVoices = speechSynthesis.getVoices();
+      }
     };
 
     loadVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = loadVoices;
     }
   }
@@ -126,7 +135,7 @@ Please respond with:
   // Enhanced TTS with multilingual support
   async speakText(text: string, options?: TTSOptions): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!('speechSynthesis' in window)) {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
         reject(new Error('Speech synthesis not supported'));
         return;
       }
@@ -158,9 +167,16 @@ Please respond with:
 
   // Stop all speech synthesis
   stopSpeaking() {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return;
+    }
     speechSynthesis.cancel();
     // Force multiple cancellations to ensure it stops
-    setTimeout(() => speechSynthesis.cancel(), 100);
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        speechSynthesis.cancel();
+      }
+    }, 100);
   }
 
   private findBestVoice(languageCode: string, preferredVoice?: string): SpeechSynthesisVoice | null {

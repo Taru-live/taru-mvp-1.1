@@ -11,13 +11,6 @@ import contextService from '@/lib/ai-buddy/contextService';
 import speechService from '@/lib/ai-buddy/speechService';
 import multilingualService from '@/lib/ai-buddy/multilingualService';
 import '@/lib/ai-buddy/setGeminiKey'; // Auto-set the Gemini API key
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Configure PDF.js worker - use local worker file for better reliability
-if (typeof window !== 'undefined') {
-  // Use local worker file from public folder (more reliable than CDN)
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs';
-}
 
 interface Message {
   id: number;
@@ -81,7 +74,6 @@ export default function AIBuddyTab() {
       setIsAPIKeySet(true);
       setCurrentApiKey('demo-mode');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Scroll to bottom when messages change
@@ -109,6 +101,13 @@ export default function AIBuddyTab() {
 
     setIsLoading(true);
     try {
+      // Dynamically import pdfjs-dist only on client side
+      if (typeof window === 'undefined') {
+        throw new Error('PDF processing is only available in the browser');
+      }
+
+      const pdfjsLib = await import('pdfjs-dist');
+      
       const arrayBuffer = await file.arrayBuffer();
       
       // Ensure worker is configured before loading document
