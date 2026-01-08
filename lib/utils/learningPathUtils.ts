@@ -46,6 +46,94 @@ export interface LearningPathResponse {
 }
 
 /**
+ * Normalizes career details data structure to ensure consistent format
+ */
+export function normalizeCareerDetailsData(careerDetails: any, uniqueId?: string): any {
+  if (!careerDetails) {
+    return null;
+  }
+
+  // Ensure uniqueid is present
+  if (!careerDetails.uniqueid && uniqueId) {
+    careerDetails.uniqueid = uniqueId;
+  }
+
+  // Ensure output exists
+  if (!careerDetails.output) {
+    careerDetails.output = {};
+  }
+
+  const output = careerDetails.output;
+
+  // Normalize arrays
+  if (!Array.isArray(output.overview)) {
+    output.overview = [];
+  }
+  if (!Array.isArray(output.focusAreas)) {
+    output.focusAreas = [];
+  }
+  if (!Array.isArray(output.learningPath)) {
+    output.learningPath = [];
+  }
+
+  // Normalize learningPath modules
+  output.learningPath = output.learningPath.map((module: any) => {
+    // Ensure module has required fields
+    if (!module.module || typeof module.module !== 'string') {
+      module.module = module.module || 'Module';
+    }
+    if (!module.description || typeof module.description !== 'string') {
+      module.description = module.description || '';
+    }
+
+    // Ensure submodules is an array (can be empty)
+    if (!Array.isArray(module.submodules)) {
+      module.submodules = [];
+    }
+
+    // Normalize submodules
+    module.submodules = module.submodules.map((submodule: any) => {
+      if (!submodule.title || typeof submodule.title !== 'string') {
+        submodule.title = submodule.title || 'Submodule';
+      }
+      if (!submodule.description || typeof submodule.description !== 'string') {
+        submodule.description = submodule.description || '';
+      }
+
+      // Ensure chapters is an array (can be empty)
+      if (!Array.isArray(submodule.chapters)) {
+        submodule.chapters = [];
+      }
+
+      // Normalize chapters
+      submodule.chapters = submodule.chapters.map((chapter: any) => {
+        if (!chapter.title || typeof chapter.title !== 'string') {
+          chapter.title = chapter.title || 'Chapter';
+        }
+        return chapter;
+      });
+
+      return submodule;
+    });
+
+    return module;
+  });
+
+  // Ensure string fields exist
+  if (!output.greeting || typeof output.greeting !== 'string') {
+    output.greeting = output.greeting || 'Welcome to your learning journey!';
+  }
+  if (!output.timeRequired || typeof output.timeRequired !== 'string') {
+    output.timeRequired = output.timeRequired || 'Not specified';
+  }
+  if (!output.finalTip || typeof output.finalTip !== 'string') {
+    output.finalTip = output.finalTip || 'Keep learning and exploring!';
+  }
+
+  return careerDetails;
+}
+
+/**
  * Validates career details data structure from N8N output
  */
 export function validateCareerDetailsData(careerDetails: any): LearningPathValidationResult {
@@ -107,28 +195,34 @@ export function validateCareerDetailsData(careerDetails: any): LearningPathValid
         errors.push(`learningPath[${moduleIndex}].description is required and must be a string`);
       }
 
-      if (!Array.isArray(module.submodules)) {
-        errors.push(`learningPath[${moduleIndex}].submodules must be an array`);
-      } else {
-        module.submodules.forEach((submodule: any, subIndex: number) => {
-          if (!submodule.title || typeof submodule.title !== 'string') {
-            errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].title is required and must be a string`);
-          }
-          
-          if (!submodule.description || typeof submodule.description !== 'string') {
-            errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].description is required and must be a string`);
-          }
+      // submodules is optional - only validate if present
+      if (module.submodules !== undefined) {
+        if (!Array.isArray(module.submodules)) {
+          errors.push(`learningPath[${moduleIndex}].submodules must be an array`);
+        } else if (module.submodules.length > 0) {
+          module.submodules.forEach((submodule: any, subIndex: number) => {
+            if (!submodule.title || typeof submodule.title !== 'string') {
+              errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].title is required and must be a string`);
+            }
+            
+            if (!submodule.description || typeof submodule.description !== 'string') {
+              errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].description is required and must be a string`);
+            }
 
-          if (!Array.isArray(submodule.chapters)) {
-            errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].chapters must be an array`);
-          } else {
-            submodule.chapters.forEach((chapter: any, chapterIndex: number) => {
-              if (!chapter.title || typeof chapter.title !== 'string') {
-                errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].chapters[${chapterIndex}].title is required and must be a string`);
+            // chapters is optional - only validate if present
+            if (submodule.chapters !== undefined) {
+              if (!Array.isArray(submodule.chapters)) {
+                errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].chapters must be an array`);
+              } else if (submodule.chapters.length > 0) {
+                submodule.chapters.forEach((chapter: any, chapterIndex: number) => {
+                  if (!chapter.title || typeof chapter.title !== 'string') {
+                    errors.push(`learningPath[${moduleIndex}].submodules[${subIndex}].chapters[${chapterIndex}].title is required and must be a string`);
+                  }
+                });
               }
-            });
-          }
-        });
+            }
+          });
+        }
       }
     });
   }

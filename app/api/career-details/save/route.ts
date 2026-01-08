@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
 import CareerSession from '@/models/CareerSession';
-import { processLearningPathData, saveLearningPathToDatabase, createLearningPathResponse, saveN8NLearningPathResponse, validateCareerDetailsData } from '@/lib/utils/learningPathUtils';
+import { processLearningPathData, saveLearningPathToDatabase, createLearningPathResponse, saveN8NLearningPathResponse, validateCareerDetailsData, normalizeCareerDetailsData } from '@/lib/utils/learningPathUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -158,15 +158,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize the career details data structure
+    const normalizedCareerDetails = normalizeCareerDetailsData(careerDetails, student.uniqueId);
+    
+    if (!normalizedCareerDetails) {
+      return NextResponse.json(
+        { error: 'Invalid career details data' },
+        { status: 400 }
+      );
+    }
+
     // Validate the career details structure
-    const validationResult = validateCareerDetailsData(careerDetails);
+    const validationResult = validateCareerDetailsData(normalizedCareerDetails);
     if (!validationResult.isValid) {
-      console.error('❌ Career details validation failed:', validationResult.errors);
+      console.error('❌ Career details validation failed:', {
+        errors: validationResult.errors,
+        warnings: validationResult.warnings,
+        receivedData: {
+          hasOutput: !!normalizedCareerDetails.output,
+          hasUniqueid: !!normalizedCareerDetails.uniqueid,
+          outputKeys: normalizedCareerDetails.output ? Object.keys(normalizedCareerDetails.output) : [],
+          learningPathLength: normalizedCareerDetails.output?.learningPath?.length || 0
+        }
+      });
       return NextResponse.json(
         { 
           error: 'Invalid career details data structure',
           validationErrors: validationResult.errors,
-          validationWarnings: validationResult.warnings
+          validationWarnings: validationResult.warnings,
+          receivedStructure: {
+            hasOutput: !!normalizedCareerDetails.output,
+            hasUniqueid: !!normalizedCareerDetails.uniqueid,
+            outputKeys: normalizedCareerDetails.output ? Object.keys(normalizedCareerDetails.output) : []
+          }
         },
         { status: 400 }
       );
@@ -181,7 +205,7 @@ export async function POST(request: NextRequest) {
 
     // Save career details to CareerSession (for exploration tracking)
     const careerSessionId = await saveCareerDetailsToSession(
-      careerDetails, 
+      normalizedCareerDetails, 
       student, 
       careerPath, 
       description || ''
@@ -189,19 +213,19 @@ export async function POST(request: NextRequest) {
 
     // Save N8N output directly in the exact database format
     const responseResult = await saveN8NLearningPathResponse(
-      careerDetails.output,
+      normalizedCareerDetails.output,
       student.uniqueId
     );
 
     // Create the learning path response for API response
     const learningPathResponse = createLearningPathResponse(
-      careerDetails.output,
+      normalizedCareerDetails.output,
       student.uniqueId
     );
 
     // Process the raw learning path data for database storage
     const processedData = processLearningPathData(
-      careerDetails.output,
+      normalizedCareerDetails.output,
       student,
       careerPath,
       'n8n'
@@ -224,7 +248,7 @@ export async function POST(request: NextRequest) {
         pathId: result.pathId,
         responseId: responseResult.id,
         learningPathResponse: learningPathResponse,
-        careerDetails: careerDetails
+        careerDetails: normalizedCareerDetails
       });
     } else {
       const errors = [];

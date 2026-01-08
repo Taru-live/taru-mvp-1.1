@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { saveN8NLearningPathResponse } from '@/lib/utils/learningPathUtils';
+import { saveN8NLearningPathResponse, normalizeCareerDetailsData, validateCareerDetailsData } from '@/lib/utils/learningPathUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,10 +39,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize the N8N data structure
+    const normalizedData = normalizeCareerDetailsData(
+      {
+        uniqueid: n8nData.uniqueid,
+        output: n8nData.output
+      },
+      n8nData.uniqueid
+    );
+
+    if (!normalizedData) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Failed to normalize N8N data' 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate the structure
+    const validationResult = validateCareerDetailsData(normalizedData);
+    if (!validationResult.isValid) {
+      console.error('❌ N8N webhook data validation failed:', validationResult.errors);
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Invalid N8N data structure',
+          validationErrors: validationResult.errors
+        },
+        { status: 400 }
+      );
+    }
+
     // Save N8N output in exact format
     const saveResult = await saveN8NLearningPathResponse(
-      n8nData.output,
-      n8nData.uniqueid
+      normalizedData.output,
+      normalizedData.uniqueid
     );
 
     if (saveResult.success) {
@@ -52,7 +85,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Learning path response saved successfully',
         responseId: saveResult.id,
-        uniqueid: n8nData.uniqueid,
+        uniqueid: normalizedData.uniqueid,
         timestamp: new Date().toISOString()
       });
     } else {
@@ -63,7 +96,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: 'Failed to save learning path response',
           details: saveResult.error,
-          uniqueid: n8nData.uniqueid,
+          uniqueid: normalizedData.uniqueid,
           timestamp: new Date().toISOString()
         },
         { status: 500 }

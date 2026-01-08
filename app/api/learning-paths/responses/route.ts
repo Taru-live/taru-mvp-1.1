@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
 import LearningPath from '@/models/LearningPath';
-import { createLearningPathResponse, getLearningPathResponses, saveLearningPathResponse } from '@/lib/utils/learningPathUtils';
+import { createLearningPathResponse, getLearningPathResponses, saveLearningPathResponse, normalizeCareerDetailsData, validateCareerDetailsData } from '@/lib/utils/learningPathUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -123,9 +123,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize the career details data structure
+    const normalizedCareerDetails = normalizeCareerDetailsData(careerDetails, student.uniqueId);
+    
+    if (!normalizedCareerDetails) {
+      return NextResponse.json(
+        { error: 'Failed to normalize career details data' },
+        { status: 400 }
+      );
+    }
+
+    // Validate the structure
+    const validationResult = validateCareerDetailsData(normalizedCareerDetails);
+    if (!validationResult.isValid) {
+      console.error('❌ Career details validation failed:', validationResult.errors);
+      return NextResponse.json(
+        { 
+          error: 'Invalid career details data structure',
+          validationErrors: validationResult.errors
+        },
+        { status: 400 }
+      );
+    }
+
     // Create learning path response in the exact reference format
     const learningPathResponse = createLearningPathResponse(
-      careerDetails.output,
+      normalizedCareerDetails.output,
       student.uniqueId
     );
 

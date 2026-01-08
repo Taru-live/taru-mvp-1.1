@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import LearningPath from '@/models/LearningPath';
 import LearningPathResponse from '@/models/LearningPathResponse';
+import { normalizeCareerDetailsData, validateCareerDetailsData } from '@/lib/utils/learningPathUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -65,18 +66,83 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize learningModules to ensure proper structure
+    const normalizedModules = learningModules.map((module: any) => {
+      // Ensure module has required fields
+      const normalizedModule: any = {
+        module: module.module || module.name || 'Module',
+        description: module.description || '',
+        submodules: []
+      };
+
+      // Normalize submodules if present
+      if (module.submodules && Array.isArray(module.submodules)) {
+        normalizedModule.submodules = module.submodules.map((sub: any) => {
+          const normalizedSub: any = {
+            title: sub.title || sub.name || 'Submodule',
+            description: sub.description || '',
+            chapters: []
+          };
+
+          // Normalize chapters if present
+          if (sub.chapters && Array.isArray(sub.chapters)) {
+            normalizedSub.chapters = sub.chapters.map((chapter: any) => ({
+              title: chapter.title || chapter.name || 'Chapter'
+            }));
+          }
+
+          return normalizedSub;
+        });
+      }
+
+      return normalizedModule;
+    });
+
+    // Create a normalized career details structure for validation
+    const careerDetailsForValidation = {
+      uniqueid: studentId || user.uniqueId,
+      output: {
+        greeting: `Hi Student! Welcome to your ${careerPath} learning journey!`,
+        overview: Array.isArray(description) ? description : description.split('. ').filter((s: string) => s.trim()),
+        timeRequired: timeRequired || 'Not specified',
+        focusAreas: Array.isArray(focusAreas) ? focusAreas : [],
+        learningPath: normalizedModules,
+        finalTip: `Keep exploring and learning in ${careerPath}!`
+      }
+    };
+
+    // Normalize and validate the data
+    const normalizedCareerDetails = normalizeCareerDetailsData(careerDetailsForValidation, studentId || user.uniqueId);
+    
+    if (!normalizedCareerDetails) {
+      return NextResponse.json(
+        { error: 'Failed to normalize learning path data' },
+        { status: 400 }
+      );
+    }
+
+    // Validate the structure
+    const validationResult = validateCareerDetailsData(normalizedCareerDetails);
+    if (!validationResult.isValid) {
+      console.error('❌ Learning path validation failed:', validationResult.errors);
+      return NextResponse.json(
+        { 
+          error: 'Invalid learning path data structure',
+          validationErrors: validationResult.errors
+        },
+        { status: 400 }
+      );
+    }
+
     // Check if a learning path for this career already exists for this student in learning-path-responses
     const existingResponse = await LearningPathResponse.findOne({
-      uniqueid: studentId || user.uniqueId,
+      uniqueid: normalizedCareerDetails.uniqueid,
       'output.greeting': { $regex: new RegExp(careerPath, 'i') }
     });
 
     if (existingResponse) {
-      // Update existing response
-      existingResponse.output.overview = description.split('. ').filter((s: string) => s.trim());
-      existingResponse.output.learningPath = learningModules;
-      existingResponse.output.timeRequired = timeRequired || 'Not specified';
-      existingResponse.output.focusAreas = focusAreas || [];
+      // Update existing response with normalized data
+      existingResponse.output = normalizedCareerDetails.output;
       existingResponse.updatedAt = new Date();
       
       await existingResponse.save();
@@ -88,25 +154,18 @@ export async function POST(request: NextRequest) {
           studentId: existingResponse.uniqueid,
           careerPath: careerPath,
           description: description,
-          learningModules: learningModules,
-          timeRequired: timeRequired || 'Not specified',
-          focusAreas: focusAreas || [],
+          learningModules: normalizedCareerDetails.output.learningPath,
+          timeRequired: normalizedCareerDetails.output.timeRequired,
+          focusAreas: normalizedCareerDetails.output.focusAreas,
           createdAt: existingResponse.createdAt,
           updatedAt: existingResponse.updatedAt
         }
       });
     } else {
-      // Create new learning path response
+      // Create new learning path response with normalized data
       const newLearningPathResponse = new LearningPathResponse({
-        uniqueid: studentId || user.uniqueId,
-        output: {
-          greeting: `Hi Student! Welcome to your ${careerPath} learning journey!`,
-          overview: description.split('. ').filter((s: string) => s.trim()),
-          timeRequired: timeRequired || 'Not specified',
-          focusAreas: focusAreas || [],
-          learningPath: learningModules,
-          finalTip: `Keep exploring and learning in ${careerPath}!`
-        }
+        uniqueid: normalizedCareerDetails.uniqueid,
+        output: normalizedCareerDetails.output
       });
 
       await newLearningPathResponse.save();
@@ -118,9 +177,9 @@ export async function POST(request: NextRequest) {
           studentId: newLearningPathResponse.uniqueid,
           careerPath: careerPath,
           description: description,
-          learningModules: learningModules,
-          timeRequired: timeRequired || 'Not specified',
-          focusAreas: focusAreas || [],
+          learningModules: normalizedCareerDetails.output.learningPath,
+          timeRequired: normalizedCareerDetails.output.timeRequired,
+          focusAreas: normalizedCareerDetails.output.focusAreas,
           createdAt: newLearningPathResponse.createdAt,
           updatedAt: newLearningPathResponse.updatedAt
         }
