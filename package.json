@@ -45,6 +45,7 @@
     "react-speech-recognition": "^4.0.1",
     "react-youtube": "^10.1.0",
     "recharts": "^3.1.0",
+    "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {

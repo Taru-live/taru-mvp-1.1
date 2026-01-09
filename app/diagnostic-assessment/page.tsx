@@ -9,6 +9,103 @@ import { useAssessmentState } from '@/lib/hooks/useAssessmentState';
 import { useNavigationWithState } from '@/lib/hooks/useNavigationWithState';
 import ConsistentLoadingPage from '../components/ConsistentLoadingPage';
 
+// SVG Icon Components
+const TargetIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+  </svg>
+);
+
+const CheckIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+  </svg>
+);
+
+const WarningIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+  </svg>
+);
+
+const PartyIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    <circle cx="7" cy="7" r="1.5"/>
+    <circle cx="17" cy="7" r="1.5"/>
+    <circle cx="7" cy="17" r="1.5"/>
+    <circle cx="17" cy="17" r="1.5"/>
+  </svg>
+);
+
+const SparklesIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+  </svg>
+);
+
+const ConfettiIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    <circle cx="5" cy="5" r="1"/>
+    <circle cx="19" cy="5" r="1"/>
+    <circle cx="5" cy="19" r="1"/>
+    <circle cx="19" cy="19" r="1"/>
+  </svg>
+);
+
+const StarIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+  </svg>
+);
+
+const ChartIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
+  </svg>
+);
+
+const TrophyIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+  </svg>
+);
+
+const RocketIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9.19 6.35c-2.04 2.29-3.44 5.58-3.57 9.11-.02.27.18.49.45.49s.47-.19.49-.45c.12-3.25 1.42-6.23 3.25-8.28l-.62-.87zm5.62 0l-.62.87c1.83 2.05 3.13 5.03 3.25 8.28.02.27.22.45.49.45s.47-.22.45-.49c-.13-3.53-1.53-6.82-3.57-9.11zM12 2.01c-1.33 0-2.41 1.08-2.41 2.41 0 1.33 1.08 2.41 2.41 2.41s2.41-1.08 2.41-2.41c0-1.33-1.08-2.41-2.41-2.41zm0 5.16c-1.52 0-2.75-1.23-2.75-2.75S10.48 1.67 12 1.67s2.75 1.23 2.75 2.75-1.23 2.75-2.75 2.75zm-6.5 11.75c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm13 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-6.5-2c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+  </svg>
+);
+
+const FlexIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12l7-7 8.57 8.57 1.43-1.43-1.43-1.43 1.43-1.43 1.43 1.43 1.43-1.43-1.43-1.43L22 12l-1.43 1.43-1.43-1.43-1.43 1.43 1.43 1.43L17 15.57l3.57-3.57z"/>
+  </svg>
+);
+
+const ChartUpIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+  </svg>
+);
+
+const DizzyStarIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2zm0 2.74L9.5 8.5 3.5 9.27l4.5 4.38-1.06 6.18L12 16.23l5.06 2.6-1.06-6.18L20.5 9.27l-6-1.03L12 4.74z"/>
+    <circle cx="8" cy="8" r="1"/>
+    <circle cx="16" cy="8" r="1"/>
+    <circle cx="8" cy="16" r="1"/>
+    <circle cx="16" cy="16" r="1"/>
+  </svg>
+);
+
+const LightbulbIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.4 3-5.7 0-3.9-3.1-7-7-7z"/>
+  </svg>
+);
+
 interface AssessmentQuestion {
   id: string;
   question: string;
@@ -73,6 +170,112 @@ export default function DiagnosticAssessment() {
   const [isFromInterestAssessment, setIsFromInterestAssessment] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const router = useRouter();
+
+  // Helper function to generate motivating appreciation message
+  const getAppreciationMessage = (result: AssessmentResult): string => {
+    const score = result.n8nResults?.Score || result.score || 0;
+    const resultType = result.type || '';
+    
+    // Score-based motivational adjectives that inspire and encourage students
+    let adjectives: string[] = [];
+    if (score >= 90) {
+      adjectives = [
+        'absolutely amazing', 
+        'incredibly talented', 
+        'truly exceptional', 
+        'remarkably skilled', 
+        'phenomenally bright',
+        'outstandingly brilliant',
+        'extraordinarily gifted',
+        'spectacularly smart'
+      ];
+    } else if (score >= 80) {
+      adjectives = [
+        'doing fantastic', 
+        'really impressive', 
+        'truly excellent', 
+        'wonderfully capable', 
+        'amazingly talented',
+        'incredibly smart',
+        'remarkably strong',
+        'exceptionally bright'
+      ];
+    } else if (score >= 70) {
+      adjectives = [
+        'doing great', 
+        'really capable', 
+        'truly talented', 
+        'wonderfully determined', 
+        'impressively focused',
+        'remarkably dedicated',
+        'genuinely skilled',
+        'truly promising'
+      ];
+    } else if (score >= 60) {
+      adjectives = [
+        'working hard', 
+        'staying determined', 
+        'being persistent', 
+        'showing resilience', 
+        'staying committed',
+        'being courageous',
+        'staying focused',
+        'showing dedication'
+      ];
+    } else {
+      adjectives = [
+        'being brave', 
+        'staying strong', 
+        'showing courage', 
+        'being persistent', 
+        'staying determined',
+        'showing resilience',
+        'being committed',
+        'staying motivated'
+      ];
+    }
+    
+    // Type-based motivational adjectives (if result type contains specific keywords)
+    const typeLower = resultType.toLowerCase();
+    if (typeLower.includes('visual') || typeLower.includes('superstar')) {
+      adjectives = [
+        'incredibly creative', 
+        'wonderfully imaginative', 
+        'truly visionary', 
+        'remarkably artistic',
+        ...adjectives
+      ];
+    } else if (typeLower.includes('auditory') || typeLower.includes('listener')) {
+      adjectives = [
+        'deeply attentive', 
+        'wonderfully focused', 
+        'truly perceptive', 
+        'remarkably observant',
+        ...adjectives
+      ];
+    } else if (typeLower.includes('kinesthetic') || typeLower.includes('hands-on')) {
+      adjectives = [
+        'incredibly active', 
+        'wonderfully energetic', 
+        'truly dynamic', 
+        'remarkably vibrant',
+        ...adjectives
+      ];
+    } else if (typeLower.includes('analytical') || typeLower.includes('thinker')) {
+      adjectives = [
+        'deeply thoughtful', 
+        'wonderfully analytical', 
+        'truly insightful', 
+        'remarkably intelligent',
+        ...adjectives
+      ];
+    }
+    
+    // Select a random adjective from the list
+    const selectedAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    
+    return `You're ${selectedAdjective}!`;
+  };
 
   // Session management hooks
   const { navigateWithState, loadPageState, savePageState } = useNavigationWithState();
@@ -184,12 +387,27 @@ export default function DiagnosticAssessment() {
         
         if (!hasActualAnswers) {
           // User is coming from interest assessment, mark this
-          console.log('🔍 No actual answers found, treating as new assessment');
+          console.log('🔍 No actual answers found, checking if questions exist...');
           setIsFromInterestAssessment(true);
           setIsCompleted(false);
           setResult(null);
-          // Try to generate new questions
+          
+          // Check if questions already exist before generating
+          const questionCheckResponse = await fetch('/api/assessment/questions');
+          if (questionCheckResponse.ok) {
+            const questionCheckData = await questionCheckResponse.json();
+            if (questionCheckData.totalQuestions > 0) {
+              console.log('🎯 Questions already exist, using them:', questionCheckData.totalQuestions);
+              // Questions exist, just load them
+              await loadQuestion();
+              return;
+            }
+          }
+          
+          // Only generate if questions don't exist
+          console.log('🔍 No questions found, generating new ones...');
           await generateN8NQuestions();
+          await loadQuestion();
           return;
         }
         
@@ -750,10 +968,43 @@ export default function DiagnosticAssessment() {
         // Load previous answers from database
         await loadPreviousAnswers();
         
-        // Try to generate N8N questions if not already generated
+        // First, try to load a question to check if questions already exist
+        // This will use existing questions if they're stored in the database
+        try {
+          const questionResponse = await fetch('/api/assessment/questions');
+          if (questionResponse.ok) {
+            const questionData = await questionResponse.json();
+            
+            // If assessment is completed, don't generate new questions
+            if (questionData.completed) {
+              console.log('🔍 Assessment already completed, skipping question generation');
+              setAssessmentCompleted(questionData.result || {
+                type: 'Assessment Completed',
+                description: 'You have already completed the diagnostic assessment.',
+                score: 0,
+                learningStyle: 'Not Available',
+                recommendations: []
+              });
+              return;
+            }
+            
+            // If questions exist (totalQuestions > 0), use them without generating new ones
+            if (questionData.totalQuestions > 0) {
+              console.log('🎯 Questions already exist in database:', questionData.totalQuestions, 'questions');
+              // Load the question normally
+              await loadQuestion();
+              return;
+            }
+          }
+        } catch (questionError) {
+          console.log('🔍 Could not check for existing questions, will try to generate:', questionError);
+        }
+        
+        // Only generate N8N questions if no questions exist
+        // This function now checks internally if questions exist before generating
         await generateN8NQuestions();
         
-        // If profile fetch succeeds, load the question (this will check completion status)
+        // Load the question (this will use newly generated questions or existing ones)
         await loadQuestion();
         
         console.log('🔍 Assessment initialization completed');
@@ -834,7 +1085,9 @@ export default function DiagnosticAssessment() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
-              <div className="text-6xl mb-6">🎯</div>
+              <div className="text-6xl mb-6 flex items-center justify-center">
+                <TargetIcon className="w-16 h-16 text-purple-600" />
+              </div>
               <h1 className="text-4xl font-bold text-purple-600 mb-4">
                 Welcome to Your Diagnostic Assessment!
               </h1>
@@ -848,19 +1101,19 @@ export default function DiagnosticAssessment() {
                 <h3 className="text-lg font-semibold text-purple-700 mb-3">What to expect:</h3>
                 <ul className="space-y-2 text-gray-700">
                   <li className="flex items-center gap-2">
-                    <span className="text-purple-500">✓</span>
+                    <CheckIcon className="text-purple-500 flex-shrink-0" />
                     Personalized questions based on your interests
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-purple-500">✓</span>
+                    <CheckIcon className="text-purple-500 flex-shrink-0" />
                     Single choice and multiple choice questions
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-purple-500">✓</span>
+                    <CheckIcon className="text-purple-500 flex-shrink-0" />
                     AI-generated content tailored to your learning style
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-purple-500">✓</span>
+                    <CheckIcon className="text-purple-500 flex-shrink-0" />
                     Detailed results and recommendations
                   </li>
                 </ul>
@@ -883,304 +1136,691 @@ export default function DiagnosticAssessment() {
   }
 
 
-  // Completion screen
+  // Completion screen - Trendy Modern Design
   if (isCompleted && result) {
     return (
       <>
         <motion.main 
-          className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col"
+          className="h-screen bg-gradient-to-br from-violet-400 via-purple-500 to-fuchsia-500 flex flex-col overflow-hidden relative"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-        {/* Header */}
-        <header className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image src="/icons/logo.svg" alt="Logo" width={40} height={40} className="rounded-full" />
-            <span className="font-semibold text-gray-800">Taru Learning</span>
+          {/* Animated Background Particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  width: `${Math.random() * 10 + 5}px`,
+                  height: `${Math.random() * 10 + 5}px`,
+                  background: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.2})`,
+                }}
+                animate={{
+                  y: [0, -30, 0],
+                  x: [0, Math.random() * 20 - 10, 0],
+                  opacity: [0.3, 0.8, 0.3],
+                }}
+                transition={{
+                  duration: Math.random() * 3 + 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                }}
+              />
+            ))}
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-gray-600">
-              {userProfile ? `${userProfile.fullName} ${userProfile.uniqueId ? `#${userProfile.uniqueId}` : ''}` : 'Loading...'}
-            </span>
-            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-              {userProfile ? userProfile.fullName.charAt(0).toUpperCase() : 'U'}
+
+          {/* Compact Glassmorphism Header */}
+          <header className="backdrop-blur-xl bg-white/10 border-b border-white/20 px-3 sm:px-4 py-2 flex items-center justify-between flex-shrink-0 relative z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Image src="/icons/logo.svg" alt="Logo" width={24} height={24} className="sm:w-7 sm:h-7 rounded-full" />
+              </div>
+              <span className="font-bold text-white text-xs sm:text-sm drop-shadow-lg">Taru Learning</span>
             </div>
-          </div>
-        </header>
-
-
-        {/* Special notice for users coming from interest assessment */}
-        {result && result.type === 'Assessment Completed' && result.description.includes('already completed') && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mx-6 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="text-yellow-600 text-xl">⚠️</div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                  Welcome from Interest Assessment!
-                </h3>
-                <p className="text-yellow-700 mb-3">
-                  It looks like you&apos;ve completed the interest assessment and are now ready for the diagnostic assessment. 
-                  Click the button below to start your diagnostic assessment with N8N-generated questions.
-                </p>
-                <button
-                  onClick={resetAssessment}
-                  disabled={isResetting}
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isResetting ? 'Starting...' : 'Start Diagnostic Assessment'}
-                </button>
+            <div className="flex items-center gap-2">
+              <span className="text-white/90 text-xs hidden sm:inline drop-shadow-md">
+                {userProfile ? `${userProfile.fullName} ${userProfile.uniqueId ? `#${userProfile.uniqueId}` : ''}` : 'Loading...'}
+              </span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white/30">
+                {userProfile ? userProfile.fullName.charAt(0).toUpperCase() : 'U'}
               </div>
             </div>
-          </div>
-        )}
+          </header>
 
-        {/* Result Section */}
-        <div className="flex-1 flex items-center justify-center px-6 py-8 relative">
-          {/* Animated Background Elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-400/20 rounded-full animate-pulse"></div>
-            <div className="absolute top-32 right-16 w-16 h-16 bg-blue-400/20 rounded-full animate-bounce"></div>
-            <div className="absolute bottom-20 left-20 w-12 h-12 bg-green-400/20 rounded-full animate-ping"></div>
-            <div className="absolute bottom-32 right-10 w-24 h-24 bg-purple-400/20 rounded-full animate-pulse"></div>
-            <div className="absolute top-1/2 left-1/4 w-8 h-8 bg-pink-400/20 rounded-full animate-bounce"></div>
-            <div className="absolute top-1/3 right-1/3 w-14 h-14 bg-indigo-400/20 rounded-full animate-ping"></div>
-          </div>
-
-          <motion.div 
-            className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 rounded-3xl p-8 text-white text-center max-w-5xl mx-auto relative overflow-hidden shadow-2xl border border-purple-400/20"
-            initial={{ scale: 0.9, y: 20, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-          >
-            {/* Decorative Elements */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400"></div>
-            <div className="absolute top-4 left-4 w-8 h-8 border-2 border-white/20 rounded-full"></div>
-            <div className="absolute top-4 right-4 w-6 h-6 border-2 border-white/20 rounded-full"></div>
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-2 border-white/20 rounded-full"></div>
-            <div className="absolute bottom-4 right-4 w-8 h-8 border-2 border-white/20 rounded-full"></div>
-            <motion.div
+          {/* Special notice - Compact */}
+          {result && result.type === 'Assessment Completed' && result.description.includes('already completed') && (
+            <motion.div 
+              className="backdrop-blur-xl bg-yellow-400/20 border border-yellow-300/30 rounded-xl p-2 mx-3 sm:mx-4 mb-2 flex-shrink-0 relative z-10 shadow-xl"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
             >
-              <motion.h1 
-                className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 bg-clip-text text-transparent"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.8, type: "spring", stiffness: 200 }}
-              >
-                🎉 Congratulations! 🎉
-              </motion.h1>
-              
+              <div className="flex items-center gap-2">
+                <div className="text-lg flex-shrink-0">
+                  <WarningIcon className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-white mb-0.5 drop-shadow-md">
+                    Welcome from Interest Assessment!
+                  </h3>
+                  <button
+                    onClick={resetAssessment}
+                    disabled={isResetting}
+                    className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-3 sm:px-4 py-1 rounded-lg text-xs font-bold transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isResetting ? 'Starting...' : 'Start Assessment'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Main Content - Compact Single Page */}
+          <div className="flex-1 flex items-center justify-center px-3 sm:px-4 py-2 relative overflow-hidden min-h-0">
+            <motion.div 
+              className="backdrop-blur-2xl bg-white/10 rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-6 w-full max-w-7xl mx-auto relative overflow-hidden shadow-2xl border-2 border-white/20 h-full flex flex-col group"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, type: "spring" }}
+              whileHover={{ 
+                borderColor: "rgba(255, 255, 255, 0.4)",
+                boxShadow: "0 25px 50px rgba(0, 0, 0, 0.3)"
+              }}
+            >
+              {/* Dynamic Animated Gradient Border */}
               <motion.div 
-                className="text-3xl md:text-4xl font-bold mb-2 text-white/95"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-              >
-                You&apos;re a <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">{result.type}</span>!
-              </motion.div>
+                className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-yellow-400/50 via-pink-400/50 to-purple-400/50 blur-xl -z-10"
+                animate={{ 
+                  opacity: [0.5, 0.8, 0.5],
+                  scale: [1, 1.02, 1],
+                  rotate: [0, 180, 360]
+                }}
+                transition={{ 
+                  duration: 8, 
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              />
               
+              {/* Dynamic Floating Decorative Elements */}
               <motion.div 
-                className="text-6xl mb-6"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 1, duration: 0.5, type: "spring", stiffness: 300 }}
-              >
-                🏆
-              </motion.div>
+                className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-yellow-400/30 to-pink-400/30 rounded-full blur-2xl"
+                animate={{ 
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.6, 0.3],
+                  x: [0, 10, 0],
+                  y: [0, -10, 0]
+                }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="absolute bottom-4 left-4 w-24 h-24 bg-gradient-to-br from-purple-400/30 to-blue-400/30 rounded-full blur-2xl"
+                animate={{ 
+                  scale: [1, 1.4, 1],
+                  opacity: [0.3, 0.6, 0.3],
+                  x: [0, -10, 0],
+                  y: [0, 10, 0]
+                }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+              />
               
-              {/* Student Info */}
-              {userProfile && (
-                <motion.div 
-                  className="bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-md rounded-2xl p-6 mb-8 border border-white/20 shadow-lg"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 1.2, duration: 0.6 }}
+              {/* Compact Celebration Header */}
+              <div className="text-center mb-2 sm:mb-3 relative z-10 flex-shrink-0">
+                <motion.div
+                  className="inline-block mb-1"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
                 >
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold mb-3 text-white/80">Personalized Results for</h3>
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                        {userProfile.fullName.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-white">
-                          {userProfile.fullName}
-                        </p>
-                        <p className="text-sm text-blue-200 font-mono">
-                          #{userProfile.uniqueId}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="text-3xl sm:text-4xl md:text-5xl flex items-center justify-center gap-2">
+                    <PartyIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-300" />
+                    <SparklesIcon className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-pink-300" />
+                    <ConfettiIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-purple-300" />
                   </div>
                 </motion.div>
-              )}
-              
-                             {/* Assessment Results Display - Enhanced N8N Data Alignment */}
-               {result.n8nResults && (
-                 <div className="space-y-6 mb-8">
-                   {/* Score and Stats Cards */}
-                   <motion.div 
-                     className="grid grid-cols-1 md:grid-cols-3 gap-6"
-                     initial={{ y: 30, opacity: 0 }}
-                     animate={{ y: 0, opacity: 1 }}
-                     transition={{ delay: 1.4, duration: 0.8 }}
-                   >
-                     <motion.div 
-                       className="bg-gradient-to-br from-blue-500/30 to-blue-600/30 backdrop-blur-md rounded-2xl p-8 text-center border border-blue-300/40 shadow-xl hover:shadow-2xl transition-all duration-300"
-                       whileHover={{ scale: 1.05, y: -5 }}
-                     >
-                       <motion.div 
-                         className="text-5xl mb-4"
-                         animate={{ rotate: [0, 10, -10, 0] }}
-                         transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                       >
-                         📊
-                       </motion.div>
-                       <h3 className="text-xl font-bold mb-3 text-blue-100">Total Questions</h3>
-                       <motion.p 
-                         className="text-4xl font-bold text-blue-50"
-                         initial={{ scale: 0 }}
-                         animate={{ scale: 1 }}
-                         transition={{ delay: 1.8, duration: 0.5, type: "spring" }}
-                       >
-                         {result.n8nResults?.['Total Questions'] || result.totalQuestions || 0}
-                       </motion.p>
-                     </motion.div>
-                     
-                     <motion.div 
-                       className="bg-gradient-to-br from-yellow-500/30 to-yellow-600/30 backdrop-blur-md rounded-2xl p-8 text-center border border-yellow-300/40 shadow-xl hover:shadow-2xl transition-all duration-300"
-                       whileHover={{ scale: 1.05, y: -5 }}
-                     >
-                       <motion.div 
-                         className="text-5xl mb-4"
-                         animate={{ y: [0, -10, 0] }}
-                         transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
-                       >
-                         🏆
-                       </motion.div>
-                       <h3 className="text-xl font-bold mb-3 text-yellow-100">Your Score</h3>
-                       <motion.p 
-                         className="text-4xl font-bold text-yellow-50"
-                         initial={{ scale: 0 }}
-                         animate={{ scale: 1 }}
-                         transition={{ delay: 2, duration: 0.5, type: "spring" }}
-                       >
-                         {result.n8nResults?.Score || result.score || 0}%
-                       </motion.p>
-                     </motion.div>
-                     
-                     <motion.div 
-                       className="bg-gradient-to-br from-green-500/30 to-green-600/30 backdrop-blur-md rounded-2xl p-8 text-center border border-green-300/40 shadow-xl hover:shadow-2xl transition-all duration-300"
-                       whileHover={{ scale: 1.05, y: -5 }}
-                     >
-                       <motion.div 
-                         className="text-5xl mb-4"
-                         animate={{ rotate: [0, 15, -15, 0] }}
-                         transition={{ duration: 3, repeat: Infinity, repeatDelay: 1 }}
-                       >
-                         ⭐
-                       </motion.div>
-                       <h3 className="text-xl font-bold mb-3 text-green-100">Performance</h3>
-                       <motion.p 
-                         className="text-2xl font-bold text-green-50"
-                         initial={{ scale: 0 }}
-                         animate={{ scale: 1 }}
-                         transition={{ delay: 2.4, duration: 0.5, type: "spring" }}
-                       >
-                         {(() => {
-                           const scoreStr = String(result.n8nResults?.Score || result.score || 0);
-                           const score = parseInt(scoreStr);
-                           if (score >= 90) return 'Excellent';
-                           if (score >= 80) return 'Great';
-                           if (score >= 70) return 'Good';
-                           if (score >= 60) return 'Fair';
-                           return 'Needs Work';
-                         })()}
-                       </motion.p>
-                     </motion.div>
-                   </motion.div>
-                   
-                   {/* Assessment Summary */}
-                   <motion.div 
-                     className="bg-gradient-to-br from-purple-500/30 to-purple-600/30 backdrop-blur-md rounded-3xl p-8 border border-purple-300/40 shadow-xl"
-                     initial={{ y: 30, opacity: 0 }}
-                     animate={{ y: 0, opacity: 1 }}
-                     transition={{ delay: 2.6, duration: 0.8 }}
-                   >
-                     <div className="text-center mb-8">
-                       <motion.h3 
-                         className="text-3xl font-bold text-purple-100 mb-4"
-                         initial={{ scale: 0.8 }}
-                         animate={{ scale: 1 }}
-                         transition={{ delay: 2.8, duration: 0.5 }}
-                       >
-                         🎯 Assessment Summary
-                       </motion.h3>
-                       <motion.div 
-                         className="w-32 h-1 bg-gradient-to-r from-purple-300 to-pink-300 mx-auto rounded-full"
-                         initial={{ width: 0 }}
-                         animate={{ width: "8rem" }}
-                         transition={{ delay: 3, duration: 1 }}
-                       ></motion.div>
-                     </div>
-                     
-                     <motion.div 
-                       className="bg-gradient-to-r from-white/15 to-white/5 rounded-2xl p-8 text-left border border-white/20"
-                       initial={{ scale: 0.95, opacity: 0 }}
-                       animate={{ scale: 1, opacity: 1 }}
-                       transition={{ delay: 3.2, duration: 0.6 }}
-                     >
-                       <div className="flex items-start gap-4">
-                         <div className="text-4xl">💡</div>
-                         <p className="text-xl leading-relaxed text-white/95 font-medium">
-                           {result.n8nResults?.Summery || result.description || 'Assessment completed successfully.'}
-                         </p>
-                       </div>
-                     </motion.div>
-                   </motion.div>
-                   
-                 </div>
-               )}
-              
-
-              
-              {/* Fallback description if no N8N results */}
-              {!result.n8nResults && (
-                <p className="text-xl mb-8 opacity-90">
-                  {result.description}
-                </p>
-              )}
-              
-
-            </motion.div>
-
-            <motion.div 
-              className="flex justify-center mb-8"
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 3.4, duration: 0.8 }}
-            >
-              <motion.button
-                onClick={() => router.push('/career-exploration')}
-                className="group bg-gradient-to-r from-yellow-500/30 to-orange-500/30 backdrop-blur-md text-white px-10 py-5 rounded-2xl font-bold hover:from-yellow-500/40 hover:to-orange-500/40 transition-all duration-300 flex items-center gap-4 border border-yellow-300/40 shadow-xl hover:shadow-2xl"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.span 
-                  className="text-3xl"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                
+                <motion.h1 
+                  className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 bg-gradient-to-r from-yellow-200 via-pink-200 to-purple-200 bg-clip-text text-transparent drop-shadow-2xl"
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.4 }}
                 >
-                  🚀
-                </motion.span>
-                <span className="text-lg">Get My Career Path</span>
-              </motion.button>
+                  Congratulations!
+                </motion.h1>
+                
+                <motion.div 
+                  className="text-sm sm:text-base md:text-lg lg:text-xl font-bold"
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                >
+                  <span className="bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 bg-clip-text text-transparent drop-shadow-lg">
+                    {getAppreciationMessage(result)}
+                  </span>
+                  {result.type && result.type !== 'Assessment Completed' && (
+                    <span className="text-white/95 block mt-1">
+                      You&apos;re a <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent font-extrabold text-base sm:text-lg md:text-xl">{result.type}</span>! <StarIcon className="inline-block w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-yellow-300 ml-1" />
+                    </span>
+                  )}
+                </motion.div>
+              </div>
+
+              {/* Stats Grid - Dynamic Cards */}
+              {result.n8nResults && (
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-2 sm:mb-3 flex-shrink-0">
+                  {/* Total Questions Card */}
+                  <motion.div 
+                    className="backdrop-blur-xl bg-gradient-to-br from-blue-500/40 to-cyan-500/40 rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 text-center border-2 border-blue-300/50 shadow-xl relative overflow-hidden group cursor-pointer"
+                    initial={{ y: 20, opacity: 0, scale: 0.9 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5, duration: 0.4, type: "spring" }}
+                    whileHover={{ 
+                      scale: 1.05, 
+                      y: -5,
+                      boxShadow: "0 20px 40px rgba(59, 130, 246, 0.4)"
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Dynamic Animated Background */}
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-cyan-400/30"
+                      animate={{ 
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    {/* Glowing Border Effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-xl sm:rounded-2xl"
+                      style={{
+                        background: "linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(6, 182, 212, 0.3))",
+                        filter: "blur(8px)",
+                        opacity: 0
+                      }}
+                      animate={{
+                        opacity: [0, 0.5, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    
+                    <motion.div 
+                      className="text-2xl sm:text-3xl md:text-4xl mb-1 relative z-10 flex items-center justify-center"
+                      animate={{ 
+                        rotate: [0, 10, -10, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                      whileHover={{ scale: 1.2, rotate: 360 }}
+                    >
+                      <ChartIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-100" />
+                    </motion.div>
+                    <motion.h3 
+                      className="text-xs sm:text-sm font-bold mb-1 text-blue-100 relative z-10"
+                      animate={{ opacity: [0.8, 1, 0.8] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      Questions
+                    </motion.h3>
+                    <motion.p 
+                      className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-blue-50 relative z-10"
+                      animate={{ 
+                        scale: [1, 1.05, 1],
+                        textShadow: ["0 0 0px", "0 0 10px rgba(191, 219, 254, 0.5)", "0 0 0px"]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {result.n8nResults?.['Total Questions'] || result.totalQuestions || 0}
+                    </motion.p>
+                  </motion.div>
+                  
+                  {/* Score Card */}
+                  <motion.div 
+                    className="backdrop-blur-xl bg-gradient-to-br from-yellow-500/40 to-orange-500/40 rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 text-center border-2 border-yellow-300/50 shadow-xl relative overflow-hidden group cursor-pointer"
+                    initial={{ y: 20, opacity: 0, scale: 0.9 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6, duration: 0.4, type: "spring" }}
+                    whileHover={{ 
+                      scale: 1.05, 
+                      y: -5,
+                      boxShadow: "0 20px 40px rgba(234, 179, 8, 0.4)"
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Dynamic Animated Background */}
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-br from-yellow-400/30 to-orange-400/30"
+                      animate={{ 
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    {/* Glowing Border Effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-xl sm:rounded-2xl"
+                      style={{
+                        background: "linear-gradient(45deg, rgba(234, 179, 8, 0.3), rgba(249, 115, 22, 0.3))",
+                        filter: "blur(8px)",
+                        opacity: 0
+                      }}
+                      animate={{
+                        opacity: [0, 0.5, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    
+                    <motion.div 
+                      className="text-2xl sm:text-3xl md:text-4xl mb-1 relative z-10 flex items-center justify-center"
+                      animate={{ 
+                        y: [0, -8, 0],
+                        rotate: [0, 5, -5, 0]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      whileHover={{ scale: 1.2, y: -15 }}
+                    >
+                      <TrophyIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-100" />
+                    </motion.div>
+                    <motion.h3 
+                      className="text-xs sm:text-sm font-bold mb-1 text-yellow-100 relative z-10"
+                      animate={{ opacity: [0.8, 1, 0.8] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      Score
+                    </motion.h3>
+                    <motion.p 
+                      className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-yellow-50 relative z-10"
+                      animate={{ 
+                        scale: [1, 1.05, 1],
+                        textShadow: ["0 0 0px", "0 0 10px rgba(254, 240, 138, 0.5)", "0 0 0px"]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {result.n8nResults?.Score || result.score || 0}%
+                    </motion.p>
+                  </motion.div>
+                  
+                  {/* Performance Card */}
+                  <motion.div 
+                    className="backdrop-blur-xl bg-gradient-to-br from-green-500/40 to-emerald-500/40 rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 text-center border-2 border-green-300/50 shadow-xl relative overflow-hidden group cursor-pointer"
+                    initial={{ y: 20, opacity: 0, scale: 0.9 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.7, duration: 0.4, type: "spring" }}
+                    whileHover={{ 
+                      scale: 1.05, 
+                      y: -5,
+                      boxShadow: "0 20px 40px rgba(34, 197, 94, 0.4)"
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Dynamic Animated Background */}
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-br from-green-400/30 to-emerald-400/30"
+                      animate={{ 
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-emerald-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    {/* Glowing Border Effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-xl sm:rounded-2xl"
+                      style={{
+                        background: "linear-gradient(45deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3))",
+                        filter: "blur(8px)",
+                        opacity: 0
+                      }}
+                      animate={{
+                        opacity: [0, 0.5, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    
+                    <motion.div 
+                      className="text-2xl sm:text-3xl md:text-4xl mb-1 relative z-10 flex items-center justify-center"
+                      animate={{ 
+                        rotate: [0, 15, -15, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                      whileHover={{ scale: 1.2, rotate: 360 }}
+                    >
+                      <StarIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-100" />
+                    </motion.div>
+                    <motion.h3 
+                      className="text-xs sm:text-sm font-bold mb-1 text-green-100 relative z-10"
+                      animate={{ opacity: [0.8, 1, 0.8] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      Performance
+                    </motion.h3>
+                    <motion.p 
+                      className="text-xs sm:text-sm md:text-base font-black text-green-50 relative z-10"
+                      animate={{ 
+                        scale: [1, 1.05, 1],
+                        textShadow: ["0 0 0px", "0 0 10px rgba(187, 247, 208, 0.5)", "0 0 0px"]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <span className="flex items-center justify-center gap-1">
+                        {(() => {
+                          const scoreStr = String(result.n8nResults?.Score || result.score || 0);
+                          const score = parseInt(scoreStr);
+                          if (score >= 90) return (
+                            <>
+                              Excellent <TargetIcon className="w-4 h-4 inline" />
+                            </>
+                          );
+                          if (score >= 80) return (
+                            <>
+                              Great <RocketIcon className="w-4 h-4 inline" />
+                            </>
+                          );
+                          if (score >= 70) return (
+                            <>
+                              Good <FlexIcon className="w-4 h-4 inline" />
+                            </>
+                          );
+                          if (score >= 60) return (
+                            <>
+                              Fair <ChartUpIcon className="w-4 h-4 inline" />
+                            </>
+                          );
+                          return (
+                            <>
+                              Keep Going! <DizzyStarIcon className="w-4 h-4 inline" />
+                            </>
+                          );
+                        })()}
+                      </span>
+                    </motion.p>
+                  </motion.div>
+                </div>
+              )}
+
+              {/* Summary Section - Dynamic */}
+              <div className="flex-1 min-h-0 flex flex-col mb-2 sm:mb-3">
+                {result.n8nResults ? (
+                  <motion.div 
+                    className="backdrop-blur-xl bg-gradient-to-br from-purple-500/30 via-pink-500/30 to-indigo-500/30 rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 border-2 border-purple-300/50 shadow-xl relative overflow-hidden group cursor-pointer"
+                    initial={{ y: 20, opacity: 0, scale: 0.95 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8, duration: 0.4, type: "spring" }}
+                    whileHover={{ 
+                      scale: 1.02,
+                      boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)"
+                    }}
+                  >
+                    {/* Dynamic Animated Background */}
+                    <motion.div 
+                      className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-yellow-400/20 to-pink-400/20 rounded-full blur-2xl"
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.6, 0.3],
+                        x: [0, 10, 0],
+                        y: [0, -10, 0]
+                      }}
+                      transition={{ 
+                        duration: 4, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    <motion.div 
+                      className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-tr from-blue-400/20 to-purple-400/20 rounded-full blur-xl"
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        opacity: [0.3, 0.6, 0.3],
+                        x: [0, -10, 0],
+                        y: [0, 10, 0]
+                      }}
+                      transition={{ 
+                        duration: 4, 
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 1
+                      }}
+                    />
+                    
+                    {/* Glowing Border Effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-xl sm:rounded-2xl"
+                      style={{
+                        background: "linear-gradient(45deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2), rgba(99, 102, 241, 0.2))",
+                        filter: "blur(10px)",
+                        opacity: 0
+                      }}
+                      animate={{
+                        opacity: [0, 0.4, 0],
+                        scale: [1, 1.02, 1]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    
+                    <div className="relative z-10">
+                      <motion.div 
+                        className="backdrop-blur-md bg-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 border-2 border-white/20 shadow-lg"
+                        whileHover={{ 
+                          borderColor: "rgba(255, 255, 255, 0.4)",
+                          backgroundColor: "rgba(255, 255, 255, 0.15)"
+                        }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <motion.div 
+                            className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-yellow-400/50 to-orange-400/50 rounded-lg flex items-center justify-center border-2 border-yellow-300/50 shadow-md flex-shrink-0"
+                            animate={{ 
+                              rotate: [0, 5, -5, 0],
+                              scale: [1, 1.05, 1]
+                            }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            whileHover={{ scale: 1.2, rotate: 360 }}
+                          >
+                            <LightbulbIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-yellow-300" />
+                          </motion.div>
+                          <div className="flex-1 min-w-0">
+                            <motion.h4 
+                              className="text-xs sm:text-sm font-bold text-white drop-shadow-md"
+                              animate={{ opacity: [0.9, 1, 0.9] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              Your Assessment Insights
+                            </motion.h4>
+                          </div>
+                        </div>
+                        
+                        <motion.p 
+                          className="text-xs sm:text-sm md:text-base leading-relaxed sm:leading-relaxed text-white/95 font-medium w-full text-left m-0"
+                          animate={{ 
+                            opacity: [0.9, 1, 0.9]
+                          }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                          style={{ 
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            hyphens: 'auto',
+                            WebkitHyphens: 'auto',
+                            msHyphens: 'auto'
+                          }}
+                        >
+                          <span className="block w-full first-letter:text-base sm:first-letter:text-lg first-letter:font-black first-letter:text-yellow-300 first-letter:mr-1">
+                            {result.n8nResults?.Summery || result.description || 'Assessment completed successfully.'}
+                          </span>
+                        </motion.p>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    className="backdrop-blur-xl bg-gradient-to-br from-purple-500/30 to-indigo-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 border-2 border-purple-300/50 shadow-xl flex items-center justify-center flex-1 relative overflow-hidden group"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5, type: "spring" }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-indigo-400/20"
+                      animate={{ 
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    <p className="text-sm sm:text-base md:text-lg text-white/95 text-center font-medium relative z-10">
+                      {result.description}
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Dynamic CTA Button */}
+              <motion.div 
+                className="flex justify-center relative z-10 flex-shrink-0"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.9, duration: 0.4 }}
+              >
+                <motion.button
+                  onClick={() => router.push('/career-exploration')}
+                  className="group relative overflow-hidden bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white px-6 sm:px-8 md:px-12 py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base md:text-lg shadow-2xl border-2 border-white/30 backdrop-blur-sm"
+                  whileHover={{ 
+                    scale: 1.05,
+                    y: -3,
+                    boxShadow: "0 20px 40px rgba(234, 179, 8, 0.5)"
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{
+                    boxShadow: [
+                      "0 10px 30px rgba(234, 179, 8, 0.3)",
+                      "0 15px 35px rgba(249, 115, 22, 0.4)",
+                      "0 10px 30px rgba(234, 179, 8, 0.3)"
+                    ]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  {/* Animated Gradient Overlay */}
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-yellow-500 via-orange-600 to-pink-600"
+                    animate={{
+                      opacity: [0, 0.5, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 via-orange-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  {/* Shimmer Effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    animate={{
+                      x: ["-100%", "100%"]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 1,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  
+                  <div className="relative z-10 flex items-center gap-2 sm:gap-3">
+                    <motion.span 
+                      className="text-lg sm:text-xl md:text-2xl flex items-center"
+                      animate={{ 
+                        y: [0, -8, 0],
+                        rotate: [0, 15, -15, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                    >
+                      <RocketIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                    </motion.span>
+                    <span className="drop-shadow-lg">Get My Career Path</span>
+                    <motion.span 
+                      className="text-base sm:text-lg md:text-xl flex items-center"
+                      animate={{ 
+                        x: [0, 5, 0],
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 180, 360]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                    >
+                      <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+                    </motion.span>
+                  </div>
+                </motion.button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </div>
+          </div>
         </motion.main>
 
         {/* Result Summary Modal */}
@@ -1337,9 +1977,6 @@ export default function DiagnosticAssessment() {
                         {currentQuestionNumber.toString().padStart(2, '0')}
                     </span>
                     </div>
-                    <span className="text-gray-600 text-sm font-medium">
-                      Level - {currentQuestion.difficulty}
-                    </span>
                   </div>
                   
                   {/* Question Display */}

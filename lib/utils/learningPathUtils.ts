@@ -72,7 +72,38 @@ export function normalizeCareerDetailsData(careerDetails: any, uniqueId?: string
   if (!Array.isArray(output.focusAreas)) {
     output.focusAreas = [];
   }
-  if (!Array.isArray(output.learningPath)) {
+  
+  // Transform modules array to learningPath format if modules exists (always prioritize modules)
+  if (Array.isArray(output.modules) && output.modules.length > 0) {
+    console.log('🔍 Transforming modules to learningPath in normalizeCareerDetailsData');
+    console.log('🔍 Modules array length:', output.modules.length);
+    output.learningPath = output.modules.map((module: any) => {
+      const transformedModule = {
+        module: module.moduleTitle || module.module || '',
+        description: module.moduleDescription || module.description || '',
+        submodules: Array.isArray(module.submodules) ? module.submodules.map((submodule: any) => ({
+          title: submodule.submoduleTitle || submodule.title || '',
+          description: submodule.submoduleDescription || submodule.description || '',
+          chapters: Array.isArray(submodule.chapters) ? submodule.chapters.map((chapter: any) => ({
+            title: chapter.chapterTitle || chapter.title || ''
+          })) : []
+        })) : []
+      };
+      console.log('🔍 Transformed module:', {
+        module: transformedModule.module,
+        description: transformedModule.description,
+        submodulesCount: transformedModule.submodules.length
+      });
+      return transformedModule;
+    });
+    console.log('🔍 Transformed learningPath length:', output.learningPath.length);
+    if (output.learningPath.length > 0) {
+      console.log('🔍 Transformed learningPath sample:', output.learningPath[0]);
+    }
+  } else if (Array.isArray(output.learningPath) && output.learningPath.length > 0) {
+    console.log('🔍 Using existing learningPath array, length:', output.learningPath.length);
+  } else {
+    console.log('⚠️ No modules array found and learningPath is empty or not an array, initializing empty array');
     output.learningPath = [];
   }
 
@@ -505,6 +536,50 @@ function extractLearningObjectives(module: any): string[] {
 }
 
 /**
+ * Helper function to extract career path from greeting
+ */
+function extractCareerPathFromGreeting(greeting: string): string {
+  if (!greeting) return 'Career Path';
+  
+  // Remove "Hi [name]!" prefix
+  let extracted = greeting.replace(/^Hi\s+[^!]+!\s*/i, '').trim();
+  
+  // Try to extract career path from common patterns
+  // Pattern 1: "Welcome to your {careerPath} learning journey!"
+  const welcomeMatch = extracted.match(/Welcome\s+to\s+your\s+(.+?)\s+learning\s+journey/i);
+  if (welcomeMatch && welcomeMatch[1]) {
+    return welcomeMatch[1].trim();
+  }
+  
+  // Pattern 2: "You're on a thrilling path! As a {careerPath}..."
+  const pathMatch = extracted.match(/As\s+a\s+([^,\.!]+)/i);
+  if (pathMatch && pathMatch[1]) {
+    return pathMatch[1].trim();
+  }
+  
+  // Pattern 3: Remove common suffixes and prefixes
+  extracted = extracted
+    .replace(/Welcome\s+to\s+your\s+/i, '')
+    .replace(/\s+learning\s+journey!?\s*$/i, '')
+    .replace(/\s+career\s+path!?\s*$/i, '')
+    .replace(/\s+path!?\s*$/i, '')
+    .trim();
+  
+  // If we still have a long sentence, try to extract the main career title
+  // Look for capitalized words (likely the career name)
+  if (extracted.length > 50) {
+    const words = extracted.split(/\s+/);
+    const capitalizedWords = words.filter(word => /^[A-Z][a-z]+/.test(word));
+    if (capitalizedWords.length > 0) {
+      // Take the last few capitalized words (likely the career name)
+      return capitalizedWords.slice(-2).join(' ') || extracted;
+    }
+  }
+  
+  return extracted || 'Career Path';
+}
+
+/**
  * Saves N8N output directly in the exact database format
  */
 export async function saveN8NLearningPathResponse(
@@ -535,35 +610,67 @@ export async function saveN8NLearningPathResponse(
       uniqueid: uniqueId
     };
 
-    // Check for existing response
-    const existingResponse = await LearningPathResponse.findOne({
-      uniqueid: uniqueId,
-      'output.greeting': { $regex: exactFormatResponse.output.greeting.split(',')[0], $options: 'i' }
+    // Extract career path from greeting for comparison
+    const careerPathFromGreeting = extractCareerPathFromGreeting(exactFormatResponse.output.greeting);
+    const normalizedCareerPathForComparison = careerPathFromGreeting.toLowerCase().trim();
+
+    // Find ALL learning paths for this student
+    const allLearningPaths = await LearningPathResponse.find({
+      uniqueid: uniqueId
     });
 
-    if (existingResponse) {
-      // Update existing response
+    // Filter to find duplicates by comparing extracted career paths
+    const duplicatePaths = allLearningPaths.filter(path => {
+      if (!path.output?.greeting) return false;
+      const extractedPath = extractCareerPathFromGreeting(path.output.greeting);
+      return extractedPath.toLowerCase().trim() === normalizedCareerPathForComparison;
+    });
+
+    console.log(`🔍 Found ${duplicatePaths.length} learning path(s) with title "${careerPathFromGreeting}" for student ${uniqueId}`);
+
+    let savedResponse;
+
+    if (duplicatePaths.length > 0) {
+      // Sort by updatedAt (most recent first)
+      duplicatePaths.sort((a, b) => {
+        const dateA = a.updatedAt || a.createdAt || new Date(0);
+        const dateB = b.updatedAt || b.createdAt || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      // Keep the most recent one and update it
+      const mostRecentPath = duplicatePaths[0];
+      const pathsToDelete = duplicatePaths.slice(1);
+
+      // Delete all duplicates except the most recent one
+      if (pathsToDelete.length > 0) {
+        const deleteIds = pathsToDelete.map(p => p._id);
+        const deleteResult = await LearningPathResponse.deleteMany({
+          _id: { $in: deleteIds }
+        });
+        console.log(`🗑️ Deleted ${deleteResult.deletedCount} duplicate learning path(s) with title "${careerPathFromGreeting}"`);
+      }
+
+      // Update the most recent one with new data
       const updatedResponse = await LearningPathResponse.findByIdAndUpdate(
-        existingResponse._id,
+        mostRecentPath._id,
         exactFormatResponse,
-        { new: true, upsert: true }
+        { new: true }
       );
 
-      console.log('✅ N8N learning path response updated:', updatedResponse?._id);
-      return {
-        success: true,
-        id: updatedResponse?._id.toString()
-      };
+      savedResponse = updatedResponse;
+      console.log(`✅ N8N learning path response updated (kept most recent, deleted ${pathsToDelete.length} duplicate(s)):`, updatedResponse?._id);
+    } else {
+      // No duplicates found, create new response
+      const newResponse = new LearningPathResponse(exactFormatResponse);
+      await newResponse.save();
+      savedResponse = newResponse;
+      console.log(`✅ N8N learning path response saved:`, newResponse._id);
     }
 
-    // Create new response
-    const newResponse = new LearningPathResponse(exactFormatResponse);
-    await newResponse.save();
-
-    console.log('✅ N8N learning path response saved:', newResponse._id);
     return {
       success: true,
-      id: newResponse._id.toString()
+      id: savedResponse?._id.toString()
     };
 
   } catch (error) {
@@ -582,49 +689,25 @@ export async function saveLearningPathResponse(
   learningPathResponse: LearningPathResponse
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
-    // Check if response already exists for this uniqueid and similar greeting
-    const existingResponse = await LearningPathResponse.findOne({
-      uniqueid: learningPathResponse.uniqueid,
-      'output.greeting': { $regex: learningPathResponse.output.greeting.split(',')[0], $options: 'i' }
+    // Extract career path from greeting for comparison
+    const careerPathFromGreeting = extractCareerPathFromGreeting(learningPathResponse.output.greeting);
+    const normalizedCareerPathForComparison = careerPathFromGreeting.toLowerCase().trim();
+
+    // Find ALL learning paths for this student
+    const allLearningPaths = await LearningPathResponse.find({
+      uniqueid: learningPathResponse.uniqueid
     });
 
-    if (existingResponse) {
-      // Update existing response with exact format mapping
-      const updatedResponse = await LearningPathResponse.findByIdAndUpdate(
-        existingResponse._id,
-        {
-          output: {
-            greeting: learningPathResponse.output.greeting,
-            overview: learningPathResponse.output.overview,
-            timeRequired: learningPathResponse.output.timeRequired,
-            focusAreas: learningPathResponse.output.focusAreas,
-            learningPath: learningPathResponse.output.learningPath.map(module => ({
-              module: module.module,
-              description: module.description,
-              submodules: module.submodules?.map(sub => ({
-                title: sub.title,
-                description: sub.description,
-                chapters: sub.chapters.map(chapter => ({
-                  title: chapter.title
-                }))
-              })) || []
-            })),
-            finalTip: learningPathResponse.output.finalTip
-          },
-          uniqueid: learningPathResponse.uniqueid
-        },
-        { new: true, upsert: true }
-      );
+    // Filter to find duplicates by comparing extracted career paths
+    const duplicatePaths = allLearningPaths.filter(path => {
+      if (!path.output?.greeting) return false;
+      const extractedPath = extractCareerPathFromGreeting(path.output.greeting);
+      return extractedPath.toLowerCase().trim() === normalizedCareerPathForComparison;
+    });
 
-      console.log('✅ Learning path response updated:', updatedResponse?._id);
-      return {
-        success: true,
-        id: updatedResponse?._id.toString()
-      };
-    }
+    console.log(`🔍 Found ${duplicatePaths.length} learning path(s) with title "${careerPathFromGreeting}" for student ${learningPathResponse.uniqueid}`);
 
-    // Create new response with exact format mapping
-    const newResponse = new LearningPathResponse({
+    const responseData = {
       output: {
         greeting: learningPathResponse.output.greeting,
         overview: learningPathResponse.output.overview,
@@ -644,14 +727,51 @@ export async function saveLearningPathResponse(
         finalTip: learningPathResponse.output.finalTip
       },
       uniqueid: learningPathResponse.uniqueid
-    });
-    
-    await newResponse.save();
+    };
 
-    console.log('✅ Learning path response saved:', newResponse._id);
+    let savedResponse;
+
+    if (duplicatePaths.length > 0) {
+      // Sort by updatedAt (most recent first)
+      duplicatePaths.sort((a, b) => {
+        const dateA = a.updatedAt || a.createdAt || new Date(0);
+        const dateB = b.updatedAt || b.createdAt || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      // Keep the most recent one and update it
+      const mostRecentPath = duplicatePaths[0];
+      const pathsToDelete = duplicatePaths.slice(1);
+
+      // Delete all duplicates except the most recent one
+      if (pathsToDelete.length > 0) {
+        const deleteIds = pathsToDelete.map(p => p._id);
+        const deleteResult = await LearningPathResponse.deleteMany({
+          _id: { $in: deleteIds }
+        });
+        console.log(`🗑️ Deleted ${deleteResult.deletedCount} duplicate learning path(s) with title "${careerPathFromGreeting}"`);
+      }
+
+      // Update the most recent one with new data
+      const updatedResponse = await LearningPathResponse.findByIdAndUpdate(
+        mostRecentPath._id,
+        responseData,
+        { new: true }
+      );
+
+      savedResponse = updatedResponse;
+      console.log(`✅ Learning path response updated (kept most recent, deleted ${pathsToDelete.length} duplicate(s)):`, updatedResponse?._id);
+    } else {
+      // No duplicates found, create new response
+      const newResponse = new LearningPathResponse(responseData);
+      await newResponse.save();
+      savedResponse = newResponse;
+      console.log(`✅ Learning path response saved:`, newResponse._id);
+    }
+
     return {
       success: true,
-      id: newResponse._id.toString()
+      id: savedResponse?._id.toString()
     };
 
   } catch (error) {

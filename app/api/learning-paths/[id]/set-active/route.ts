@@ -66,15 +66,39 @@ export async function PUT(
       );
     }
 
+    // Get student profile to get uniqueId
+    const Student = (await import('@/models/Student')).default;
+    const student = await Student.findOne({ 
+      userId: decoded.userId,
+      uniqueId: studentId || user.uniqueId 
+    });
+
+    if (!student) {
+      return NextResponse.json(
+        { error: 'Student profile not found' },
+        { status: 404 }
+      );
+    }
+
     // Check if the learning path belongs to the current user
-    if (learningPathResponse.uniqueid !== (studentId || user.uniqueId)) {
+    if (learningPathResponse.uniqueid !== student.uniqueId) {
       return NextResponse.json(
         { error: 'You can only set your own learning paths as active' },
         { status: 403 }
       );
     }
 
-    // Update the learning path response (mark as active by updating timestamp)
+    // Set all other learning paths for this student to inactive
+    await LearningPathResponse.updateMany(
+      { 
+        uniqueid: student.uniqueId,
+        _id: { $ne: learningPathResponse._id }
+      },
+      { isActive: false }
+    );
+
+    // Mark this learning path as active
+    learningPathResponse.isActive = true;
     learningPathResponse.updatedAt = new Date();
     await learningPathResponse.save();
 

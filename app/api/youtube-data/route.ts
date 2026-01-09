@@ -67,6 +67,38 @@ export async function GET(request: NextRequest) {
       });
     }
     
+    // Check if data is in hierarchical format (modules with submodules and chapters)
+    if (youtubeData.modules && Array.isArray(youtubeData.modules)) {
+      console.log('✅ Found hierarchical modules format in youtube-data route');
+      
+      // Return hierarchical format directly
+      return NextResponse.json({
+        success: true,
+        message: 'YouTube data fetched successfully',
+        data: {
+          _id: youtubeData._id,
+          uniqueid: youtubeData.uniqueid,
+          modules: youtubeData.modules,
+          createdAt: youtubeData.createdAt,
+          updatedAt: youtubeData.updatedAt
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Check if Module exists and is an array (old flat format)
+    if (!youtubeData.Module || !Array.isArray(youtubeData.Module)) {
+      console.log('⚠️ Module/modules data is missing or not an array. Available keys:', Object.keys(youtubeData));
+      // Return fallback data if structure is invalid
+      const fallbackData = FallbackModuleService.getFallbackYouTubeData(student.uniqueId);
+      return NextResponse.json({
+        success: true,
+        message: 'Using fallback YouTube data (invalid structure)',
+        data: fallbackData,
+        isFallback: true
+      });
+    }
+    
     // Convert the Module array to a more usable format
     // Each item in Module array contains one chapter (e.g., {"Chapter 1": {...}})
     const chapters = youtubeData.Module.map((moduleItem: any, index: number) => {
@@ -162,6 +194,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Using fallback YouTube data',
+        data: fallbackData,
+        isFallback: true
+      });
+    }
+    
+    // Check if data is in hierarchical format (modules with submodules and chapters)
+    if (youtubeData.modules && Array.isArray(youtubeData.modules)) {
+      console.log('✅ Found hierarchical modules format in youtube-data route (POST)');
+      
+      // Return hierarchical format directly
+      return NextResponse.json({
+        success: true,
+        message: 'YouTube data fetched successfully',
+        data: {
+          _id: youtubeData._id,
+          uniqueid: youtubeData.uniqueid,
+          modules: youtubeData.modules,
+          createdAt: youtubeData.createdAt,
+          updatedAt: youtubeData.updatedAt
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Check if Module exists and is an array (old flat format)
+    if (!youtubeData.Module || !Array.isArray(youtubeData.Module)) {
+      console.log('⚠️ Module/modules data is missing or not an array. Available keys:', Object.keys(youtubeData));
+      // Return fallback data if structure is invalid
+      const fallbackData = FallbackModuleService.getFallbackYouTubeData(student.uniqueId);
+      return NextResponse.json({
+        success: true,
+        message: 'Using fallback YouTube data (invalid structure)',
         data: fallbackData,
         isFallback: true
       });

@@ -18,8 +18,12 @@ import { TypewriterText, StaggeredText, GradientText, CharacterAnimation } from 
 import { TiltCard, MagneticButton } from '../../components/InteractiveElements';
 import { StaggerContainer, StaggerItem } from '../../components/PageTransitions';
 import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../../components/ScrollAnimations';
-import { FloatingParticles, MorphingBlob } from '../../components/FloatingElements';
+import nextDynamic from 'next/dynamic';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
+
+// Dynamically import components that use browser-only APIs
+const FloatingParticles = nextDynamic(() => import('../../components/FloatingElements').then(mod => ({ default: mod.FloatingParticles })), { ssr: false });
+const MorphingBlob = nextDynamic(() => import('../../components/FloatingElements').then(mod => ({ default: mod.MorphingBlob })), { ssr: false });
 
 // Avatar utility functions
 const AVAILABLE_AVATARS = [
@@ -187,6 +191,9 @@ interface ContinueLearningCourse {
   icon: string;
   color: string;
 }
+
+// Disable static generation to prevent SSR issues with browser-only APIs
+export const dynamic = 'force-dynamic';
 
 export default function StudentDashboard() {
   const [user, setUser] = useState<StudentProfile | null>(null);

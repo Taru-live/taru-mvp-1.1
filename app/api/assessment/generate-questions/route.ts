@@ -72,8 +72,42 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || 'diagnostic';
     const forceRegenerate = searchParams.get('forceRegenerate') === 'true';
 
-    // Check for cached questions first
+    // Check for existing questions in database first (unless forcing regenerate)
     if (!forceRegenerate) {
+      // First check AssessmentResponse for generatedQuestions
+      const assessmentResponse = await AssessmentResponse.findOne({
+        uniqueId: student.uniqueId,
+        assessmentType: type
+      });
+      
+      if (assessmentResponse && assessmentResponse.generatedQuestions && assessmentResponse.generatedQuestions.length > 0) {
+        console.log(`🎯 Found existing questions in AssessmentResponse for student ${student.uniqueId}`);
+        // Parse the questions using the same parser used elsewhere
+        try {
+          const parsedQuestions = parseN8nOutput(assessmentResponse.generatedQuestions);
+          if (parsedQuestions && parsedQuestions.length > 0) {
+            console.log(`🎯 Returning ${parsedQuestions.length} parsed questions from database`);
+            return NextResponse.json({
+              success: true,
+              questions: parsedQuestions,
+              cached: true,
+              metadata: {
+                generatedAt: assessmentResponse.updatedAt?.toISOString() || new Date().toISOString(),
+                studentId: decoded.userId,
+                type: type,
+                totalQuestions: parsedQuestions.length,
+                cacheHit: true,
+                source: 'database'
+              }
+            });
+          }
+        } catch (parseError) {
+          console.error('Failed to parse stored questions:', parseError);
+          // Continue to check N8N cache or generate new questions
+        }
+      }
+      
+      // Also check N8N cache service
       const cachedQuestions = await N8NCacheService.getCachedAssessmentResults(
         student.uniqueId,
         'questions',
@@ -81,7 +115,7 @@ export async function GET(request: NextRequest) {
       );
       
       if (cachedQuestions && cachedQuestions.length > 0) {
-        console.log(`🎯 Using cached assessment questions for student ${student.uniqueId}`);
+        console.log(`🎯 Using cached assessment questions from N8N cache for student ${student.uniqueId}`);
         return NextResponse.json({
           success: true,
           questions: cachedQuestions,
@@ -91,7 +125,8 @@ export async function GET(request: NextRequest) {
             studentId: decoded.userId,
             type: type,
             totalQuestions: cachedQuestions.length,
-            cacheHit: true
+            cacheHit: true,
+            source: 'n8n_cache'
           }
         });
       }

@@ -27,6 +27,7 @@ interface LearningModule {
 
 interface CareerDetails {
   _id?: { $oid: string };
+  id?: string;
   uniqueid?: string;
   output?: {
     greeting: string;
@@ -35,6 +36,7 @@ interface CareerDetails {
     focusAreas: string[];
     learningPath: LearningModule[];
     finalTip: string;
+    modules?: LearningModule[]; // Optional modules field from API
     // Possible student name fields from N8N API
     studentName?: string;
     student_name?: string;
@@ -67,6 +69,7 @@ function CareerDetailsContent() {
   const searchParams = useSearchParams();
   const careerPath = searchParams?.get('careerPath') || null;
   const description = searchParams?.get('description') || null;
+  const learningPathId = searchParams?.get('learningPathId') || null;
 
   useEffect(() => {
     // Track mouse position for interactive effects
@@ -96,13 +99,31 @@ function CareerDetailsContent() {
       setIsSaving(true);
       
       // First, save career details
+      // Ensure we send the original careerDetails with modules field preserved
+      const careerDetailsToSave = {
+        ...careerDetails,
+        output: {
+          ...careerDetails.output,
+          // Preserve modules if it exists, and ensure learningPath is also present
+          modules: careerDetails.output.modules || undefined,
+          learningPath: careerDetails.output.learningPath || (careerDetails.output.modules ? undefined : [])
+        }
+      };
+      
+      console.log('🔍 Saving career details with structure:', {
+        hasModules: !!careerDetailsToSave.output.modules,
+        modulesLength: careerDetailsToSave.output.modules?.length || 0,
+        hasLearningPath: !!careerDetailsToSave.output.learningPath,
+        learningPathLength: careerDetailsToSave.output.learningPath?.length || 0
+      });
+      
       const careerDetailsResponse = await fetch('/api/career-details/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          careerDetails: careerDetails,
+          careerDetails: careerDetailsToSave,
           careerPath: searchParams?.get('careerPath') || 'Unknown Career',
           description: careerDetails.output.overview?.join(' ') || 'Career learning path'
         }),
@@ -114,6 +135,28 @@ function CareerDetailsContent() {
         return;
       }
 
+      // Transform modules to learningPath if needed for learning-paths/save
+      let learningModulesForSave = careerDetails.output.learningPath || [];
+      
+      // If learningPath is empty but modules exists, transform it
+      if ((!learningModulesForSave || learningModulesForSave.length === 0) && 
+          Array.isArray(careerDetails.output.modules) && 
+          careerDetails.output.modules.length > 0) {
+        console.log('🔍 Transforming modules to learningPath for save');
+        learningModulesForSave = careerDetails.output.modules.map((module: any) => ({
+          module: module.moduleTitle || module.module || '',
+          description: module.moduleDescription || module.description || '',
+          submodules: Array.isArray(module.submodules) ? module.submodules.map((submodule: any) => ({
+            title: submodule.submoduleTitle || submodule.title || '',
+            description: submodule.submoduleDescription || submodule.description || '',
+            chapters: Array.isArray(submodule.chapters) ? submodule.chapters.map((chapter: any) => ({
+              title: chapter.chapterTitle || chapter.title || ''
+            })) : []
+          })) : []
+        }));
+        console.log('🔍 Transformed learningModulesForSave length:', learningModulesForSave.length);
+      }
+      
       // Then, save learning path
       const response = await fetch('/api/learning-paths/save', {
         method: 'POST',
@@ -124,7 +167,7 @@ function CareerDetailsContent() {
           studentId: userInfo.id,
           careerPath: searchParams?.get('careerPath') || 'Unknown Career',
           description: careerDetails.output.overview?.join(' ') || 'Career learning path',
-          learningModules: careerDetails.output.learningPath || [],
+          learningModules: learningModulesForSave,
           timeRequired: careerDetails.output.timeRequired || 'Not specified',
           focusAreas: careerDetails.output.focusAreas || []
         }),
@@ -297,6 +340,75 @@ function CareerDetailsContent() {
 
   // Note: All data is now dynamically generated from N8N API
 
+  // Fetch saved learning path by ID
+  const fetchSavedLearningPath = async (pathId: string) => {
+    if (hasFetchedCareerDetails) {
+      console.log('🔍 Career details already fetched, skipping...');
+      return;
+    }
+    
+    try {
+      console.log('🔍 Fetching saved learning path by ID:', pathId);
+      setHasFetchedCareerDetails(true);
+      setLoading(true);
+      const response = await fetch(`/api/learning-paths/${pathId}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('🔍 Saved learning path API response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Saved learning path data:', data);
+        
+        if (data.success && data.careerDetails) {
+          const careerData = data.careerDetails;
+          console.log('🔍 Career data structure:', careerData);
+          console.log('🔍 Career data output:', careerData.output);
+          
+          if (careerData.output && typeof careerData.output === 'object') {
+            // Data is in the correct format: { output: {...}, uniqueid: "..." }
+            setCareerDetails(careerData);
+            
+            // Extract career path from greeting or use description
+            const extractedCareerPath = careerData.output.greeting?.replace(/^Hi\s+[^!]+!\s*/, '') || 
+                                       careerPath || 
+                                       'Career Path';
+            
+            // Save to career state and page state
+            await selectCareerPath(extractedCareerPath, careerData);
+            await savePageState(window.location.pathname, { careerDetails: careerData });
+          } else {
+            console.error('Invalid career details structure:', careerData);
+            setError('Invalid career details format received from server');
+          }
+        } else {
+          console.error('No career details in response:', data);
+          setError(data.error || 'Failed to load saved learning path');
+        }
+      } else {
+        let errorMessage = 'Failed to load saved learning path';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        console.error('Failed to fetch saved learning path:', response.status, errorMessage);
+        setError(errorMessage);
+      }
+    } catch (err) {
+      console.error('Error fetching saved learning path:', err);
+      setError('Failed to load saved learning path');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchCareerDetails = async () => {
     if (hasFetchedCareerDetails) {
       console.log('🔍 Career details already fetched, skipping...');
@@ -376,10 +488,17 @@ function CareerDetailsContent() {
 
   useEffect(() => {
     const initializePage = async () => {
-      console.log('🔍 Career details page initializing...', { careerPath, sessionInitialized });
+      console.log('🔍 Career details page initializing...', { careerPath, learningPathId, sessionInitialized });
       
       // Fetch user info first
       await fetchUserInfo();
+      
+      // If we have a learning path ID, fetch the saved learning path (don't call n8n)
+      if (learningPathId) {
+        console.log('🔍 Learning path ID found, fetching saved learning path...');
+        await fetchSavedLearningPath(learningPathId);
+        return;
+      }
       
       // If we have a career path, always try to fetch details (this ensures webhook is called)
       if (careerPath) {
@@ -420,18 +539,18 @@ function CareerDetailsContent() {
 
       // This section is no longer needed since we handle career path above
 
-      console.log('🔍 No career path specified, showing error...');
-      setError('Career path not specified');
+      console.log('🔍 No career path or learning path ID specified, showing error...');
+      setError('Career path or learning path ID not specified');
       setLoading(false);
     };
 
     initializePage();
-  }, [careerPath, loadPageState, sessionInitialized, getCareerPathData, sessionData, migrateExistingData]);
+  }, [careerPath, learningPathId, loadPageState, sessionInitialized, getCareerPathData, sessionData, migrateExistingData]);
 
-  // Reset fetch flag when career path changes
+  // Reset fetch flag when career path or learning path ID changes
   useEffect(() => {
     setHasFetchedCareerDetails(false);
-  }, [careerPath]);
+  }, [careerPath, learningPathId]);
 
   // Fetch user info when session data changes or on initial load
   useEffect(() => {
@@ -592,6 +711,37 @@ function CareerDetailsContent() {
   console.log('🔍 Career details state:', careerDetails);
   console.log('🔍 Output object:', careerDetails?.output);
   
+  if (careerDetails?.output) {
+    console.log('🔍 Extracted career details:', {
+      output: careerDetails.output,
+      uniqueid: careerDetails.uniqueid,
+      _id: careerDetails._id,
+      id: careerDetails.id
+    });
+    console.log('🔍 Career details output structure:', {
+      greeting: careerDetails.output.greeting,
+      overviewLength: Array.isArray(careerDetails.output.overview) ? careerDetails.output.overview.length : 0,
+      focusAreasLength: Array.isArray(careerDetails.output.focusAreas) ? careerDetails.output.focusAreas.length : 0,
+      learningPathLength: Array.isArray(careerDetails.output.learningPath) ? careerDetails.output.learningPath.length : undefined,
+      modulesLength: Array.isArray(careerDetails.output.modules) ? careerDetails.output.modules.length : undefined,
+      timeRequired: careerDetails.output.timeRequired,
+      finalTip: careerDetails.output.finalTip
+    });
+    
+    if (Array.isArray(careerDetails.output.overview)) {
+      console.log('🔍 Overview array content:', careerDetails.output.overview);
+    }
+    if (Array.isArray(careerDetails.output.focusAreas)) {
+      console.log('🔍 Focus areas array content:', careerDetails.output.focusAreas);
+    }
+    if (Array.isArray(careerDetails.output.modules)) {
+      console.log('🔍 Modules array content:', careerDetails.output.modules);
+    }
+    if (Array.isArray(careerDetails.output.learningPath)) {
+      console.log('🔍 Learning path array content:', careerDetails.output.learningPath);
+    }
+  }
+  
   // Minimal fallback data (only used if N8N API completely fails)
   const defaultOutput = {
     greeting: "🌟 Welcome to your career exploration!",
@@ -623,12 +773,34 @@ function CareerDetailsContent() {
     console.log('✅ Using N8N career details data');
     const apiOutput = careerDetails.output;
     
+    // Transform modules array to learningPath format
+    let learningPath: LearningModule[] = defaultOutput.learningPath;
+    
+    if (Array.isArray(apiOutput.modules) && apiOutput.modules.length > 0) {
+      console.log('🔍 Transforming modules to learningPath format');
+      learningPath = apiOutput.modules.map((module: any) => ({
+        module: module.moduleTitle || module.module || '',
+        description: module.moduleDescription || module.description || '',
+        submodules: Array.isArray(module.submodules) ? module.submodules.map((submodule: any) => ({
+          title: submodule.submoduleTitle || submodule.title || '',
+          description: submodule.submoduleDescription || submodule.description || '',
+          chapters: Array.isArray(submodule.chapters) ? submodule.chapters.map((chapter: any) => ({
+            title: chapter.chapterTitle || chapter.title || ''
+          })) : []
+        })) : []
+      }));
+      console.log('🔍 Transformed learningPath:', learningPath);
+    } else if (Array.isArray(apiOutput.learningPath)) {
+      // Fallback to learningPath if modules doesn't exist
+      learningPath = apiOutput.learningPath;
+    }
+    
     output = {
       greeting: apiOutput.greeting || defaultOutput.greeting,
       overview: Array.isArray(apiOutput.overview) ? apiOutput.overview : defaultOutput.overview,
       timeRequired: apiOutput.timeRequired || defaultOutput.timeRequired,
       focusAreas: Array.isArray(apiOutput.focusAreas) ? apiOutput.focusAreas : defaultOutput.focusAreas,
-      learningPath: Array.isArray(apiOutput.learningPath) ? apiOutput.learningPath : defaultOutput.learningPath,
+      learningPath: learningPath,
       finalTip: apiOutput.finalTip || defaultOutput.finalTip
     };
   } else {
@@ -855,7 +1027,7 @@ function CareerDetailsContent() {
             transition={{ delay: 0.5, duration: 0.6 }}
           >
             <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            {careerPath || 'Career Explorer'}
+            {careerPath || (careerDetails?.output?.greeting?.replace(/^Hi\s+[^!]+!\s*/, '') || 'Career Explorer')}
             </span>
           </motion.h1>
           
@@ -1194,7 +1366,7 @@ function CareerDetailsContent() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => navigateWithState('/career-exploration', { careerDetails })}
+                onClick={() => router.push('/career-exploration')}
                 className="px-8 py-3 bg-white text-purple-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors duration-200"
               >
                 Explore More Careers

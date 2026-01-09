@@ -27,7 +27,8 @@ import {
   Rocket,
   Globe,
   Lock,
-  Unlock
+  Unlock,
+  ChevronRight
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -51,6 +52,7 @@ interface LearningPath {
   focusAreas: string[];
   createdAt: string;
   updatedAt: string;
+  isActive?: boolean;
 }
 
 interface LearningPathTabProps {
@@ -72,7 +74,32 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
   const [editingPath, setEditingPath] = useState<LearningPath | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pathToDelete, setPathToDelete] = useState<LearningPath | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedPathDetails, setSelectedPathDetails] = useState<LearningPath | null>(null);
+  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const router = useRouter();
+
+  // Helper function to normalize career path title for comparison
+  const normalizeCareerPath = (careerPath: string): string => {
+    return careerPath.trim().toLowerCase();
+  };
+
+  // Helper function to format date properly
+  const formatDate = (dateString: string | Date): string => {
+    if (!dateString) return 'Unknown';
+    try {
+      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
 
   // Fetch saved learning paths
   const fetchLearningPaths = async () => {
@@ -98,11 +125,63 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
       if (response.ok) {
         const data = await response.json();
         console.log('🔍 Learning paths data received:', data);
-        setLearningPaths(data.learningPaths || []);
         
-        // Set the most recent path as current if none is selected
-        if (data.learningPaths?.length > 0 && !currentPath) {
-          setCurrentPath(data.learningPaths[0]);
+        // Remove duplicates - keep only the most recent one for each career path title
+        const allPaths = data.learningPaths || [];
+        const uniquePathsMap = new Map<string, LearningPath>();
+        
+        allPaths.forEach((path: LearningPath) => {
+          const normalizedTitle = normalizeCareerPath(path.careerPath);
+          const existingPath = uniquePathsMap.get(normalizedTitle);
+          
+          if (!existingPath) {
+            // First occurrence of this title
+            uniquePathsMap.set(normalizedTitle, path);
+          } else {
+            // Compare dates to keep the most recent one
+            const existingDate = new Date(existingPath.updatedAt || existingPath.createdAt || 0);
+            const currentDate = new Date(path.updatedAt || path.createdAt || 0);
+            
+            if (currentDate > existingDate) {
+              // Current path is more recent, replace it
+              uniquePathsMap.set(normalizedTitle, path);
+              console.log(`🔄 Replacing duplicate "${path.careerPath}" with more recent version`);
+            } else {
+              console.log(`⏭️ Skipping duplicate "${path.careerPath}" (keeping existing more recent version)`);
+            }
+          }
+        });
+        
+        // Convert map back to array and sort by updatedAt (most recent first)
+        const uniquePaths = Array.from(uniquePathsMap.values()).sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.createdAt || 0);
+          const dateB = new Date(b.updatedAt || b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        const duplicateCount = allPaths.length - uniquePaths.length;
+        if (duplicateCount > 0) {
+          console.log(`✅ Removed ${duplicateCount} duplicate learning path(s) from display`);
+        }
+        
+        setLearningPaths(uniquePaths);
+        
+        // Set the active path as current, or the most recent one if none is active
+        const activePath = uniquePaths.find(p => p.isActive);
+        if (activePath) {
+          setCurrentPath(activePath);
+        } else if (uniquePaths.length > 0 && !currentPath) {
+          // No active path, set the most recent one as current
+          setCurrentPath(uniquePaths[0]);
+        } else if (currentPath) {
+          // Update current path if it still exists in the deduplicated list
+          const updatedCurrentPath = uniquePaths.find(p => p._id === currentPath._id);
+          if (updatedCurrentPath) {
+            setCurrentPath(updatedCurrentPath);
+          } else if (uniquePaths.length > 0) {
+            // Current path was removed as duplicate, set the first one
+            setCurrentPath(uniquePaths[0]);
+          }
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -166,8 +245,10 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
   const deleteLearningPath = async () => {
     if (!pathToDelete) return;
     
+    const pathIdToDelete = pathToDelete._id; // Store ID before deletion
+    
     try {
-      const response = await fetch(`/api/learning-paths/${pathToDelete._id}`, {
+      const response = await fetch(`/api/learning-paths/${pathIdToDelete}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -177,16 +258,31 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
 
       if (response.ok) {
         setSuccess('Learning path deleted successfully!');
-        await fetchLearningPaths(); // Refresh the list
         
-        // If we deleted the current path, select another one
-        if (currentPath?._id === pathToDelete._id) {
-          setCurrentPath(learningPaths.length > 1 ? learningPaths[1] : null);
+        // If we deleted the current path, clear it before refreshing
+        if (currentPath?._id === pathIdToDelete) {
+          setCurrentPath(null);
         }
         
+        await fetchLearningPaths(); // Refresh the list
+        
+        // After refresh, if no current path is set, select the first one if available
+        setTimeout(() => {
+          if (!currentPath && learningPaths.length > 0) {
+            setCurrentPath(learningPaths[0]);
+          }
+        }, 100);
+        
+        setTimeout(() => setSuccess(null), 3000);
+      } else if (response.status === 404) {
+        // Path was already deleted (possibly by duplicate removal), just refresh
+        console.log('Learning path already deleted, refreshing list...');
+        setSuccess('Learning path removed successfully!');
+        await fetchLearningPaths();
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        setError('Failed to delete learning path');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || 'Failed to delete learning path');
       }
     } catch (err) {
       console.error('Error deleting learning path:', err);
@@ -216,11 +312,23 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
       });
 
       if (response.ok) {
-        setCurrentPath(path);
+        // Update the path's isActive status locally
+        const updatedPath = { ...path, isActive: true };
+        setCurrentPath(updatedPath);
+        
+        // Update the path in the learningPaths array
+        setLearningPaths(prevPaths => 
+          prevPaths.map(p => ({
+            ...p,
+            isActive: p._id === path._id
+          }))
+        );
+        
         setSuccess('Learning path activated successfully!');
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        setError('Failed to activate learning path');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || 'Failed to activate learning path');
       }
     } catch (err) {
       console.error('Error setting active path:', err);
@@ -467,7 +575,7 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
                           <h3 className="text-2xl font-bold text-gray-900 mb-1">{path.careerPath}</h3>
                           <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Calendar className="w-4 h-4" />
-                            <span>Created {new Date(path.createdAt).toLocaleDateString()}</span>
+                            <span>Created {formatDate(path.createdAt)}</span>
                           </div>
                         </div>
                       </div>
@@ -560,7 +668,10 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
 
                   {/* Enhanced View Details Button */}
                   <motion.button
-                    onClick={() => router.push(`/career-details?careerPath=${encodeURIComponent(path.careerPath)}&description=${encodeURIComponent(path.description)}`)}
+                    onClick={() => {
+                      setSelectedPathDetails(path);
+                      setShowDetailsModal(true);
+                    }}
                     className="group w-full py-4 bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 hover:from-purple-100 hover:via-blue-100 hover:to-indigo-100 text-purple-700 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-3 border border-purple-200 hover:border-purple-300 shadow-lg hover:shadow-xl"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
@@ -647,6 +758,219 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
           </motion.div>
         )}
       </motion.div>
+
+      {/* Learning Path Details Modal */}
+      <AnimatePresence>
+        {showDetailsModal && selectedPathDetails && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDetailsModal(false)}
+          >
+            <motion.div
+              className="bg-white rounded-3xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white p-6 rounded-t-3xl z-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                      <Target className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold mb-1">{selectedPathDetails.careerPath}</h2>
+                      <div className="flex items-center gap-4 text-sm text-white/90">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>Created {formatDate(selectedPathDetails.createdAt)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          <span>{selectedPathDetails.timeRequired}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowDetailsModal(false)}
+                    className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-8 space-y-8">
+                {/* Description */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-purple-600" />
+                    Overview
+                  </h3>
+                  <p className="text-gray-700 text-lg leading-relaxed">{selectedPathDetails.description}</p>
+                </div>
+
+                {/* Focus Areas */}
+                {selectedPathDetails.focusAreas && selectedPathDetails.focusAreas.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-yellow-500" />
+                      Focus Areas
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedPathDetails.focusAreas.map((area, index) => (
+                        <div
+                          key={index}
+                          className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <span className="text-gray-800 font-medium">{area}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Learning Modules */}
+                {selectedPathDetails.learningModules && selectedPathDetails.learningModules.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-blue-600" />
+                      Learning Modules ({selectedPathDetails.learningModules.length})
+                    </h3>
+                    <div className="space-y-4">
+                      {selectedPathDetails.learningModules.map((module, index) => {
+                        const isExpanded = expandedModules.has(index);
+                        const hasSubmodules = module.submodules && module.submodules.length > 0;
+                        
+                        return (
+                          <motion.div
+                            key={index}
+                            className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl overflow-hidden border border-gray-200"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                          >
+                            <div className="p-6">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-start gap-4 flex-1">
+                                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white font-bold text-lg">{index + 1}</span>
+                                  </div>
+                                  <div className="flex-1">
+                                    <h4 className="text-xl font-bold text-gray-900 mb-2">{module.module}</h4>
+                                    <p className="text-gray-600 leading-relaxed">{module.description}</p>
+                                  </div>
+                                </div>
+                                {hasSubmodules && (
+                                  <button
+                                    onClick={() => {
+                                      const newExpanded = new Set(expandedModules);
+                                      if (newExpanded.has(index)) {
+                                        newExpanded.delete(index);
+                                      } else {
+                                        newExpanded.add(index);
+                                      }
+                                      setExpandedModules(newExpanded);
+                                    }}
+                                    className="ml-4 p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
+                                  >
+                                    <ChevronRight
+                                      className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                                    />
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Submodules */}
+                              {hasSubmodules && isExpanded && (
+                                <motion.div
+                                  className="mt-4 space-y-3 pl-16"
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                >
+                                  {module.submodules?.map((submodule, subIndex) => (
+                                    <div
+                                      key={subIndex}
+                                      className="bg-white rounded-lg p-4 border border-gray-200"
+                                    >
+                                      <h5 className="font-semibold text-gray-800 mb-2">{submodule.title}</h5>
+                                      <p className="text-sm text-gray-600 mb-3">{submodule.description}</p>
+                                      
+                                      {/* Chapters */}
+                                      {submodule.chapters && submodule.chapters.length > 0 && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                          {submodule.chapters.map((chapter, chapterIndex) => (
+                                            <div
+                                              key={chapterIndex}
+                                              className="flex items-center gap-2 text-sm text-gray-700"
+                                            >
+                                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                              <span>{chapter.title}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
+                  <div className="text-center p-4 bg-purple-50 rounded-xl">
+                    <Clock className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 mb-1">Duration</p>
+                    <p className="text-xl font-bold text-gray-900">{selectedPathDetails.timeRequired}</p>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-xl">
+                    <BookOpen className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 mb-1">Modules</p>
+                    <p className="text-xl font-bold text-gray-900">{selectedPathDetails.learningModules.length}</p>
+                  </div>
+                  <div className="text-center p-4 bg-indigo-50 rounded-xl">
+                    <Target className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 mb-1">Focus Areas</p>
+                    <p className="text-xl font-bold text-gray-900">{selectedPathDetails.focusAreas.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 rounded-b-3xl">
+                <div className="flex justify-end">
+                  <motion.button
+                    onClick={() => setShowDetailsModal(false)}
+                    className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300 flex items-center gap-2 shadow-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <ArrowRight className="w-5 h-5 rotate-180" />
+                    Back to Learning Paths
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>

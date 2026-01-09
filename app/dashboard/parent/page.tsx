@@ -13,6 +13,7 @@ import { StaggerContainer, StaggerItem } from '../../components/PageTransitions'
 import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../../components/ScrollAnimations';
 import { FloatingParticles, MorphingBlob } from '../../components/FloatingElements';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
+import LearningPathTab from '../student/components/LearningPathTab';
 
 // Add custom hook for responsive behavior
 function useWindowSize() {
@@ -166,6 +167,7 @@ export default function ParentDashboard() {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '/icons/overview.png' },
     { id: 'child-progress', label: 'Child Progress', icon: '/icons/report.png' },
+    { id: 'learning-paths', label: 'Learning Paths', icon: '/icons/overview.png' },
     { id: 'reports', label: 'Reports', icon: '/icons/rewards.png' },
     { id: 'messages', label: 'Messages', icon: '/icons/bot.png' },
     { id: 'settings', label: 'Settings', icon: '/icons/settings.png' },
@@ -1366,6 +1368,30 @@ export default function ParentDashboard() {
                     </div>
                   </motion.div>
                 </div>
+                </motion.div>
+              )}
+              {activeTab === 'learning-paths' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  {dashboardData?.studentDashboard?.overview?.studentKey ? (
+                    <LearningPathTab 
+                      user={{ 
+                        uniqueId: dashboardData.studentDashboard.overview.studentKey,
+                        name: dashboardData.student?.name || dashboardData.studentDashboard.overview.studentName
+                      }} 
+                      onTabChange={setActiveTab} 
+                    />
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                        <div className="text-4xl">📚</div>
+                      </div>
+                      <p className="text-gray-500 text-lg">Loading learning paths...</p>
+                    </div>
+                  )}
                 </motion.div>
               )}
               {activeTab === 'reports' && (

@@ -64,6 +64,11 @@ const learningPathResponseSchema = new mongoose.Schema({
     type: String,
     required: true,
     index: true
+  },
+  isActive: {
+    type: Boolean,
+    default: false,
+    index: true
   }
 }, {
   timestamps: true,

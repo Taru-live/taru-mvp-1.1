@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
+import YoutubeUrl from '@/models/YoutubeUrl';
+import StudentProgress from '@/models/StudentProgress';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const YOUTUBE_SCRAPING_WEBHOOK_URL = 'https://nclbtaru.app.n8n.cloud/webhook/YoutubeLinkscrapper';
@@ -56,6 +58,67 @@ export async function POST(request: NextRequest) {
       fullName: student.fullName,
       classGrade: student.classGrade
     });
+
+    // Check if we should delete existing data
+    let deleteExisting = false;
+    try {
+      const body = await request.json();
+      deleteExisting = body.deleteExisting === true;
+    } catch (e) {
+      // If body is empty or invalid JSON, deleteExisting remains false
+      console.log('📝 No request body or invalid JSON, proceeding without deletion');
+    }
+
+    // If deleteExisting is true, delete all existing YouTube data and progress
+    if (deleteExisting) {
+      console.log('🗑️ Deleting existing YouTube data and progress for:', student.uniqueId);
+      
+      try {
+        // Delete all YoutubeUrl entries for this uniqueid
+        const youtubeDeleteResult = await YoutubeUrl.deleteMany({ uniqueid: student.uniqueId });
+        console.log(`🗑️ Deleted ${youtubeDeleteResult.deletedCount} YouTube data entry/entries`);
+
+        // Delete student progress related to modules
+        const progress = await StudentProgress.findOne({ studentId: student.uniqueId });
+        if (progress) {
+          // Clear module progress but keep the student progress record
+          progress.moduleProgress = [];
+          progress.totalModulesCompleted = 0;
+          progress.totalPoints = 0;
+          progress.totalWatchTime = 0;
+          progress.totalInteractiveTime = 0;
+          progress.totalProjectTime = 0;
+          progress.totalPeerLearningTime = 0;
+          progress.learningStreak = 0;
+          progress.badgesEarned = [];
+          progress.skillLevels = new Map();
+          await progress.save();
+          console.log('🗑️ Cleared all module progress data');
+        }
+
+        // Also try to delete by userId (in case progress is stored by userId)
+        const progressByUserId = await StudentProgress.findOne({ studentId: decoded.userId });
+        if (progressByUserId) {
+          progressByUserId.moduleProgress = [];
+          progressByUserId.totalModulesCompleted = 0;
+          progressByUserId.totalPoints = 0;
+          progressByUserId.totalWatchTime = 0;
+          progressByUserId.totalInteractiveTime = 0;
+          progressByUserId.totalProjectTime = 0;
+          progressByUserId.totalPeerLearningTime = 0;
+          progressByUserId.learningStreak = 0;
+          progressByUserId.badgesEarned = [];
+          progressByUserId.skillLevels = new Map();
+          await progressByUserId.save();
+          console.log('🗑️ Cleared all module progress data (by userId)');
+        }
+
+        console.log('✅ Successfully deleted existing data before generating new modules');
+      } catch (deleteError) {
+        console.error('❌ Error deleting existing data:', deleteError);
+        // Continue with scraping even if deletion fails
+      }
+    }
 
     // Prepare uniqueId for N8N webhook - use GET request with query parameters
     const uniqueId = student.uniqueId;

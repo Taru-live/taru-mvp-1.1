@@ -134,57 +134,101 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if a learning path for this career already exists for this student in learning-path-responses
-    const existingResponse = await LearningPathResponse.findOne({
-      uniqueid: normalizedCareerDetails.uniqueid,
-      'output.greeting': { $regex: new RegExp(careerPath, 'i') }
+    // Helper function to extract career path from greeting
+    const extractCareerPathFromGreeting = (greeting: string): string => {
+      // Remove "Hi [name]!" prefix and common suffixes
+      return greeting
+        .replace(/^Hi\s+[^!]+!\s*/i, '')
+        .replace(/\s*(learning journey|career path|path)!?\s*$/i, '')
+        .trim();
+    };
+
+    // Normalize career path for comparison (case-insensitive, trimmed)
+    const normalizedCareerPathForComparison = careerPath.trim().toLowerCase();
+
+    // Find ALL learning paths with the same career path for this student
+    const allLearningPaths = await LearningPathResponse.find({
+      uniqueid: normalizedCareerDetails.uniqueid
     });
 
-    if (existingResponse) {
-      // Update existing response with normalized data
-      existingResponse.output = normalizedCareerDetails.output;
-      existingResponse.updatedAt = new Date();
-      
-      await existingResponse.save();
-      
-      return NextResponse.json({
-        message: 'Learning path updated successfully',
-        learningPath: {
-          _id: existingResponse._id,
-          studentId: existingResponse.uniqueid,
-          careerPath: careerPath,
-          description: description,
-          learningModules: normalizedCareerDetails.output.learningPath,
-          timeRequired: normalizedCareerDetails.output.timeRequired,
-          focusAreas: normalizedCareerDetails.output.focusAreas,
-          createdAt: existingResponse.createdAt,
-          updatedAt: existingResponse.updatedAt
-        }
+    // Filter to find duplicates by comparing extracted career paths
+    const duplicatePaths = allLearningPaths.filter(path => {
+      if (!path.output?.greeting) return false;
+      const extractedPath = extractCareerPathFromGreeting(path.output.greeting);
+      return extractedPath.toLowerCase().trim() === normalizedCareerPathForComparison;
+    });
+
+    console.log(`🔍 Found ${duplicatePaths.length} learning path(s) with title "${careerPath}" for student ${normalizedCareerDetails.uniqueid}`);
+
+    // Check if there's already an active learning path for this student
+    const existingActivePath = await LearningPathResponse.findOne({
+      uniqueid: normalizedCareerDetails.uniqueid,
+      isActive: true
+    });
+
+    let savedLearningPath;
+
+    if (duplicatePaths.length > 0) {
+      // Sort by updatedAt (most recent first)
+      duplicatePaths.sort((a, b) => {
+        const dateA = a.updatedAt || a.createdAt || new Date(0);
+        const dateB = b.updatedAt || b.createdAt || new Date(0);
+        return dateB.getTime() - dateA.getTime();
       });
+
+      // Keep the most recent one and update it
+      const mostRecentPath = duplicatePaths[0];
+      const pathsToDelete = duplicatePaths.slice(1);
+
+      // Delete all duplicates except the most recent one
+      if (pathsToDelete.length > 0) {
+        const deleteIds = pathsToDelete.map(p => p._id);
+        const deleteResult = await LearningPathResponse.deleteMany({
+          _id: { $in: deleteIds }
+        });
+        console.log(`🗑️ Deleted ${deleteResult.deletedCount} duplicate learning path(s) with title "${careerPath}"`);
+      }
+
+      // Update the most recent one with new data
+      mostRecentPath.output = normalizedCareerDetails.output;
+      mostRecentPath.updatedAt = new Date();
+      // Set as active if no active path exists
+      if (!existingActivePath) {
+        mostRecentPath.isActive = true;
+      }
+      await mostRecentPath.save();
+      
+      savedLearningPath = mostRecentPath;
+      console.log(`✅ Updated existing learning path (kept most recent, deleted ${pathsToDelete.length} duplicate(s))`);
     } else {
-      // Create new learning path response with normalized data
+      // No duplicates found, create new learning path
       const newLearningPathResponse = new LearningPathResponse({
         uniqueid: normalizedCareerDetails.uniqueid,
-        output: normalizedCareerDetails.output
+        output: normalizedCareerDetails.output,
+        isActive: !existingActivePath // Set as active if no active path exists
       });
 
       await newLearningPathResponse.save();
-
-      return NextResponse.json({
-        message: 'Learning path saved successfully',
-        learningPath: {
-          _id: newLearningPathResponse._id,
-          studentId: newLearningPathResponse.uniqueid,
-          careerPath: careerPath,
-          description: description,
-          learningModules: normalizedCareerDetails.output.learningPath,
-          timeRequired: normalizedCareerDetails.output.timeRequired,
-          focusAreas: normalizedCareerDetails.output.focusAreas,
-          createdAt: newLearningPathResponse.createdAt,
-          updatedAt: newLearningPathResponse.updatedAt
-        }
-      });
+      savedLearningPath = newLearningPathResponse;
+      console.log(`✅ Created new learning path for "${careerPath}"${!existingActivePath ? ' (set as active)' : ''}`);
     }
+
+    return NextResponse.json({
+      message: duplicatePaths.length > 0 
+        ? `Learning path updated successfully (removed ${duplicatePaths.length - 1} duplicate(s))`
+        : 'Learning path saved successfully',
+      learningPath: {
+        _id: savedLearningPath._id,
+        studentId: savedLearningPath.uniqueid,
+        careerPath: careerPath,
+        description: description,
+        learningModules: normalizedCareerDetails.output.learningPath,
+        timeRequired: normalizedCareerDetails.output.timeRequired,
+        focusAreas: normalizedCareerDetails.output.focusAreas,
+        createdAt: savedLearningPath.createdAt,
+        updatedAt: savedLearningPath.updatedAt
+      }
+    });
 
   } catch (error) {
     console.error('Save learning path error:', error);

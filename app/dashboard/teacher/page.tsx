@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '../student/components/Sidebar';
 import Image from 'next/image';
 import { Dialog } from '@headlessui/react';
+import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TypewriterText, StaggeredText, GradientText, CharacterAnimation } from '../../components/TextAnimations';
 import { TiltCard, MagneticButton } from '../../components/InteractiveElements';
@@ -12,6 +13,7 @@ import { StaggerContainer, StaggerItem } from '../../components/PageTransitions'
 import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../../components/ScrollAnimations';
 import VantaBackground from '../../components/VantaBackground';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
+import LearningPathTab from '../student/components/LearningPathTab';
 
 // Add custom hook for responsive behavior
 function useWindowSize() {
@@ -252,6 +254,8 @@ export default function TeacherDashboard() {
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [newStudentCredentials, setNewStudentCredentials] = useState<StudentData | null>(null);
   const [allStudentCredentials, setAllStudentCredentials] = useState<StudentData[]>([]);
+  const [selectedStudentForLearningPaths, setSelectedStudentForLearningPaths] = useState<StudentData | null>(null);
+  const [showLearningPathsModal, setShowLearningPathsModal] = useState(false);
   
   // Additional state for real data
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -863,16 +867,9 @@ export default function TeacherDashboard() {
   };
 
   const handleViewStudent = (student: any) => {
-    // For now, just show a notification - in production, this would open a detailed view
-    const notification = {
-      id: Date.now().toString(),
-      title: 'Student Details',
-      message: `Viewing details for ${student.fullName}`,
-      date: new Date().toISOString(),
-      read: false,
-      type: 'info' as const
-    };
-    setNotifications(prev => [notification, ...prev]);
+    // Open learning paths modal for the selected student
+    setSelectedStudentForLearningPaths(student);
+    setShowLearningPathsModal(true);
   };
 
   const handleAssignToStudent = (student: any) => {
@@ -3353,6 +3350,41 @@ export default function TeacherDashboard() {
               >
                 Close
               </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+
+      {/* Learning Paths Modal */}
+      <Dialog open={showLearningPathsModal} onClose={() => setShowLearningPathsModal(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="mx-auto max-w-6xl w-full bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <Dialog.Title className="text-2xl font-bold text-gray-900">
+                Learning Paths - {selectedStudentForLearningPaths?.fullName}
+              </Dialog.Title>
+              <button
+                onClick={() => setShowLearningPathsModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {selectedStudentForLearningPaths?.uniqueId ? (
+                <LearningPathTab 
+                  user={{ 
+                    uniqueId: selectedStudentForLearningPaths.uniqueId,
+                    name: selectedStudentForLearningPaths.fullName
+                  }} 
+                  onTabChange={() => {}} 
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Student information not available</p>
+                </div>
+              )}
             </div>
           </Dialog.Panel>
         </div>

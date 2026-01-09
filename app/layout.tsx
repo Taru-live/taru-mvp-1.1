@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionProvider from "./components/SessionProvider";
 import PerformanceMonitor from "./components/PerformanceMonitor";
 import DataRecoveryUI from "./components/DataRecoveryUI";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,6 +80,7 @@ export default function RootLayout({
             enabled={true}
             showInDevelopment={true}
           />
+          <Toaster position="top-right" richColors />
         </SessionProvider>
       </body>
     </html>

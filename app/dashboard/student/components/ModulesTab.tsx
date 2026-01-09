@@ -10,6 +10,7 @@ import {
   Loader2, 
   RefreshCw, 
   AlertCircle, 
+  AlertTriangle,
   CheckCircle,
   Star,
   Clock,
@@ -50,19 +51,38 @@ import {
 import N8NLoadingIndicator from '@/app/components/N8NLoadingIndicator';
 
 interface Chapter {
-  chapterIndex: number;
-  chapterKey: string;
-    videoTitle: string;
-  videoUrl: string;
+  chapterId: number;
+  chapterTitle: string;
+  chapterDescription: string;
+  youtubeUrl: string;
+  youtubeTitle: string;
+}
+
+interface Submodule {
+  submoduleId: number;
+  submoduleTitle: string;
+  submoduleDescription: string;
+  chapters: Chapter[];
+}
+
+interface Module {
+  moduleId: number;
+  moduleTitle: string;
+  moduleDescription: string;
+  submodules: Submodule[];
+}
+
+interface StudentModulesData {
+  uniqueid: string;
+  modules: Module[];
 }
 
 interface YoutubeData {
-  _id: string;
+  _id?: string;
   uniqueid: string;
-  chapters: Chapter[];
-  totalChapters: number;
-  createdAt: string;
-  updatedAt: string;
+  modules: Module[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface MCQQuestion {
@@ -86,7 +106,9 @@ export default function ModulesTab({ user }: ModulesTabProps) {
   const [youtubeData, setYoutubeData] = useState<YoutubeData | null>(null);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
-  const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
+  const [expandedSubmodules, setExpandedSubmodules] = useState<Set<string>>(new Set());
   const [mcqQuestions, setMcqQuestions] = useState<MCQQuestion[]>([]);
   const [mcqLoading, setMcqLoading] = useState(false);
   const [mcqAnswers, setMcqAnswers] = useState<Record<string, string>>({});
@@ -119,6 +141,10 @@ export default function ModulesTab({ user }: ModulesTabProps) {
   const [n8nMessage, setN8nMessage] = useState('');
   const [showN8nIndicator, setShowN8nIndicator] = useState(false);
   const [n8nStartTime, setN8nStartTime] = useState<number | null>(null);
+  const [isFirstTimeGeneration, setIsFirstTimeGeneration] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [deletionOccurred, setDeletionOccurred] = useState(false);
+  const [generationFailed, setGenerationFailed] = useState(false);
 
   // Fetch YouTube data on component mount
   useEffect(() => {
@@ -306,6 +332,94 @@ export default function ModulesTab({ user }: ModulesTabProps) {
     };
   }, []);
 
+  // Transform data to new hierarchical format
+  const transformToHierarchicalFormat = (data: any): YoutubeData | null => {
+    try {
+      // Check if data is already in the new format
+      if (data.modules && Array.isArray(data.modules) && data.modules.length > 0) {
+        // Check if it's the new format (has modules with submodules and chapters)
+        const firstModule = data.modules[0];
+        if (firstModule.submodules && Array.isArray(firstModule.submodules)) {
+          return {
+            uniqueid: data.uniqueid || data.uniqueId || user?.uniqueId || '',
+            modules: data.modules,
+            _id: data._id,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt
+          };
+        }
+      }
+
+      // Transform from old format (flat chapters) to new format
+      if (data.chapters && Array.isArray(data.chapters)) {
+        // Group chapters into modules and submodules
+        // For now, create a simple structure - can be enhanced based on actual data patterns
+        const modules: Module[] = [];
+        let currentModuleId = 1;
+        let currentSubmoduleId = 1;
+        let chapterCounter = 1;
+        
+        // Group chapters into modules (every 4 chapters = 1 module, 2 chapters = 1 submodule)
+        const chaptersPerSubmodule = 2;
+        const submodulesPerModule = 2;
+        
+        for (let i = 0; i < data.chapters.length; i += chaptersPerSubmodule * submodulesPerModule) {
+          const moduleChapters = data.chapters.slice(i, i + chaptersPerSubmodule * submodulesPerModule);
+          const submodules: Submodule[] = [];
+          
+          for (let j = 0; j < moduleChapters.length; j += chaptersPerSubmodule) {
+            const submoduleChapters = moduleChapters.slice(j, j + chaptersPerSubmodule);
+            const chapters: Chapter[] = submoduleChapters.map((ch: any, idx: number) => ({
+              chapterId: chapterCounter++,
+              chapterTitle: ch.videoTitle || ch.chapterTitle || `Chapter ${chapterCounter - 1}`,
+              chapterDescription: ch.chapterDescription || `Learn about ${ch.videoTitle || 'this topic'}`,
+              youtubeUrl: ch.videoUrl || ch.youtubeUrl || '',
+              youtubeTitle: ch.videoTitle || ch.youtubeTitle || ''
+            }));
+            
+            submodules.push({
+              submoduleId: currentSubmoduleId++,
+              submoduleTitle: `Submodule ${currentSubmoduleId - 1}`,
+              submoduleDescription: `Explore these topics in detail`,
+              chapters
+            });
+          }
+          
+          modules.push({
+            moduleId: currentModuleId++,
+            moduleTitle: `Module ${currentModuleId - 1}`,
+            moduleDescription: `Comprehensive learning module covering essential topics`,
+            submodules
+          });
+        }
+        
+        return {
+          uniqueid: data.uniqueid || data.uniqueId || user?.uniqueId || '',
+          modules,
+          _id: data._id,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt
+        };
+      }
+
+      // If data is an array (API might return array directly)
+      if (Array.isArray(data) && data.length > 0) {
+        const studentData = data[0] as StudentModulesData;
+        if (studentData.modules && Array.isArray(studentData.modules)) {
+          return {
+            uniqueid: studentData.uniqueid,
+            modules: studentData.modules
+          };
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error transforming data:', error);
+      return null;
+    }
+  };
+
   const fetchYouTubeData = async (isPolling = false) => {
     if (!user?.uniqueId) return;
     
@@ -320,37 +434,116 @@ export default function ModulesTab({ user }: ModulesTabProps) {
       if (response.ok) {
         const result = await response.json();
         
-        if (result.success && result.data) {
-          setYoutubeData(result.data);
+        // Explicitly check for "Module array missing" message - this means data is still being processed
+        const isModuleArrayMissing = result.message && 
+          result.message.includes('Module array is missing or invalid');
+        
+        // Check if API indicates this is a processing state (not an error)
+        const isProcessing = result.isProcessing === true || isModuleArrayMissing;
+        
+        // Handle case where API returns data but success is false (e.g., Module array missing)
+        // During first-time generation, this means data is still being processed
+        if (result.data) {
+          // Transform data to hierarchical format
+          const transformedData = transformToHierarchicalFormat(result.data);
           
-          // If we're polling and got real data (not fallback), update N8N status
-          if (isPolling && !result.isFallback) {
-            console.log('✅ N8N processing completed successfully');
-            setN8nProgress(100);
-            setN8nStatus('completed');
-            setN8nMessage('YouTube videos are ready for you to explore!');
+          if (transformedData) {
+            // Check if we have actual modules with content
+            const hasValidModules = transformedData.modules && 
+                                   transformedData.modules.length > 0 &&
+                                   transformedData.modules.some((m: Module) => 
+                                     m.submodules && m.submodules.length > 0 &&
+                                     m.submodules.some((sm: Submodule) => 
+                                       sm.chapters && sm.chapters.length > 0
+                                     )
+                                   );
             
-            // Hide indicator after 2 minutes
-            setTimeout(() => {
-              setShowN8nIndicator(false);
-            }, 120000);
-          } else if (isPolling && result.isFallback) {
-            console.log('⏳ N8N still processing, using fallback data');
-            // Keep processing status if we're still getting fallback data
+            if (hasValidModules) {
+              setYoutubeData(transformedData);
+              // Reset first-time generation state when valid data is available
+              setIsFirstTimeGeneration(false);
+              setScraping(false);
+              
+              // Reset failure state if modules were successfully generated
+              if (deletionOccurred) {
+                setDeletionOccurred(false);
+                setGenerationFailed(false);
+              }
+              
+              // If we're polling and got real data (not fallback), update N8N status
+              if (isPolling && !result.isFallback) {
+                console.log('✅ N8N processing completed successfully');
+                setN8nProgress(100);
+                setN8nStatus('completed');
+                setN8nMessage('YouTube videos are ready for you to explore!');
+                
+                // Hide indicator after 2 minutes
+                setTimeout(() => {
+                  setShowN8nIndicator(false);
+                }, 120000);
+              } else if (isPolling && result.isFallback) {
+                console.log('⏳ N8N still processing, using fallback data');
+                // Keep processing status if we're still getting fallback data
+              }
+            } else {
+              // Data exists but no valid modules yet - still processing during first-time generation
+              // This includes the case where Module array is missing
+              if (isFirstTimeGeneration && (isPolling || isProcessing)) {
+                if (isProcessing) {
+                  console.log('⏳ YouTube data document exists but Module array not populated yet - N8N still processing...');
+                } else {
+                  console.log('⏳ N8N still processing, waiting for module data...');
+                }
+                // Keep waiting UI visible - don't update youtubeData
+              } else if (!isPolling) {
+                // Only show error if not in first-time generation mode and not processing
+                if (!isFirstTimeGeneration && !isProcessing) {
+                  setError('No modules available. Please try generating modules again.');
+                }
+              }
+            }
+          } else {
+            // Failed to transform data
+            if (isFirstTimeGeneration && (isPolling || isProcessing)) {
+              if (isProcessing) {
+                console.log('⏳ YouTube data document exists but Module array not populated yet - N8N still processing...');
+              } else {
+                console.log('⏳ N8N still processing, data transformation pending...');
+              }
+              // Keep waiting UI visible during first-time generation
+            } else if (!isPolling) {
+              if (!isFirstTimeGeneration && !isProcessing) {
+                setError('Failed to parse module data. Please try again.');
+              }
+            }
           }
         } else {
-          if (!isPolling) {
-            setError(result.message || 'Failed to fetch modules');
-          } else {
-            console.log('⏳ N8N still processing, no data available yet');
+          // No data returned
+          if (isFirstTimeGeneration && (isPolling || isProcessing)) {
+            if (isProcessing) {
+              console.log('⏳ YouTube data document exists but Module array not populated yet - N8N still processing...');
+            } else {
+              console.log('⏳ N8N still processing, no data available yet');
+            }
+            // Keep waiting UI visible during first-time generation
+          } else if (!isPolling) {
+            if (!isFirstTimeGeneration && !isProcessing) {
+              setError(result.message || 'Failed to fetch modules');
+            }
           }
         }
       } else {
         const errorData = await response.json();
         const errorMessage = errorData.message || `HTTP ${response.status}: Failed to fetch modules`;
         
-        if (!isPolling) {
-          setError(errorMessage);
+        // During first-time generation, 404 is expected - data hasn't been created yet
+        if (isFirstTimeGeneration && isPolling && response.status === 404) {
+          console.log('⏳ N8N still processing, YouTube data not created yet...');
+          // Keep waiting UI visible - this is expected during first-time generation
+        } else if (!isPolling) {
+          if (!isFirstTimeGeneration) {
+            setError(errorMessage);
+          }
         } else {
           console.warn('⚠️ Error during polling:', errorMessage);
           // Don't immediately fail during polling, let the timeout handle it
@@ -358,8 +551,13 @@ export default function ModulesTab({ user }: ModulesTabProps) {
       }
     } catch (error) {
       console.error('Error fetching YouTube data:', error);
-      if (!isPolling) {
-        setError('Failed to fetch modules. Please try again.');
+      if (isFirstTimeGeneration && isPolling) {
+        console.warn('⚠️ Network error during first-time generation polling:', error);
+        // Keep waiting UI visible - network errors are expected during polling
+      } else if (!isPolling) {
+        if (!isFirstTimeGeneration) {
+          setError('Failed to fetch modules. Please try again.');
+        }
       } else {
         console.warn('⚠️ Network error during polling:', error);
         // Don't immediately fail during polling, let the timeout handle it
@@ -371,17 +569,46 @@ export default function ModulesTab({ user }: ModulesTabProps) {
     }
   };
 
-  const triggerYouTubeScraping = async () => {
+  // Handler to show confirmation dialog if modules exist
+  const handleDiscoverModules = () => {
+    // Check if there are existing modules
+    const hasExistingModules = youtubeData && 
+                               youtubeData.modules && 
+                               youtubeData.modules.length > 0;
+    
+    if (hasExistingModules) {
+      // Show confirmation dialog
+      setShowConfirmDialog(true);
+    } else {
+      // No existing modules, proceed directly
+      triggerYouTubeScraping();
+    }
+  };
+
+  // Confirm and proceed with scraping (with deletion)
+  const confirmAndProceed = () => {
+    setShowConfirmDialog(false);
+    triggerYouTubeScraping(true); // Pass true to indicate deletion is needed
+  };
+
+  const triggerYouTubeScraping = async (deleteExisting: boolean = false) => {
     if (!user?.uniqueId) return;
     
     setScraping(true);
     setError(null);
     setSuccess(null);
     
+    // Check if this is first time generation (no existing youtubeData)
+    if (!youtubeData || !youtubeData.modules || youtubeData.modules.length === 0) {
+      setIsFirstTimeGeneration(true);
+    }
+    
     // Show N8N indicator
     setShowN8nIndicator(true);
     setN8nStatus('triggering');
-    setN8nMessage('Starting YouTube content generation...');
+    setN8nMessage(deleteExisting 
+      ? 'Deleting existing data and starting YouTube content generation...' 
+      : 'Starting YouTube content generation...');
     setN8nProgress(0);
     setN8nStartTime(Date.now());
     
@@ -391,16 +618,32 @@ export default function ModulesTab({ user }: ModulesTabProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ uniqueid: user.uniqueId })
+        body: JSON.stringify({ 
+          uniqueid: user.uniqueId,
+          deleteExisting: deleteExisting 
+        })
       });
 
       if (response.ok) {
         const result = await response.json();
         setSuccess(result.message || 'YouTube scraping initiated! Please wait for modules to be processed.');
         
+        // Clear local state if existing data was deleted
+        if (deleteExisting) {
+          setYoutubeData(null);
+          setProgress({});
+          setCompletedModules(new Set());
+          setIsFirstTimeGeneration(true);
+          setDeletionOccurred(true);
+          setGenerationFailed(false);
+          // Refetch progress data to ensure it's cleared
+          fetchProgressData();
+          console.log('🗑️ Cleared local state after deleting existing data');
+        }
+        
         // Update N8N status to processing
         setN8nStatus('processing');
-        setN8nMessage('N8N is generating YouTube videos for you...');
+        setN8nMessage('');
         
         console.log('🚀 N8N workflow triggered successfully:', {
           webhookSuccess: result.webhookSuccess,
@@ -411,17 +654,76 @@ export default function ModulesTab({ user }: ModulesTabProps) {
         const progressInterval = setInterval(() => {
           setN8nProgress(prev => {
             if (prev >= 90) {
-              clearInterval(progressInterval);
               return prev;
             }
             return prev + Math.random() * 15;
           });
         }, 2000);
         
-        // Start polling for results - no timeout restrictions
+        // Start polling for results - with timeout for deletion case
         let pollCount = 0;
+        let isPollingActive = true;
+        const maxPollingTime = deleteExisting ? 10 * 60 * 1000 : Infinity; // 10 minutes if deletion occurred
+        const pollingStartTime = Date.now();
+        
+        // Set up timeout check for deletion case
+        let timeoutCheck: NodeJS.Timeout | null = null;
+            if (deleteExisting) {
+              timeoutCheck = setTimeout(async () => {
+                if (isPollingActive) {
+                  console.warn('⏰ Polling exceeded maximum time after deletion, checking for modules...');
+                  
+                  try {
+                    if (!user?.uniqueId) {
+                      throw new Error('User uniqueId not available');
+                    }
+                    const checkResponse = await fetch(`/api/youtube-urls?uniqueid=${encodeURIComponent(user.uniqueId)}`);
+                    const checkData = await checkResponse.json();
+                
+                const hasModules = checkData.success && 
+                                  checkData.data?.modules && 
+                                  Array.isArray(checkData.data.modules) &&
+                                  checkData.data.modules.length > 0 &&
+                                  checkData.data.modules.some((m: any) => 
+                                    m.submodules && Array.isArray(m.submodules) && m.submodules.length > 0
+                                  );
+                
+                if (!hasModules) {
+                  // No modules generated - show failure notice
+                  isPollingActive = false;
+                  clearInterval(progressInterval);
+                  setGenerationFailed(true);
+                  setN8nStatus('error');
+                  setN8nMessage('Module generation failed. Previous content was deleted.');
+                  setScraping(false);
+                  setIsFirstTimeGeneration(false);
+                  
+                  setTimeout(() => {
+                    setShowN8nIndicator(false);
+                  }, 3000);
+                }
+              } catch (e) {
+                console.error('Error checking for modules after timeout:', e);
+                // If check fails, assume generation failed
+                isPollingActive = false;
+                clearInterval(progressInterval);
+                setGenerationFailed(true);
+                setN8nStatus('error');
+                setN8nMessage('Module generation failed. Previous content was deleted.');
+                setScraping(false);
+                setIsFirstTimeGeneration(false);
+                
+                setTimeout(() => {
+                  setShowN8nIndicator(false);
+                }, 3000);
+              }
+            }
+          }, maxPollingTime);
+        }
         
         const pollForResults = async () => {
+          if (!isPollingActive) return; // Stop if polling was cancelled
+          
           try {
             pollCount++;
             console.log(`🔄 Polling attempt ${pollCount} for N8N results`);
@@ -435,15 +737,81 @@ export default function ModulesTab({ user }: ModulesTabProps) {
               
               if (validatedStatus === 'error') {
                 console.warn('⏰ N8N processing exceeded maximum time, stopping');
+                isPollingActive = false;
                 clearInterval(progressInterval);
-                setTimeout(() => {
+                
+                // Check if modules were generated before marking as error
+                setTimeout(async () => {
+                  try {
+                    if (!user?.uniqueId) {
+                      throw new Error('User uniqueId not available');
+                    }
+                    const uniqueId = user.uniqueId;
+                    const checkResponse = await fetch(`/api/youtube-urls?uniqueid=${encodeURIComponent(uniqueId)}`);
+                    const checkData = await checkResponse.json();
+                    
+                    const hasModules = checkData.success && 
+                                      checkData.data?.modules && 
+                                      Array.isArray(checkData.data.modules) &&
+                                      checkData.data.modules.length > 0;
+                    
+                    if (!hasModules && deletionOccurred) {
+                      setGenerationFailed(true);
+                      setN8nMessage('Module generation failed. Previous content was deleted.');
+                    }
+                  } catch (e) {
+                    console.error('Error checking for modules:', e);
+                    if (deletionOccurred) {
+                      setGenerationFailed(true);
+                      setN8nMessage('Module generation failed. Previous content was deleted.');
+                    }
+                  }
                   setShowN8nIndicator(false);
                 }, 3000);
                 return 'error';
               }
               
-              // Continue polling if status is still processing - no timeout restrictions
-              if (currentStatus === 'processing') {
+              // Stop polling if status is completed
+              if (currentStatus === 'completed') {
+                console.log('✅ Polling stopped - data is ready');
+                isPollingActive = false;
+                clearInterval(progressInterval);
+                if (timeoutCheck) clearTimeout(timeoutCheck);
+                
+                // Final check: verify modules were actually generated after a short delay
+                setTimeout(async () => {
+                  try {
+                    await fetchYouTubeData();
+                    // Check if we have valid modules now
+                    setYoutubeData(data => {
+                      const hasValidModules = data && 
+                                             data.modules && 
+                                             Array.isArray(data.modules) &&
+                                             data.modules.length > 0 &&
+                                             data.modules.some((m: Module) => 
+                                               m.submodules && Array.isArray(m.submodules) && m.submodules.length > 0
+                                             );
+                      if (!hasValidModules && deletionOccurred) {
+                        setGenerationFailed(true);
+                        setN8nStatus('error');
+                        setN8nMessage('Module generation failed. Previous content was deleted.');
+                      }
+                      return data;
+                    });
+                  } catch (e) {
+                    console.error('Error in final module check:', e);
+                    if (deletionOccurred) {
+                      setGenerationFailed(true);
+                      setN8nStatus('error');
+                      setN8nMessage('Module generation failed. Previous content was deleted.');
+                    }
+                  }
+                }, 2000);
+                return currentStatus;
+              }
+              
+              // Continue polling if status is still processing
+              if (currentStatus === 'processing' && isPollingActive) {
                 setTimeout(pollForResults, 5000);
                 return currentStatus; // Keep current status
               }
@@ -451,9 +819,41 @@ export default function ModulesTab({ user }: ModulesTabProps) {
             });
           } catch (pollError) {
             console.error('Error polling for results:', pollError);
+            isPollingActive = false;
             clearInterval(progressInterval);
+            if (timeoutCheck) clearTimeout(timeoutCheck);
             setN8nStatus('error');
-            setN8nMessage('Failed to check for results. Please try refreshing.');
+            
+              // Check if deletion occurred to show appropriate message
+            if (deletionOccurred) {
+              // Final check: verify if modules exist despite the error
+              try {
+                if (!user?.uniqueId) {
+                  throw new Error('User uniqueId not available');
+                }
+                const uniqueId = user.uniqueId;
+                const checkResponse = await fetch(`/api/youtube-urls?uniqueid=${encodeURIComponent(uniqueId)}`);
+                const checkData = await checkResponse.json();
+                const hasModules = checkData.success && 
+                                  checkData.data?.modules && 
+                                  Array.isArray(checkData.data.modules) &&
+                                  checkData.data.modules.length > 0;
+                
+                if (!hasModules) {
+                  setGenerationFailed(true);
+                  setN8nMessage('Module generation failed. Previous content was deleted.');
+                }
+              } catch (e) {
+                // If check fails, assume generation failed
+                setGenerationFailed(true);
+                setN8nMessage('Module generation failed. Previous content was deleted.');
+              }
+            } else {
+              setN8nMessage('Failed to check for results. Please try refreshing.');
+            }
+            
+            setScraping(false);
+            setIsFirstTimeGeneration(false);
             
             // Hide indicator after error
             setTimeout(() => {
@@ -478,6 +878,8 @@ export default function ModulesTab({ user }: ModulesTabProps) {
         setError(errorMessage);
         setN8nStatus('error');
         setN8nMessage(`Failed to trigger YouTube scraping: ${errorMessage}`);
+        setScraping(false);
+        setIsFirstTimeGeneration(false);
         
         // Hide indicator after showing error
         setTimeout(() => {
@@ -499,14 +901,19 @@ export default function ModulesTab({ user }: ModulesTabProps) {
       setError(errorMessage);
       setN8nStatus('error');
       setN8nMessage(errorMessage);
+      setScraping(false);
+      setIsFirstTimeGeneration(false);
       
       // Hide indicator after showing error
       setTimeout(() => {
         setShowN8nIndicator(false);
       }, 5000);
-    } finally {
-      setScraping(false);
     }
+    // Note: Don't set scraping to false in finally block
+    // It should only be set to false when:
+    // 1. Valid modules are available (in fetchYouTubeData)
+    // 2. An error occurs (handled above)
+    // This ensures the waiting UI stays visible during first-time generation
   };
 
   const generateMCQ = async (chapterKey: string) => {
@@ -624,9 +1031,9 @@ export default function ModulesTab({ user }: ModulesTabProps) {
           }, 100);
 
           // Check if module is completed (score >= 75%)
-          if (score >= 75) {
+          if (score >= 75 && selectedChapter !== null) {
             setCompletedModules(prev => {
-              const newSet = new Set([...prev, selectedChapter]);
+              const newSet = new Set([...prev, getChapterId(selectedChapter)]);
               console.log('✅ Module marked as completed in frontend:', selectedChapter, 'Score:', score);
               return newSet;
             });
@@ -716,9 +1123,8 @@ export default function ModulesTab({ user }: ModulesTabProps) {
     }
   };
 
-  const getChapterId = (chapterKey: string) => {
-    // Keep the full chapter key to match the API data
-    return chapterKey;
+  const getChapterId = (chapterId: number) => {
+    return `chapter-${chapterId}`;
   };
 
   const getVideoId = (url: string) => {
@@ -727,49 +1133,74 @@ export default function ModulesTab({ user }: ModulesTabProps) {
     return match ? match[1] : null;
   };
 
-  // Filter and sort modules
-  const filteredModules = React.useMemo(() => {
-    if (!youtubeData?.chapters) return [];
+  // Get all chapters flattened for filtering and display
+  const getAllChapters = React.useMemo(() => {
+    if (!youtubeData?.modules) return [];
     
-    let modules = youtubeData.chapters;
+    const chapters: Array<Chapter & { moduleId: number; submoduleId: number; moduleTitle: string; submoduleTitle: string }> = [];
+    
+    youtubeData.modules.forEach(module => {
+      module.submodules.forEach(submodule => {
+        submodule.chapters.forEach(chapter => {
+          chapters.push({
+            ...chapter,
+            moduleId: module.moduleId,
+            submoduleId: submodule.submoduleId,
+            moduleTitle: module.moduleTitle,
+            submoduleTitle: submodule.submoduleTitle
+          });
+        });
+      });
+    });
+    
+    return chapters;
+  }, [youtubeData]);
+
+  // Filter and sort modules
+  const filteredChapters = React.useMemo(() => {
+    if (!youtubeData?.modules) return [];
+    
+    let chapters = getAllChapters;
     
     // Filter by search query
     if (searchQuery) {
-      modules = modules.filter(chapter => {
-        return chapter.videoTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               chapter.chapterKey.toLowerCase().includes(searchQuery.toLowerCase());
+      chapters = chapters.filter(chapter => {
+        return chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               chapter.chapterDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               chapter.moduleTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               chapter.submoduleTitle.toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
     
     // Filter by level
     if (filterLevel !== 'all') {
-      modules = modules.filter(chapter => {
-        // Simple level detection based on chapter number
-        const chapterNum = chapter.chapterIndex;
-        if (filterLevel === 'basic') return chapterNum <= 3;
-        if (filterLevel === 'intermediate') return chapterNum > 3 && chapterNum <= 6;
-        if (filterLevel === 'advanced') return chapterNum > 6;
+      chapters = chapters.filter(chapter => {
+        // Simple level detection based on chapter ID
+        const chapterNum = chapter.chapterId;
+        if (filterLevel === 'basic') return chapterNum <= 6;
+        if (filterLevel === 'intermediate') return chapterNum > 6 && chapterNum <= 12;
+        if (filterLevel === 'advanced') return chapterNum > 12;
         return true;
       });
     }
     
-    // Sort modules
-      switch (sortBy) {
-        case 'title':
-        modules.sort((a, b) => a.videoTitle.localeCompare(b.videoTitle));
+    // Sort chapters
+    switch (sortBy) {
+      case 'title':
+        chapters.sort((a, b) => a.chapterTitle.localeCompare(b.chapterTitle));
         break;
-        case 'oldest':
-        modules.sort((a, b) => a.chapterIndex - b.chapterIndex);
+      case 'oldest':
+        chapters.sort((a, b) => a.chapterId - b.chapterId);
         break;
-        case 'newest':
-        default:
-        // Sort by chapter index descending (newest first)
-        modules.sort((a, b) => b.chapterIndex - a.chapterIndex);
+      case 'newest':
+      default:
+        // Sort by chapter ID descending (newest first)
+        chapters.sort((a, b) => b.chapterId - a.chapterId);
         break;
-      }
+    }
     
-    return modules;
-  }, [youtubeData, searchQuery, filterLevel, sortBy]);
+    return chapters;
+  }, [youtubeData, searchQuery, filterLevel, sortBy, getAllChapters]);
 
   const toggleFavorite = (chapterId: string) => {
     setFavorites(prev => {
@@ -818,6 +1249,41 @@ export default function ModulesTab({ user }: ModulesTabProps) {
       return newLikes;
     });
   };
+
+  const toggleModuleExpansion = (moduleId: number) => {
+    setExpandedModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSubmoduleExpansion = (moduleId: number, submoduleId: number) => {
+    const key = `${moduleId}-${submoduleId}`;
+    setExpandedSubmodules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  // Calculate total chapters count
+  const totalChapters = React.useMemo(() => {
+    if (!youtubeData?.modules) return 0;
+    return youtubeData.modules.reduce((total, module) => {
+      return total + module.submodules.reduce((subTotal, submodule) => {
+        return subTotal + submodule.chapters.length;
+      }, 0);
+    }, 0);
+  }, [youtubeData]);
 
   const shareVideo = async (videoUrl: string, videoTitle: string) => {
     if (navigator.share) {
@@ -1233,9 +1699,17 @@ When any threat is found, these tools give details so you can quickly fix the pr
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                 <div className="flex items-center gap-3 mb-2">
                   <Video className="w-6 h-6 text-blue-300" />
+                  <span className="text-sm font-medium text-blue-100">Total Chapters</span>
+                </div>
+                <div className="text-3xl font-bold">{totalChapters}</div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <BookOpen className="w-6 h-6 text-purple-300" />
                   <span className="text-sm font-medium text-blue-100">Total Modules</span>
                 </div>
-                <div className="text-3xl font-bold">{youtubeData?.chapters?.length || 0}</div>
+                <div className="text-3xl font-bold">{youtubeData?.modules?.length || 0}</div>
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -1248,19 +1722,11 @@ When any threat is found, these tools give details so you can quickly fix the pr
               
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                 <div className="flex items-center gap-3 mb-2">
-                  <Heart className="w-6 h-6 text-red-300" />
-                  <span className="text-sm font-medium text-blue-100">Favorites</span>
-                </div>
-                <div className="text-3xl font-bold">{favorites.size}</div>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <div className="flex items-center gap-3 mb-2">
                   <TrendingUp className="w-6 h-6 text-green-300" />
                   <span className="text-sm font-medium text-blue-100">Progress</span>
                 </div>
                 <div className="text-3xl font-bold">
-                  {youtubeData?.chapters?.length ? Math.round((completedModules.size / youtubeData.chapters.length) * 100) : 0}%
+                  {totalChapters > 0 ? Math.round((completedModules.size / totalChapters) * 100) : 0}%
                 </div>
               </div>
             </div>
@@ -1268,7 +1734,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
             {/* Action Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
-                onClick={triggerYouTubeScraping}
+                onClick={handleDiscoverModules}
                 disabled={scraping || !user?.uniqueId}
                 className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl p-8 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-emerald-500/25"
               >
@@ -1347,7 +1813,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
           )}
 
           {/* Search and Filter Controls */}
-          {youtubeData && youtubeData.chapters && youtubeData.chapters.length > 0 && (
+          {youtubeData && youtubeData.modules && youtubeData.modules.length > 0 && (
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
               <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
                 {/* Search */}
@@ -1409,415 +1875,754 @@ When any threat is found, these tools give details so you can quickly fix the pr
           )}
 
           {/* Modules Display */}
-          {youtubeData && youtubeData.chapters && youtubeData.chapters.length > 0 ? (
+          {youtubeData && youtubeData.modules && youtubeData.modules.length > 0 ? (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold text-gray-900">
                   Your Learning Modules
                 </h3>
                 <span className="text-gray-500">
-                  {filteredModules.length} of {youtubeData.totalChapters} modules
+                  {filteredChapters.length} of {totalChapters} chapters
                 </span>
               </div>
               
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                  {filteredModules.map((chapter, index) => {
-                    const videoId = getVideoId(chapter.videoUrl);
-                    const chapterId = getChapterId(chapter.chapterKey);
-                    const isFavorite = favorites.has(chapterId);
-                    const isCompleted = completedModules.has(chapterId);
-                    const isPlaying = playingVideo === chapterId;
-                    const isBookmarked = bookmarkedVideos.has(chapterId);
-                    const isLiked = likedVideos.has(chapterId);
-                    const isHovered = hoveredVideo === chapterId;
-                    
-                    return (
-                      <motion.div 
-                        key={index} 
-                        className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ scale: 1.02 }}
-                        onHoverStart={() => setHoveredVideo(chapterId)}
-                        onHoverEnd={() => setHoveredVideo(null)}
+              {/* Hierarchical View: Modules -> Submodules -> Chapters */}
+              <div className="space-y-6">
+                {youtubeData.modules.map((module) => {
+                  const isModuleExpanded = expandedModules.has(module.moduleId);
+                  
+                  return (
+                    <div key={module.moduleId} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                      {/* Module Header */}
+                      <div 
+                        className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() => toggleModuleExpansion(module.moduleId)}
                       >
-                        {/* Video Section */}
-                        <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
-                          {videoId ? (
-                            <>
-                              {isPlaying ? (
-                                <iframe
-                                  key={`playing-${chapterId}`}
-                                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-                                  title={chapter.videoTitle}
-                                  className="w-full h-full"
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
-                                  {/* Video Thumbnail */}
-                                  <img
-                                    src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                                    alt={chapter.videoTitle}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                                    }}
-                                  />
-                                  {/* Play Overlay */}
-                                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                    <motion.button
-                                      onClick={() => setPlayingVideo(chapterId)}
-                                      className="p-6 bg-red-600 hover:bg-red-700 rounded-full shadow-2xl transform transition-all duration-300 hover:scale-110"
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
-                                    >
-                                      <Play className="w-12 h-12 text-white" />
-                                    </motion.button>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Control Overlay */}
-                              {isPlaying && (
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                                  <div className="flex gap-3">
-                                    <motion.button
-                                      onClick={() => setPlayingVideo(null)}
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
-                                    >
-                                      <PauseCircle className="w-8 h-8 text-gray-800" />
-                                    </motion.button>
-                                    
-                                    <motion.button
-                                      onClick={() => window.open(chapter.videoUrl, '_blank')}
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
-                                    >
-                                      <ExternalLink className="w-6 h-6 text-gray-800" />
-                                    </motion.button>
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-500">
-                              <div className="text-center">
-                                <Video className="w-12 h-12 mx-auto mb-2" />
-                                <p>Video not available</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                              <BookOpen className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                {module.moduleTitle}
+                              </h3>
+                              <p className="text-gray-600 text-sm">{module.moduleDescription}</p>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                                <span>{module.submodules.length} submodules</span>
+                                <span>•</span>
+                                <span>{module.submodules.reduce((sum, sub) => sum + sub.chapters.length, 0)} chapters</span>
                               </div>
                             </div>
-                          )}
-                          
-                          {/* Overlay Badges */}
-                          <div className="absolute top-4 left-4 flex gap-2">
-                            <span className="px-3 py-1 bg-black/70 text-white text-xs font-medium rounded-full backdrop-blur-sm">
-                              {chapter.chapterKey}
-                            </span>
-                            {isCompleted && (
-                              <span className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
-                                <CheckCircle className="w-3 h-3 inline mr-1" />
-                                Completed
-                              </span>
-                            )}
                           </div>
-                          
-                          {/* Action Buttons Overlay */}
-                          <div className="absolute top-4 right-4 flex gap-2">
-                            <motion.button
-                              onClick={() => toggleBookmark(chapterId)}
-                              className={`p-2 rounded-full backdrop-blur-sm transition-all ${
-                                isBookmarked 
-                                  ? 'bg-yellow-500 text-white' 
-                                  : 'bg-black/70 text-white hover:bg-yellow-500'
-                              }`}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              {isBookmarked ? (
-                                <BookmarkCheck className="w-4 h-4" />
-                              ) : (
-                                <Bookmark className="w-4 h-4" />
-                              )}
-                            </motion.button>
-                            
-                            <motion.button
-                              onClick={() => toggleLike(chapterId)}
-                              className={`p-2 rounded-full backdrop-blur-sm transition-all ${
-                                isLiked 
-                                  ? 'bg-blue-500 text-white' 
-                                  : 'bg-black/70 text-white hover:bg-blue-500'
-                              }`}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                            </motion.button>
-                            
-                            <motion.button
-                              onClick={() => shareVideo(chapter.videoUrl, chapter.videoTitle)}
-                              className="p-2 rounded-full backdrop-blur-sm bg-black/70 text-white hover:bg-purple-500 transition-all"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <Share className="w-4 h-4" />
-                            </motion.button>
-                            
-                            <motion.button
-                              onClick={() => toggleFavorite(chapterId)}
-                              className={`p-2 rounded-full backdrop-blur-sm transition-all ${
-                                isFavorite 
-                                  ? 'bg-red-500 text-white' 
-                                  : 'bg-black/70 text-white hover:bg-red-500'
-                              }`}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
-                            </motion.button>
-                            
-                            <motion.button
-                              onClick={() => markAsCompleted(chapterId)}
-                              className={`p-2 rounded-full backdrop-blur-sm transition-all ${
-                                isCompleted 
-                                  ? 'bg-green-500 text-white' 
-                                  : 'bg-black/70 text-white hover:bg-green-500'
-                              }`}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </motion.button>
-                      </div>
-                      </div>
-          
-                        {/* Content Section */}
-                        <div className="p-6">
-                          <h4 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                            {chapter.videoTitle}
-                          </h4>
-                          
-                          {/* Progress Bar */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
-                              <span>Quiz Score</span>
-                              <span>{progress[chapterId] || 0}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-300 ${
-                                  isCompleted 
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
-                                    : progress[chapterId] >= 75 
-                                      ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
-                                      : 'bg-gradient-to-r from-blue-500 to-purple-600'
-                                }`}
-                                style={{ width: `${progress[chapterId] || 0}%` }}
-                              ></div>
-                            </div>
-                            {progress[chapterId] >= 75 && !isCompleted && (
-                              <p className="text-xs text-orange-600 mt-1">
-                                Quiz passed! Complete other activities to finish chapter
-                              </p>
-                            )}
-                            {progress[chapterId] > 0 && progress[chapterId] < 75 && (
-                              <p className="text-xs text-blue-600 mt-1">
-                                Keep practicing to reach 75% for completion
-                              </p>
-                            )}
-                          </div>
-                          
-                          {/* Action Buttons */}
-                          <div className="flex gap-2">
-                <button
-                              onClick={() => {
-                                setSelectedChapter(chapter.chapterKey);
-                                generateMCQ(chapter.chapterKey);
-                              }}
-                              disabled={mcqLoading}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 font-medium"
-                            >
-                              {mcqLoading && selectedChapter === chapter.chapterKey ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Brain className="w-4 h-4" />
-                              )}
-                              Quiz
-          </button>
-          
-                            <button
-                              onClick={() => {
-                                setSelectedChapter(chapterId);
-                                setShowChat(true);
-                                setShowMcq(false);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 font-medium"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              Chat
-                            </button>
-                          </div>
+                          <ChevronRight 
+                            className={`w-6 h-6 text-gray-400 transition-transform ${isModuleExpanded ? 'rotate-90' : ''}`}
+                          />
                         </div>
-                      </motion.div>
-                    );
-                  })}
-                                  </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredModules.map((chapter, index) => {
-                    const videoId = getVideoId(chapter.videoUrl);
-                    const chapterId = getChapterId(chapter.chapterKey);
-                    const isFavorite = favorites.has(chapterId);
-                    const isCompleted = completedModules.has(chapterId);
-                    
-                    return (
-                      <div 
-                        key={index} 
-                        className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-6">
-                          {/* Video Thumbnail */}
-                          <div className="relative w-32 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                            {videoId ? (
-                              <img
-                                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
-                                alt={chapter.videoTitle}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <Video className="w-8 h-8" />
-                                </div>
-                            )}
-                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                              <PlayCircle className="w-6 h-6 text-white" />
-              </div>
-            </div>
-                          
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-lg font-semibold text-gray-900 line-clamp-1">
-                                {chapter.chapterKey}: {chapter.videoTitle}
-                              </h4>
-                              <div className="flex items-center gap-2 ml-4">
-                                <button
-                                  onClick={() => toggleFavorite(chapterId)}
-                                  className={`p-2 rounded-lg transition-colors ${
-                                    isFavorite 
-                                      ? 'bg-red-100 text-red-600' 
-                                      : 'text-gray-400 hover:bg-red-100 hover:text-red-600'
-                                  }`}
-                                >
-                                  <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
-                                </button>
-              <button
-                                  onClick={() => markAsCompleted(chapterId)}
-                                  className={`p-2 rounded-lg transition-colors ${
-                                    isCompleted 
-                                      ? 'bg-green-100 text-green-600' 
-                                      : 'text-gray-400 hover:bg-green-100 hover:text-green-600'
-                                  }`}
-                                >
-                                  <CheckCircle className="w-4 h-4" />
-              </button>
-            </div>
-                            </div>
+                      </div>
+                      
+                      {/* Submodules */}
+                      {isModuleExpanded && (
+                        <div className="border-t border-gray-200">
+                          {module.submodules.map((submodule) => {
+                            const submoduleKey = `${module.moduleId}-${submodule.submoduleId}`;
+                            const isSubmoduleExpanded = expandedSubmodules.has(submoduleKey);
                             
-                            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
-                                15 min
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Eye className="w-4 h-4" />
-                                1.2k views
-                              </span>
-                              {isCompleted && (
-                                <span className="flex items-center gap-1 text-green-600">
-                                  <CheckCircle className="w-4 h-4" />
-                                  Completed
-                                </span>
-          )}
-                                  </div>
-
-                            {/* Progress Bar */}
-                            <div className="mb-4">
-                              <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
-                                <span>Quiz Score</span>
-                                <span>{progress[chapterId] || 0}%</span>
-                                </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
+                            return (
+                              <div key={submodule.submoduleId} className="border-b border-gray-100 last:border-b-0">
+                                {/* Submodule Header */}
                                 <div 
-                                  className={`h-2 rounded-full transition-all duration-300 ${
-                                    isCompleted 
-                                      ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
-                                      : progress[chapterId] >= 75 
-                                        ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
-                                        : 'bg-gradient-to-r from-blue-500 to-purple-600'
-                                  }`}
-                                  style={{ width: `${progress[chapterId] || 0}%` }}
-                                ></div>
+                                  className="p-5 cursor-pointer hover:bg-gray-50 transition-colors bg-gray-50/50"
+                                  onClick={() => toggleSubmoduleExpansion(module.moduleId, submodule.submoduleId)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3 flex-1">
+                                      <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
+                                        <FileText className="w-4 h-4 text-white" />
                                       </div>
-                                      {progress[chapterId] >= 75 && !isCompleted && (
-                                        <p className="text-xs text-orange-600 mt-1">
-                                          Quiz passed! Complete other activities to finish chapter
-                                        </p>
-                                      )}
-                                      {progress[chapterId] > 0 && progress[chapterId] < 75 && (
-                                        <p className="text-xs text-blue-600 mt-1">
-                                          Keep practicing to reach 75% for completion
-                                        </p>
-                                      )}
+                                      <div className="flex-1">
+                                        <h4 className="text-lg font-semibold text-gray-800 mb-1">
+                                          {submodule.submoduleTitle}
+                                        </h4>
+                                        <p className="text-gray-600 text-sm">{submodule.submoduleDescription}</p>
+                                        <span className="text-xs text-gray-500 mt-1 inline-block">
+                                          {submodule.chapters.length} chapters
+                                        </span>
                                       </div>
+                                    </div>
+                                    <ChevronRight 
+                                      className={`w-5 h-5 text-gray-400 transition-transform ${isSubmoduleExpanded ? 'rotate-90' : ''}`}
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {/* Chapters */}
+                                {isSubmoduleExpanded && (
+                                  <div className="bg-gray-50/30">
+                                    {viewMode === 'grid' ? (
+                                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+                                        {submodule.chapters
+                                          .filter(chapter => {
+                                            // Apply search filter
+                                            if (searchQuery) {
+                                              const matchesSearch = 
+                                                chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                chapter.chapterDescription.toLowerCase().includes(searchQuery.toLowerCase());
+                                              if (!matchesSearch) return false;
+                                            }
+                                            return true;
+                                          })
+                                          .map((chapter, chapterIndex) => {
+                                            const videoId = getVideoId(chapter.youtubeUrl);
+                                            const chapterId = getChapterId(chapter.chapterId);
+                                            const isFavorite = favorites.has(chapterId);
+                                            const isCompleted = completedModules.has(chapterId);
+                                            const isPlaying = playingVideo === chapterId;
+                                            const isBookmarked = bookmarkedVideos.has(chapterId);
+                                            const isLiked = likedVideos.has(chapterId);
+                                            const isHovered = hoveredVideo === chapterId;
+                    
+                                            return (
+                                              <motion.div 
+                                                key={chapter.chapterId} 
+                                                className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: chapterIndex * 0.1 }}
+                                                whileHover={{ scale: 1.02 }}
+                                                onHoverStart={() => setHoveredVideo(chapterId)}
+                                                onHoverEnd={() => setHoveredVideo(null)}
+                                              >
+                                                {/* Video Section */}
+                                                <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
+                                                  {videoId ? (
+                                                    <>
+                                                      {isPlaying ? (
+                                                        <iframe
+                                                          key={`playing-${chapterId}`}
+                                                          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                                                          title={chapter.youtubeTitle}
+                                                          className="w-full h-full"
+                                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                          allowFullScreen
+                                                        />
+                                                      ) : (
+                                                        <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
+                                                          {/* Video Thumbnail */}
+                                                          <img
+                                                            src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                                                            alt={chapter.youtubeTitle}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                              const target = e.target as HTMLImageElement;
+                                                              target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                                                            }}
+                                                          />
+                                                          {/* Play Overlay */}
+                                                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                                            <motion.button
+                                                              onClick={() => setPlayingVideo(chapterId)}
+                                                              className="p-6 bg-red-600 hover:bg-red-700 rounded-full shadow-2xl transform transition-all duration-300 hover:scale-110"
+                                                              whileHover={{ scale: 1.1 }}
+                                                              whileTap={{ scale: 0.9 }}
+                                                            >
+                                                              <Play className="w-12 h-12 text-white" />
+                                                            </motion.button>
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                      
+                                                      {/* Control Overlay */}
+                                                      {isPlaying && (
+                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                                          <div className="flex gap-3">
+                                                            <motion.button
+                                                              onClick={() => setPlayingVideo(null)}
+                                                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
+                                                              whileHover={{ scale: 1.1 }}
+                                                              whileTap={{ scale: 0.9 }}
+                                                            >
+                                                              <PauseCircle className="w-8 h-8 text-gray-800" />
+                                                            </motion.button>
+                                                            
+                                                            <motion.button
+                                                              onClick={() => window.open(chapter.youtubeUrl, '_blank')}
+                                                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
+                                                              whileHover={{ scale: 1.1 }}
+                                                              whileTap={{ scale: 0.9 }}
+                                                            >
+                                                              <ExternalLink className="w-6 h-6 text-gray-800" />
+                                                            </motion.button>
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                    </>
+                                                  ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                      <div className="text-center">
+                                                        <Video className="w-12 h-12 mx-auto mb-2" />
+                                                        <p>Video not available</p>
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                  
+                                                  {/* Overlay Badges */}
+                                                  <div className="absolute top-4 left-4 flex gap-2">
+                                                    <span className="px-3 py-1 bg-black/70 text-white text-xs font-medium rounded-full backdrop-blur-sm">
+                                                      Chapter {chapter.chapterId}
+                                                    </span>
+                                                    {isCompleted && (
+                                                      <span className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+                                                        <CheckCircle className="w-3 h-3 inline mr-1" />
+                                                        Completed
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                  
+                                                  {/* Action Buttons Overlay */}
+                                                  <div className="absolute top-4 right-4 flex gap-2">
+                                                    <motion.button
+                                                      onClick={() => toggleBookmark(chapterId)}
+                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                        isBookmarked 
+                                                          ? 'bg-yellow-500 text-white' 
+                                                          : 'bg-black/70 text-white hover:bg-yellow-500'
+                                                      }`}
+                                                      whileHover={{ scale: 1.1 }}
+                                                      whileTap={{ scale: 0.9 }}
+                                                    >
+                                                      {isBookmarked ? (
+                                                        <BookmarkCheck className="w-4 h-4" />
+                                                      ) : (
+                                                        <Bookmark className="w-4 h-4" />
+                                                      )}
+                                                    </motion.button>
+                                                    
+                                                    <motion.button
+                                                      onClick={() => toggleLike(chapterId)}
+                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                        isLiked 
+                                                          ? 'bg-blue-500 text-white' 
+                                                          : 'bg-black/70 text-white hover:bg-blue-500'
+                                                      }`}
+                                                      whileHover={{ scale: 1.1 }}
+                                                      whileTap={{ scale: 0.9 }}
+                                                    >
+                                                      <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                                                    </motion.button>
+                                                    
+                                                    <motion.button
+                                                      onClick={() => shareVideo(chapter.youtubeUrl, chapter.youtubeTitle)}
+                                                      className="p-2 rounded-full backdrop-blur-sm bg-black/70 text-white hover:bg-purple-500 transition-all"
+                                                      whileHover={{ scale: 1.1 }}
+                                                      whileTap={{ scale: 0.9 }}
+                                                    >
+                                                      <Share className="w-4 h-4" />
+                                                    </motion.button>
+                                                    
+                                                    <motion.button
+                                                      onClick={() => toggleFavorite(chapterId)}
+                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                        isFavorite 
+                                                          ? 'bg-red-500 text-white' 
+                                                          : 'bg-black/70 text-white hover:bg-red-500'
+                                                      }`}
+                                                      whileHover={{ scale: 1.1 }}
+                                                      whileTap={{ scale: 0.9 }}
+                                                    >
+                                                      <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+                                                    </motion.button>
+                                                    
+                                                    <motion.button
+                                                      onClick={() => markAsCompleted(chapterId)}
+                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                        isCompleted 
+                                                          ? 'bg-green-500 text-white' 
+                                                          : 'bg-black/70 text-white hover:bg-green-500'
+                                                      }`}
+                                                      whileHover={{ scale: 1.1 }}
+                                                      whileTap={{ scale: 0.9 }}
+                                                    >
+                                                      <CheckCircle className="w-4 h-4" />
+                                                    </motion.button>
+                                                  </div>
+                                                </div>
+                      
+                                                {/* Content Section */}
+                                                <div className="p-6">
+                                                  <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                                    {chapter.chapterTitle}
+                                                  </h4>
+                                                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                    {chapter.chapterDescription}
+                                                  </p>
+                                                  
+                                                  {/* Progress Bar */}
+                                                  <div className="mb-4">
+                                                    <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                                                      <span>Quiz Score</span>
+                                                      <span>{progress[chapterId] || 0}%</span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                      <div 
+                                                        className={`h-2 rounded-full transition-all duration-300 ${
+                                                          isCompleted 
+                                                            ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                                                            : progress[chapterId] >= 75 
+                                                              ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
+                                                              : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                                                        }`}
+                                                        style={{ width: `${progress[chapterId] || 0}%` }}
+                                                      ></div>
+                                                    </div>
+                                                    {progress[chapterId] >= 75 && !isCompleted && (
+                                                      <p className="text-xs text-orange-600 mt-1">
+                                                        Quiz passed! Complete other activities to finish chapter
+                                                      </p>
+                                                    )}
+                                                    {progress[chapterId] > 0 && progress[chapterId] < 75 && (
+                                                      <p className="text-xs text-blue-600 mt-1">
+                                                        Keep practicing to reach 75% for completion
+                                                      </p>
+                                                    )}
+                                                  </div>
+                                                  
+                                                  {/* Action Buttons */}
+                                                  <div className="flex gap-2">
+                                                    <button
+                                                      onClick={() => {
+                                                        setSelectedChapter(chapter.chapterId);
+                                                        generateMCQ(chapter.chapterId.toString());
+                                                      }}
+                                                      disabled={mcqLoading}
+                                                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 font-medium"
+                                                    >
+                                                      {mcqLoading && selectedChapter === chapter.chapterId ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                      ) : (
+                                                        <Brain className="w-4 h-4" />
+                                                      )}
+                                                      Quiz
+                                                    </button>
+                                                    
+                                                    <button
+                                                      onClick={() => {
+                                                        setSelectedChapter(chapter.chapterId);
+                                                        setShowChat(true);
+                                                        setShowMcq(false);
+                                                      }}
+                                                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 font-medium"
+                                                    >
+                                                      <MessageCircle className="w-4 h-4" />
+                                                      Chat
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              </motion.div>
+                                            );
+                                          })}
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-4 p-6">
+                                        {submodule.chapters
+                                          .filter(chapter => {
+                                            // Apply search filter
+                                            if (searchQuery) {
+                                              const matchesSearch = 
+                                                chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                chapter.chapterDescription.toLowerCase().includes(searchQuery.toLowerCase());
+                                              if (!matchesSearch) return false;
+                                            }
+                                            return true;
+                                          })
+                                          .map((chapter) => {
+                                            const videoId = getVideoId(chapter.youtubeUrl);
+                                            const chapterId = getChapterId(chapter.chapterId);
+                                            const isFavorite = favorites.has(chapterId);
+                                            const isCompleted = completedModules.has(chapterId);
+                                            
+                                            return (
+                                              <div 
+                                                key={chapter.chapterId} 
+                                                className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300"
+                                              >
+                                                <div className="flex items-center gap-6">
+                                                  {/* Video Thumbnail */}
+                                                  <div className="relative w-32 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                                    {videoId ? (
+                                                      <img
+                                                        src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                                                        alt={chapter.youtubeTitle}
+                                                        className="w-full h-full object-cover"
+                                                      />
+                                                    ) : (
+                                                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                        <Video className="w-8 h-8" />
+                                                      </div>
+                                                    )}
+                                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                      <PlayCircle className="w-6 h-6 text-white" />
+                                                    </div>
+                                                  </div>
+                                                  
+                                                  {/* Content */}
+                                                  <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between mb-2">
+                                                      <div className="flex-1">
+                                                        <h4 className="text-lg font-semibold text-gray-900 line-clamp-1 mb-1">
+                                                          {chapter.chapterTitle}
+                                                        </h4>
+                                                        <p className="text-sm text-gray-600 line-clamp-2">
+                                                          {chapter.chapterDescription}
+                                                        </p>
+                                                      </div>
+                                                      <div className="flex items-center gap-2 ml-4">
+                                                        <button
+                                                          onClick={() => toggleFavorite(chapterId)}
+                                                          className={`p-2 rounded-lg transition-colors ${
+                                                            isFavorite 
+                                                              ? 'bg-red-100 text-red-600' 
+                                                              : 'text-gray-400 hover:bg-red-100 hover:text-red-600'
+                                                          }`}
+                                                        >
+                                                          <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+                                                        </button>
+                                                        <button
+                                                          onClick={() => markAsCompleted(chapterId)}
+                                                          className={`p-2 rounded-lg transition-colors ${
+                                                            isCompleted 
+                                                              ? 'bg-green-100 text-green-600' 
+                                                              : 'text-gray-400 hover:bg-green-100 hover:text-green-600'
+                                                          }`}
+                                                        >
+                                                          <CheckCircle className="w-4 h-4" />
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                                                      {isCompleted && (
+                                                        <span className="flex items-center gap-1 text-green-600">
+                                                          <CheckCircle className="w-4 h-4" />
+                                                          Completed
+                                                        </span>
+                                                      )}
+                                                    </div>
+
+                                                    {/* Progress Bar */}
+                                                    <div className="mb-4">
+                                                      <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                                                        <span>Quiz Score</span>
+                                                        <span>{progress[chapterId] || 0}%</span>
+                                                      </div>
+                                                      <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div 
+                                                          className={`h-2 rounded-full transition-all duration-300 ${
+                                                            isCompleted 
+                                                              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                                                              : progress[chapterId] >= 75 
+                                                                ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
+                                                                : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                                                          }`}
+                                                          style={{ width: `${progress[chapterId] || 0}%` }}
+                                                        ></div>
+                                                      </div>
+                                                      {progress[chapterId] >= 75 && !isCompleted && (
+                                                        <p className="text-xs text-orange-600 mt-1">
+                                                          Quiz passed! Complete other activities to finish chapter
+                                                        </p>
+                                                      )}
+                                                      {progress[chapterId] > 0 && progress[chapterId] < 75 && (
+                                                        <p className="text-xs text-blue-600 mt-1">
+                                                          Keep practicing to reach 75% for completion
+                                                        </p>
+                                                      )}
+                                                    </div>
           
-                            {/* Action Buttons */}
-                            <div className="flex gap-3">
-            <button
-                                onClick={() => {
-                                  setSelectedChapter(chapter.chapterKey);
-                                  generateMCQ(chapter.chapterKey);
-                                }}
-                                disabled={mcqLoading}
-                                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-                              >
-                                {mcqLoading && selectedChapter === chapter.chapterKey ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Brain className="w-4 h-4" />
+                                                    {/* Action Buttons */}
+                                                    <div className="flex gap-3">
+                                                      <button
+                                                        onClick={() => {
+                                                          setSelectedChapter(chapter.chapterId);
+                                                          generateMCQ(chapter.chapterId.toString());
+                                                        }}
+                                                        disabled={mcqLoading}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                                      >
+                                                        {mcqLoading && selectedChapter === chapter.chapterId ? (
+                                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                          <Brain className="w-4 h-4" />
+                                                        )}
+                                                        Take Quiz
+                                                      </button>
+                                                      
+                                                      <button
+                                                        onClick={() => {
+                                                          setSelectedChapter(chapter.chapterId);
+                                                          setShowChat(true);
+                                                          setShowMcq(false);
+                                                        }}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                                      >
+                                                        <MessageCircle className="w-4 h-4" />
+                                                        Ask Question
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
-                                Take Quiz
-            </button>
-            
-            <button
-                                onClick={() => {
-                                  setSelectedChapter(chapterId);
-                                  setShowChat(true);
-                                  setShowMcq(false);
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                <MessageCircle className="w-4 h-4" />
-                                Ask Question
-            </button>
-          </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+                </div>
+              </div>
+            ) : isFirstTimeGeneration && scraping ? (
+              // First-time generation waiting UI
+              <div className="text-center py-20 px-4">
+                <div className="max-w-2xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative mb-12"
+                  >
+                    {/* Animated background circles */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <motion.div
+                        className="absolute w-64 h-64 bg-gradient-to-r from-purple-200 to-blue-200 rounded-full opacity-20 blur-3xl"
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 180, 360],
+                        }}
+                        transition={{
+                          duration: 8,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                      <motion.div
+                        className="absolute w-48 h-48 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full opacity-30 blur-2xl"
+                        animate={{
+                          scale: [1.2, 1, 1.2],
+                          rotate: [360, 180, 0],
+                        }}
+                        transition={{
+                          duration: 6,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Main icon container */}
+                    <div className="relative z-10">
+                      <motion.div
+                        className="w-40 h-40 mx-auto bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl"
+                        animate={{
+                          rotate: [0, 5, -5, 0],
+                        }}
+                        transition={{
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <motion.div
+                          animate={{
+                            scale: [1, 1.1, 1],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <Video className="w-20 h-20 text-white" />
+                        </motion.div>
+                      </motion.div>
+                      
+                      {/* Orbiting sparkles */}
+                      {[0, 120, 240].map((angle, index) => (
+                        <motion.div
+                          key={index}
+                          className="absolute top-1/2 left-1/2 w-6 h-6"
+                          style={{
+                            transformOrigin: '0 80px',
+                          }}
+                          animate={{
+                            rotate: [angle, angle + 360],
+                          }}
+                          transition={{
+                            duration: 3 + index,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        >
+                          <div className="w-6 h-6 bg-yellow-400 rounded-full shadow-lg flex items-center justify-center">
+                            <Sparkles className="w-3 h-3 text-yellow-600" />
                           </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+
+                  {/* Content */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="space-y-6"
+                  >
+                    <h3 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+                      Generating Your Learning Modules
+                    </h3>
+                    
+                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 border-2 border-purple-200">
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <Clock className="w-6 h-6 text-purple-600" />
+                        <p className="text-xl font-semibold text-gray-800">
+                          Please wait for at least <span className="text-purple-600 font-bold">1 minute</span>
+                        </p>
+                      </div>
+                      <p className="text-gray-600 text-lg leading-relaxed">
+                        We're curating personalized YouTube content and creating interactive learning modules just for you. 
+                        This process takes a moment to ensure the best quality content.
+                      </p>
+                    </div>
+
+                    {/* Progress indicator */}
+                    <div className="mt-8">
+                      <div className="flex items-center justify-center gap-2 mb-3">
+                        <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+                        <span className="text-sm font-medium text-gray-600">
+                          Processing YouTube data...
+                        </span>
+                      </div>
+                      <div className="w-full max-w-md mx-auto h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "60%" }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            ease: "easeInOut",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tips */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8, duration: 0.5 }}
+                      className="mt-8 bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+                    >
+                      <div className="flex items-start gap-3">
+                        <Lightbulb className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-1" />
+                        <div className="text-left">
+                          <p className="font-semibold text-gray-800 mb-2">What's happening?</p>
+                          <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                            <li>Fetching relevant YouTube videos</li>
+                            <li>Analyzing content and creating modules</li>
+                            <li>Preparing interactive learning materials</li>
+                          </ul>
                         </div>
                       </div>
-                    );
-                  })}
+                    </motion.div>
+                  </motion.div>
+                </div>
               </div>
-      )}
-            </div>
-          ) : (
-            !loading && (
+            ) : generationFailed && deletionOccurred ? (
+              // Generation failed after deletion - show error notice
+              <div className="text-center py-20 px-4">
+                <div className="max-w-2xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white rounded-3xl shadow-2xl border-2 border-red-200 overflow-hidden"
+                  >
+                    {/* Header */}
+                    <div className="relative bg-gradient-to-r from-red-500 to-orange-600 text-white p-6">
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <div className="relative flex items-center gap-4">
+                        <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                          <AlertTriangle className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold mb-1">Module Generation Failed</h3>
+                          <p className="text-red-100 text-sm">Previous content was deleted</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-8 space-y-6">
+                      <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+                        <p className="text-gray-800 font-semibold mb-3 text-lg">
+                          ⚠️ Important Notice
+                        </p>
+                        <p className="text-gray-700 mb-4">
+                          Unfortunately, the module generation process failed. Your previous modules and learning progress have been deleted and cannot be restored.
+                        </p>
+                        <div className="bg-white rounded-lg p-4 border border-red-200">
+                          <p className="text-sm text-gray-600 font-medium mb-2">What happened:</p>
+                          <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                            <li>Previous modules were deleted as requested</li>
+                            <li>Module generation process encountered an error</li>
+                            <li>No new modules were created</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                        <p className="text-sm text-gray-700">
+                          <span className="font-semibold">What you can do:</span> You can try generating modules again. The system will attempt to create new learning content for you.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="p-6 bg-gray-50 flex gap-3">
+                      <button
+                        onClick={() => {
+                          setGenerationFailed(false);
+                          setDeletionOccurred(false);
+                        }}
+                        className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                      <button
+                        onClick={() => {
+                          setGenerationFailed(false);
+                          setDeletionOccurred(false);
+                          handleDiscoverModules();
+                        }}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            ) : (
               <div className="text-center py-20">
                 <div className="max-w-md mx-auto">
                   <div className="relative mb-8">
@@ -1833,7 +2638,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                     Start your learning journey by discovering new modules tailored to your interests and goals.
                   </p>
                   <button
-                    onClick={triggerYouTubeScraping}
+                    onClick={handleDiscoverModules}
                     disabled={scraping || !user?.uniqueId}
                     className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                   >
@@ -1846,8 +2651,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   </button>
                 </div>
               </div>
-            )
-          )}
+            )}
         </div>
       </div>
 
@@ -2140,11 +2944,11 @@ When any threat is found, these tools give details so you can quickly fix the pr
                           onChange={(e) => setChatQuery(e.target.value)}
                           placeholder="e.g., What is the main concept of this chapter? How does this work?"
                           className="w-full pl-4 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 bg-white text-lg"
-                          onKeyPress={(e) => e.key === 'Enter' && handleChatQuery(selectedChapter)}
+                          onKeyPress={(e) => e.key === 'Enter' && selectedChapter !== null && handleChatQuery(selectedChapter.toString())}
                         />
                       </div>
                       <button
-                        onClick={() => handleChatQuery(selectedChapter)}
+                        onClick={() => selectedChapter !== null && handleChatQuery(selectedChapter.toString())}
                         disabled={chatLoading || !chatQuery.trim()}
                         className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl"
                       >
@@ -2285,6 +3089,78 @@ When any threat is found, these tools give details so you can quickly fix the pr
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialog for Discovering New Modules */}
+      <AnimatePresence>
+        {showConfirmDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setShowConfirmDialog(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="relative bg-gradient-to-r from-orange-500 to-red-600 text-white p-6">
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative flex items-center gap-4">
+                  <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                    <AlertTriangle className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-1">Warning: Data Will Be Deleted</h3>
+                    <p className="text-orange-100 text-sm">This action cannot be undone</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                  <p className="text-gray-800 font-semibold mb-2">
+                    Are you sure you want to discover new modules?
+                  </p>
+                  <ul className="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                    <li>All existing modules will be <span className="font-bold text-red-600">permanently deleted</span></li>
+                    <li>All your learning progress will be <span className="font-bold text-red-600">lost</span></li>
+                    <li>Completed modules and achievements will be <span className="font-bold text-red-600">removed</span></li>
+                    <li>You will need to start learning from the beginning</li>
+                  </ul>
+                </div>
+
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">Note:</span> New modules will be generated based on your current learning path, but all previous progress will be reset.
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="p-6 bg-gray-50 flex gap-3">
+                <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAndProceed}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl"
+                >
+                  Yes, Delete & Discover
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* N8N Loading Indicator */}
         <N8NLoadingIndicator

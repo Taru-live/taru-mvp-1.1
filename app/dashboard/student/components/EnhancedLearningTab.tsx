@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Brain, BookOpen, Video, Mic, Sparkles, Zap } from 'lucide-react';
+import { Brain, BookOpen, Video, Mic, Sparkles, Zap, Network, FileImage } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AIBuddyTab from './AIBuddyTab';
+import MindMapTab from './MindMapTab';
+import PDFToInfoTab from './PDFToInfoTab';
 
 interface LearningApp {
   id: string;
@@ -23,6 +25,22 @@ const learningApps: LearningApp[] = [
     icon: <Brain className="w-8 h-8" />,
     color: 'from-purple-500 to-pink-500',
     gradient: 'bg-gradient-to-br from-purple-500 to-pink-500',
+  },
+  {
+    id: 'mindmap',
+    name: 'Mind Map Generator',
+    description: 'Transform PDFs into beautiful, interactive mind maps with AI-powered structure',
+    icon: <Network className="w-8 h-8" />,
+    color: 'from-indigo-500 to-purple-500',
+    gradient: 'bg-gradient-to-br from-indigo-500 to-purple-500',
+  },
+  {
+    id: 'pdf-to-info',
+    name: 'PDF to Infographics',
+    description: 'Convert PDF content into stunning infographics with customizable themes',
+    icon: <FileImage className="w-8 h-8" />,
+    color: 'from-teal-500 to-cyan-500',
+    gradient: 'bg-gradient-to-br from-teal-500 to-cyan-500',
   },
   {
     id: 'coming-soon-1',
@@ -81,6 +99,48 @@ export default function EnhancedLearningTab() {
         </div>
         <div className="flex-1 min-h-0">
           <AIBuddyTab />
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedApp === 'mindmap') {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex-shrink-0 bg-white border-b px-6 py-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Enhanced Learning
+          </button>
+        </div>
+        <div className="flex-1 min-h-0">
+          <MindMapTab />
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedApp === 'pdf-to-info') {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex-shrink-0 bg-white border-b px-6 py-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Enhanced Learning
+          </button>
+        </div>
+        <div className="flex-1 min-h-0">
+          <PDFToInfoTab />
         </div>
       </div>
     );
