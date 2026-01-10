@@ -1536,7 +1536,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   {parsed.allSections.length > 0 ? getSectionTitle(parsed.allSections[0]) : 'Key Concepts'}
                 </h3>
                 <div 
-                  className="text-gray-800 leading-relaxed text-sm [&_strong]:font-bold [&_strong]:text-gray-900 [&_br]:block [&_br]:mb-2 [&_strong]:text-blue-700 [&_li]:mb-2 [&_li]:ml-4"
+                  className="text-gray-800 leading-relaxed text-sm [&_strong]:font-bold [&_br]:block [&_br]:mb-2 [&_strong]:text-blue-700 [&_li]:mb-2 [&_li]:ml-4"
                   dangerouslySetInnerHTML={{ 
                     __html: parsed.article.replace(/\n/g, '<br>') 
                   }}
@@ -1667,26 +1667,17 @@ When any threat is found, these tools give details so you can quickly fix the pr
       )}
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
-            <div className="absolute top-32 right-20 w-32 h-32 bg-blue-300/20 rounded-full blur-2xl"></div>
-            <div className="absolute bottom-20 left-1/3 w-24 h-24 bg-purple-300/20 rounded-full blur-xl"></div>
-          </div>
-        </div>
-        
-        <div className="relative px-6 py-12 sm:px-8 lg:px-12">
+      <div className="relative overflow-hidden">
+        <div className="relative px-6 py-8 sm:px-8 lg:px-12">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                  <BookOpen className="w-8 h-8" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2.5 sm:p-3 bg-gradient-to-br from-purple-100 to-blue-100 rounded-xl sm:rounded-2xl shadow-sm">
+                  <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-purple-600" />
                   </div>
                   <div>
-                  <h1 className="text-4xl font-bold mb-2">Learning Modules</h1>
-                  <p className="text-blue-100 text-lg">Discover, learn, and master new skills</p>
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-gray-900">Learning Modules</h1>
+                  <p className="text-gray-600 text-sm sm:text-base md:text-lg">Discover, learn, and master new skills</p>
                 </div>
               </div>
               
@@ -1694,7 +1685,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                 <button
                   onClick={() => fetchYouTubeData()}
                   disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl backdrop-blur-sm transition-all duration-200 disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg sm:rounded-xl transition-all duration-200 disabled:opacity-50 text-sm font-medium"
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
@@ -1703,98 +1694,76 @@ When any threat is found, these tools give details so you can quickly fix the pr
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <Video className="w-6 h-6 text-blue-300" />
-                  <span className="text-sm font-medium text-blue-100">Total Chapters</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                  <Video className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Total Chapters</span>
                 </div>
-                <div className="text-3xl font-bold">{totalChapters}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900">{totalChapters}</div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <BookOpen className="w-6 h-6 text-purple-300" />
-                  <span className="text-sm font-medium text-blue-100">Total Modules</span>
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-purple-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Total Modules</span>
                 </div>
-                <div className="text-3xl font-bold">{youtubeData?.modules?.length || 0}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900">{youtubeData?.modules?.length || 0}</div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <Trophy className="w-6 h-6 text-yellow-300" />
-                  <span className="text-sm font-medium text-blue-100">Completed</span>
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-yellow-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Completed</span>
                 </div>
-                <div className="text-3xl font-bold">{completedModules.size}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900">{completedModules.size}</div>
           </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <TrendingUp className="w-6 h-6 text-green-300" />
-                  <span className="text-sm font-medium text-blue-100">Progress</span>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Progress</span>
                 </div>
-                <div className="text-3xl font-bold">
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                   {totalChapters > 0 ? Math.round((completedModules.size / totalChapters) * 100) : 0}%
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
                 onClick={handleDiscoverModules}
                 disabled={scraping || !user?.uniqueId}
-                className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl p-8 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-emerald-500/25"
+                className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl sm:rounded-2xl px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2 sm:gap-3"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative flex items-center gap-4">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    {scraping ? (
-                      <Loader2 className="w-8 h-8 animate-spin" />
-                    ) : (
-                      <Rocket className="w-8 h-8" />
-                    )}
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-2xl font-bold mb-2">
-                      {scraping ? 'Discovering New Content...' : 'Discover New Modules'}
-                    </h3>
-                    <p className="text-emerald-100 text-lg">
-                      {scraping ? 'AI is finding the best learning content for you' : 'Let AI find personalized learning content'}
-                    </p>
-          </div>
-        </div>
-                <div className="absolute top-4 right-4">
-                  <Sparkles className="w-6 h-6 text-white/60" />
-      </div>
+                <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm">
+                  {scraping ? (
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                  ) : (
+                    <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
+                </div>
+                <span className="font-semibold text-sm sm:text-base">
+                  {scraping ? 'Discovering...' : 'Discover New Modules'}
+                </span>
               </button>
 
               <button
                 onClick={() => fetchYouTubeData()}
                 disabled={loading || !user?.uniqueId}
-                className="group relative overflow-hidden bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-2xl p-8 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-violet-500/25"
+                className="group relative overflow-hidden bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-xl sm:rounded-2xl px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2 sm:gap-3"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative flex items-center gap-4">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    {loading ? (
-                      <Loader2 className="w-8 h-8 animate-spin" />
-                    ) : (
-                      <BookOpen className="w-8 h-8" />
-                    )}
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-2xl font-bold mb-2">
-                      {loading ? 'Loading Your Library...' : 'Browse Your Library'}
-                    </h3>
-                    <p className="text-violet-100 text-lg">
-                      {loading ? 'Fetching your personalized modules' : 'Explore your curated learning collection'}
-                    </p>
-                  </div>
+                <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm">
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                  ) : (
+                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
                 </div>
-                <div className="absolute top-4 right-4">
-                  <Globe className="w-6 h-6 text-white/60" />
-                </div>
+                <span className="font-semibold text-sm sm:text-base">
+                  {loading ? 'Loading...' : 'Browse Your Library'}
+                </span>
                 </button>
               </div>
           </div>
@@ -1822,7 +1791,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
 
           {/* Search and Filter Controls */}
           {youtubeData && youtubeData.modules && youtubeData.modules.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
+            <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
               <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
                 {/* Search */}
                 <div className="relative flex-1 max-w-md">
@@ -2046,7 +2015,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                           <div className="flex gap-3">
                                                             <motion.button
                                                               onClick={() => setPlayingVideo(null)}
-                                                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
+                                                              className="opacity-0 group-hover:opacity-100 duration-300 p-4 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
                                                               whileHover={{ scale: 1.1 }}
                                                               whileTap={{ scale: 0.9 }}
                                                             >
@@ -2055,7 +2024,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                             
                                                             <motion.button
                                                               onClick={() => window.open(chapter.youtubeUrl, '_blank')}
-                                                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
+                                                              className="opacity-0 group-hover:opacity-100 duration-300 p-3 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
                                                               whileHover={{ scale: 1.1 }}
                                                               whileTap={{ scale: 0.9 }}
                                                             >

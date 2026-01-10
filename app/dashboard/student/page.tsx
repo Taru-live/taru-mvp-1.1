@@ -1943,7 +1943,8 @@ export default function StudentDashboard() {
             uniqueId: user.uniqueId || undefined,
             grade: user.profile?.grade,
             school: user.profile?.school,
-            studentId: user._id
+            studentId: user._id,
+            avatar: userAvatar
           }}
         />
       )}

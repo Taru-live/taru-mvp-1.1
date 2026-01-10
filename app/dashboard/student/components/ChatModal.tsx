@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, X } from 'lucide-react';
+import { Mic, Type } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 interface Message {
   id: string;
@@ -26,6 +27,7 @@ interface StudentData {
   school?: string;
   studentId?: string;
   uniqueId?: string; // Add uniqueId field
+  avatar?: string; // Add avatar field
 }
 
 interface ChatModalProps {
@@ -41,6 +43,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
   const [showN8nOutput, setShowN8nOutput] = useState(false);
   const [studentUniqueId, setStudentUniqueId] = useState<string>('');
   const [sessionId, setSessionId] = useState<string>('');
+  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Function to extract HTML from markdown code blocks
@@ -440,7 +443,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
       
       <AnimatePresence>
         <motion.div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center sm:justify-end z-50 p-0 sm:p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -448,81 +451,35 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
           onClick={onClose}
         >
           <motion.div 
-            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-auto sm:max-w-md h-full sm:h-[600px] max-h-screen flex flex-col"
+            className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl sm:max-w-3xl h-[90vh] sm:h-[600px] max-h-[90vh] flex flex-col border border-gray-200 overflow-hidden"
             variants={modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <motion.div 
-              className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-2xl sm:rounded-t-xl"
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
+            {/* Close button positioned at top-right corner */}
+            <motion.button 
+              onClick={onClose} 
+              className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-transparent p-1.5 sm:p-2 touch-manipulation z-10 flex items-center justify-center"
+              whileHover={{ 
+                scale: 1.1,
+                rotate: 90,
+                transition: { duration: 0.2 }
+              }}
+              whileTap={{ scale: 0.9 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
             >
-              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                <motion.div 
-                  className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0"
-                  whileHover={{ 
-                    scale: 1.1,
-                    rotate: 360,
-                    transition: { duration: 0.6 }
-                  }}
-                >
-                  <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
-                </motion.div>
-                <div className="min-w-0 flex-1">
-                  <motion.h3 
-                    className="font-semibold text-sm sm:text-base truncate"
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.3 }}
-                  >
-                    AI Learning Assistant
-                  </motion.h3>
-                  <motion.p 
-                    className="text-xs text-white/80 truncate"
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.4, duration: 0.3 }}
-                  >
-                    {isLoading ? 'Processing...' : 'Ready to help you learn!'}
-                  </motion.p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                <motion.button
-                  onClick={() => setShowN8nOutput(!showN8nOutput)}
-                  className="hidden sm:block text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors backdrop-blur-sm touch-manipulation"
-                  title="Toggle AI-BUDDY output display"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.3 }}
-                >
-                  {showN8nOutput ? 'Hide AI' : 'Show AI'}
-                </motion.button>
-                
-                <motion.button 
-                  onClick={onClose} 
-                  className="text-white hover:text-white/80 transition-colors p-1 touch-manipulation"
-                  whileHover={{ 
-                    scale: 1.1,
-                    rotate: 90,
-                    transition: { duration: 0.2 }
-                  }}
-                  whileTap={{ scale: 0.9 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7, duration: 0.3 }}
-                >
-                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
-                </motion.button>
-              </div>
-            </motion.div>
+              <Image 
+                src="/icons/cross-icon.png" 
+                alt="Close" 
+                width={20} 
+                height={20} 
+                className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+              />
+            </motion.button>
 
             {/* Messages */}
             <motion.div 
@@ -531,17 +488,52 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.4 }}
             >
+              {/* Welcome text at the start of chatbox */}
+              <motion.div
+                className="flex justify-center items-center mb-4 sm:mb-6"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.4 }}
+              >
+                <motion.p
+                  className="text-gray-700 text-sm sm:text-base md:text-lg font-medium"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                >
+                  What can i help you?
+                </motion.p>
+              </motion.div>
+              
               <AnimatePresence>
                 {messages.map((message, _index) => (
                   <motion.div
                     key={message.id}
-                    className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                    className={`flex items-start gap-2 sm:gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
                     variants={messageVariants}
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
                     layout
                   >
+                    {/* Chatbot Avatar - Left side for bot messages */}
+                    {!message.isUser && (
+                      <motion.div
+                        className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center border-2 border-purple-200 shadow-sm overflow-hidden p-0"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.1, type: "spring" }}
+                      >
+                        <Image 
+                          src="/icons/chatbot-icon.png" 
+                          alt="AI Assistant" 
+                          width={32} 
+                          height={32} 
+                          className="w-full h-full object-cover"
+                        />
+                      </motion.div>
+                    )}
+                    
                     <motion.div
                       className={`max-w-[85%] sm:max-w-[80%] p-2.5 sm:p-3 rounded-2xl ${
                         message.isUser
@@ -569,6 +561,30 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
                         })}
                       </motion.p>
                     </motion.div>
+                    
+                    {/* User Avatar - Right side for user messages */}
+                    {message.isUser && (
+                      <motion.div
+                        className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-purple-200 shadow-sm overflow-hidden bg-gradient-to-br from-purple-100 to-blue-100"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.1, type: "spring" }}
+                      >
+                        {studentData.avatar ? (
+                          <Image 
+                            src={studentData.avatar} 
+                            alt={studentData.name} 
+                            width={40} 
+                            height={40} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-white font-semibold text-xs sm:text-sm">
+                            {studentData.name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -641,20 +657,63 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
 
             {/* Input */}
             <motion.div 
-              className="p-3 sm:p-4 border-t border-gray-200 bg-white"
+              className="p-3 sm:p-4 border-t border-gray-200 rounded-b-2xl sm:rounded-b-3xl"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.4 }}
             >
-              <div className="flex gap-2">
+              {/* Input Mode Options */}
+              <div className="flex gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                <motion.button
+                  onClick={() => setInputMode('text')}
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-medium transition-all duration-200 ${
+                    inputMode === 'text'
+                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Type className="w-3 h-3" />
+                  <span>Text</span>
+                </motion.button>
+                <motion.button
+                  onClick={() => setInputMode('voice')}
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-medium transition-all duration-200 ${
+                    inputMode === 'voice'
+                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Mic className="w-3 h-3" />
+                  <span>Voice</span>
+                </motion.button>
+              </div>
+              
+              <div className="flex gap-2 items-center">
+                <motion.button
+                  className={`flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9 p-1 border rounded-xl transition-colors touch-manipulation flex items-center justify-center ${
+                    inputMode === 'voice'
+                      ? 'border-purple-300 bg-gradient-to-r from-purple-600 to-blue-600 text-white'
+                      : 'border-gray-300 hover:bg-gray-50 text-gray-600'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={inputMode === 'voice' ? "Start voice recording" : "Switch to voice mode"}
+                  onClick={() => setInputMode('voice')}
+                >
+                  <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </motion.button>
                 <motion.textarea
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me anything about your learning..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none text-gray-900 bg-white text-sm sm:text-base touch-manipulation"
+                  placeholder={inputMode === 'text' ? "Ask me anything about your learning..." : "Tap the mic to speak..."}
+                  className="flex-1 h-8 sm:h-9 px-2 sm:px-2.5 py-1 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none text-gray-900 bg-white text-sm touch-manipulation"
                   rows={1}
-                  disabled={isLoading}
+                  disabled={isLoading || inputMode === 'voice'}
                   whileFocus={{ 
                     scale: 1.02,
                     transition: { duration: 0.2 }
@@ -663,49 +722,33 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
                 <motion.button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isLoading}
-                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm touch-manipulation min-w-[44px]"
+                  className="h-8 w-8 sm:h-9 sm:w-9 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 touch-manipulation flex items-center justify-center"
                   whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 5px 15px -5px rgba(147, 51, 234, 0.4)"
+                    scale: 1.05
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <motion.span
-                    animate={isLoading ? { rotate: 360 } : {}}
-                    transition={isLoading ? { 
-                      duration: 1, 
-                      repeat: Infinity, 
-                      ease: "linear" 
-                    } : {}}
-                    className="text-base sm:text-lg"
-                  >
-                    {isLoading ? '⏳' : '📤'}
-                  </motion.span>
+                  {isLoading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ 
+                        duration: 1, 
+                        repeat: Infinity, 
+                        ease: "linear" 
+                      }}
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 border-2 border-purple-600 border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    <Image 
+                      src="/icons/send.png" 
+                      alt="Send" 
+                      width={30} 
+                      height={30} 
+                      className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                    />
+                  )}
                 </motion.button>
               </div>
-              
-              {/* Quick suggestions */}
-              <motion.div 
-                className="flex gap-1.5 sm:gap-2 mt-2 sm:mt-3 flex-wrap"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.4 }}
-              >
-                {['Explain this topic', 'Help with homework', 'Study tips', 'Quiz me'].map((suggestion, index) => (
-                  <motion.button
-                    key={suggestion}
-                    onClick={() => setInputMessage(suggestion)}
-                    className="px-2.5 sm:px-3 py-1 text-xs bg-gradient-to-r from-purple-50 to-blue-50 text-purple-700 rounded-full hover:from-purple-100 hover:to-blue-100 transition-colors border border-purple-200 touch-manipulation"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.7 + index * 0.1, duration: 0.3 }}
-                  >
-                    {suggestion}
-                  </motion.button>
-                ))}
-              </motion.div>
             </motion.div>
           </motion.div>
         </motion.div>
