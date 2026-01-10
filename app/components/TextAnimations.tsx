@@ -135,10 +135,10 @@ export const StaggeredText: React.FC<StaggeredTextProps> = ({
         <motion.span
           key={index}
           variants={variants}
-          className="inline-block mr-1"
+          className="inline-block"
           transition={{ duration: 0.6, ease: "easeOut" as const }}
         >
-          {word}
+          {word}{index < words.length - 1 ? '\u00A0' : ''}
         </motion.span>
       ))}
     </motion.span>

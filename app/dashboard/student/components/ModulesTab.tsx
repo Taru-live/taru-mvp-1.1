@@ -100,9 +100,10 @@ interface ModulesTabProps {
     classGrade?: string;
     
   } | null;
+  initialSearchQuery?: string;
 }
 
-export default function ModulesTab({ user }: ModulesTabProps) {
+export default function ModulesTab({ user, initialSearchQuery = '' }: ModulesTabProps) {
   const [youtubeData, setYoutubeData] = useState<YoutubeData | null>(null);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
@@ -122,8 +123,15 @@ export default function ModulesTab({ user }: ModulesTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [filterLevel, setFilterLevel] = useState<'all' | 'basic' | 'intermediate' | 'advanced'>('all');
+  
+  // Update search query when initialSearchQuery prop changes
+  useEffect(() => {
+    if (initialSearchQuery) {
+      setSearchQuery(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [progress, setProgress] = useState<Record<string, number>>({});

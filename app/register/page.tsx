@@ -24,6 +24,8 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [language, setLanguage] = useState('English (USA)')
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false)
 
   useEffect(() => {
     // Track mouse position for interactive effects
@@ -34,6 +36,32 @@ export default function Register() {
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('lang')
+    if (savedLang) setLanguage(savedLang)
+  }, [])
+
+  useEffect(() => {
+    // Close language dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.language-selector-container')) {
+        setIsLanguageDropdownOpen(false)
+      }
+    }
+
+    if (isLanguageDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isLanguageDropdownOpen])
+
+  const handleLanguageChange = (lang: string) => {
+    setLanguage(lang)
+    localStorage.setItem('lang', lang)
+    setIsLanguageDropdownOpen(false)
+  }
 
   const handleRoleChange = (role: string) => {
     console.log('Role changed to:', role);
@@ -225,7 +253,7 @@ export default function Register() {
 
   return (
     <motion.main 
-      className="min-h-screen flex flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#6D18CE] p-2 sm:p-4 md:p-6 py-4 sm:py-6 md:py-8 lg:py-3 relative w-full"
+      className="h-screen flex flex-col items-center justify-start overflow-x-hidden overflow-y-hidden bg-[#6D18CE] relative w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -335,18 +363,14 @@ export default function Register() {
 
       {/* Main Registration Popup Container */}
       <motion.div 
-        className="relative w-full max-w-[1400px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row"
+        className="relative w-full h-full bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
         {/* Left Section - Purple Background with Content */}
         <motion.section 
-          className="w-full lg:w-[577px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12"
-          style={{ 
-            minHeight: 'clamp(500px, 80vh, 856px)',
-            height: 'auto'
-          }}
+          className="w-full lg:w-[577px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 h-full"
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
@@ -387,11 +411,62 @@ export default function Register() {
 
                  {/* Right Section - White Form Card */}
          <motion.section 
-           className="w-full lg:w-[823px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 lg:min-h-[856px]"
+           className="w-full lg:w-[823px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 h-full overflow-y-auto"
            initial={{ x: 100, opacity: 0 }}
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.8 }}
          >
+          {/* Language Selector - Top Right */}
+          <motion.div 
+            className="absolute top-3 sm:top-4 md:top-6 right-3 sm:right-4 md:right-6 z-10 language-selector-container"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <div className="relative">
+              <motion.button
+                onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                className="bg-[#6D18CE] hover:bg-[#5A14B0] text-white rounded-lg px-3 sm:px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <span className="text-lg">🌐</span>
+                <span className="text-xs sm:text-sm font-medium hidden sm:inline">{language}</span>
+                <svg 
+                  className={`w-4 h-4 text-white transition-transform ${isLanguageDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </motion.button>
+              
+              <AnimatePresence>
+                {isLanguageDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50"
+                  >
+                    {['English (USA)', 'हिन्दी', 'मराठी'].map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => handleLanguageChange(lang)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 transition-colors ${
+                          language === lang ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
 
           {/* Main Content Container */}
           <div className="px-4 sm:px-6 md:px-8 lg:px-[60px] py-4 sm:py-5 md:py-6 lg:py-[40px] h-full flex flex-col">

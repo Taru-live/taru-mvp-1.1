@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { RegistrationDataManager } from '@/lib/utils';
 import { StudentKeyGenerator } from '@/lib/studentKeyGenerator';
@@ -85,10 +86,65 @@ export default function StudentOnboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [uniqueId, setUniqueId] = useState('');
+  const [countdown, setCountdown] = useState(3);
 
   const [copied, setCopied] = useState(false);
   const [showFavoriteSubjectsDropdown, setShowFavoriteSubjectsDropdown] = useState(false);
   const [showLearningStylesDropdown, setShowLearningStylesDropdown] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerMonth, setDatePickerMonth] = useState(new Date().getMonth());
+  const [datePickerYear, setDatePickerYear] = useState(new Date().getFullYear());
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [hasReadTerms, setHasReadTerms] = useState(false);
+  const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
+
+  // Date picker helper functions
+  const formatDateDisplay = (dateString: string) => {
+    if (!dateString) return 'Select your date of birth';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month: number, year: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const handleDateSelect = (day: number) => {
+    const selectedDate = new Date(datePickerYear, datePickerMonth, day);
+    const formattedDate = selectedDate.toISOString().split('T')[0];
+    handleInputChange('dateOfBirth', formattedDate);
+    setShowDatePicker(false);
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      if (datePickerMonth === 0) {
+        setDatePickerMonth(11);
+        setDatePickerYear(datePickerYear - 1);
+      } else {
+        setDatePickerMonth(datePickerMonth - 1);
+      }
+    } else {
+      if (datePickerMonth === 11) {
+        setDatePickerMonth(0);
+        setDatePickerYear(datePickerYear + 1);
+      } else {
+        setDatePickerMonth(datePickerMonth + 1);
+      }
+    }
+  };
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -98,13 +154,20 @@ export default function StudentOnboarding() {
         setShowFavoriteSubjectsDropdown(false);
         setShowLearningStylesDropdown(false);
       }
+      // Close date picker when clicking outside
+      if (!target.closest('.date-picker-container')) {
+        setShowDatePicker(false);
+      }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showDatePicker]);
   const [formData, setFormData] = useState<StudentOnboardingData>({
     fullName: '',
     nickname: '',
@@ -137,7 +200,25 @@ export default function StudentOnboarding() {
   const [isOrganizationStudent, setIsOrganizationStudent] = useState(false);
   const router = useRouter();
 
+  // Auto-redirect to interest assessment after 3 seconds when onboarding is successful
+  useEffect(() => {
+    if (isSuccess) {
+      setCountdown(3);
+      
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            router.push('/interest-assessment');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
 
+      return () => clearInterval(countdownInterval);
+    }
+  }, [isSuccess, router]);
 
   const copyToClipboard = async () => {
     try {
@@ -267,6 +348,10 @@ export default function StudentOnboarding() {
       }
       
       setFormData(prev => ({ ...prev, age }));
+      
+      // Update date picker month/year to match selected date
+      setDatePickerMonth(birthDate.getMonth());
+      setDatePickerYear(birthDate.getFullYear());
     }
   }, [formData.dateOfBirth]);
 
@@ -294,11 +379,29 @@ export default function StudentOnboarding() {
     switch (step) {
       case 1:
         // Basic info and guardian info validation
-        if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
+        if (!formData.dateOfBirth) {
+          newErrors.dateOfBirth = 'Date of birth is required';
+        } else {
+          // Check if user is at least 5 years old
+          const today = new Date();
+          const birthDate = new Date(formData.dateOfBirth);
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          
+          if (age < 5) {
+            newErrors.dateOfBirth = 'You must be at least 5 years old to use this platform';
+          }
+        }
         if (!formData.gender) newErrors.gender = 'Gender is required';
         if (!formData.guardianName.trim()) newErrors.guardianName = 'Guardian name is required';
         if (!formData.languagePreference) newErrors.languagePreference = 'Language preference is required';
-        if (!formData.schoolId.trim()) newErrors.schoolId = 'School ID is required';
+        if (!formData.schoolId.trim() || formData.schoolId.trim() === '') {
+          newErrors.schoolId = 'School ID is required (enter 0 if not applicable)';
+        }
         if (formData.favoriteSubjects.length === 0) {
           newErrors.favoriteSubjects = 'Please select at least one favorite subject';
         }
@@ -345,13 +448,40 @@ export default function StudentOnboarding() {
 
   const handleInputChange = (field: keyof StudentOnboardingData, value: string | number | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field as string]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field as string];
-        return newErrors;
-      });
+    
+    // Validate age if date of birth is being changed
+    if (field === 'dateOfBirth' && typeof value === 'string' && value) {
+      const today = new Date();
+      const birthDate = new Date(value);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 5) {
+        setErrors(prev => ({
+          ...prev,
+          dateOfBirth: 'You must be at least 5 years old to use this platform'
+        }));
+      } else {
+        // Clear error if age is valid
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.dateOfBirth;
+          return newErrors;
+        });
+      }
+    } else {
+      // Clear error when user starts typing for other fields
+      if (errors[field as string]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field as string];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -547,8 +677,14 @@ export default function StudentOnboarding() {
 
             {/* Redirect Message */}
             <div className="text-center mb-4">
-              <p className="text-gray-600 text-sm">
-                Redirecting to interest assessment in 3 seconds...
+              <p className="text-gray-600 text-sm mb-2">
+                Redirecting to interest assessment in
+              </p>
+              <div className="text-4xl font-bold text-purple-600 mb-2">
+                {countdown}
+              </div>
+              <p className="text-gray-500 text-xs">
+                {countdown > 1 ? 'seconds' : 'second'}...
               </p>
             </div>
 
@@ -575,7 +711,7 @@ export default function StudentOnboarding() {
   const renderStep1 = () => (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
           Full Name
           {autoFilledFields.fullName && (
             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
@@ -651,7 +787,7 @@ export default function StudentOnboarding() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
           Class/Grade
           {autoFilledFields.classGrade && (
             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
@@ -893,7 +1029,7 @@ export default function StudentOnboarding() {
   return (
     <main className="h-screen flex flex-col md:flex-row overflow-hidden">
       {/* 🟪 Left Section - Students Details */}
-      <section className="w-full md:w-1/2 bg-gradient-to-br from-[#8B3DFF] to-[#6D18CE] px-6 py-8 text-white flex flex-col relative">
+      <section className="w-full md:w-1/2 bg-gradient-to-br from-[#8B3DFF] to-[#6D18CE] px-6 py-8 text-white flex flex-col relative m-4 rounded-2xl border-2">
         <Image src="/icons/logo.svg" alt="Logo" width={60} height={60} className="w-15 h-15 object-contain mb-8" />
         
         <div className="flex-1 flex flex-col justify-center">
@@ -902,7 +1038,7 @@ export default function StudentOnboarding() {
           </h1>
           
           {/* Progress Steps */}
-          <div className="px-4 space-y-6">
+          <div className="px-4 space-y-3">
             {[
               { step: 1, label: 'Personal Information', description: 'Basic details about you' },
               { step: 2, label: 'Learning Preferences', description: 'How you like to learn' },
@@ -955,8 +1091,7 @@ export default function StudentOnboarding() {
       {/* ⬜ Right Section - Getting to Know You */}
       <section className="w-full md:w-1/2 bg-white px-8 py-8 flex flex-col relative overflow-y-auto">
 
-
-        <div className="max-w-2xl mx-auto w-full">
+        <div className="max-w-2xl mx-auto w-full mt-3 md:mt-4 lg:mt-6 rounded-2xl border-2 border-purple-200 p-6 md:p-8 lg:p-10 bg-white shadow-lg">
           {/* Header */}
           <div className="text-center mb-8 relative">
             <div className="absolute top-0 right-0">
@@ -996,19 +1131,125 @@ export default function StudentOnboarding() {
                     />
                     {errors.guardianName && <p className="text-red-500 text-sm mt-1">{errors.guardianName}</p>}
                   </div>
-                  <div>
+                  <div className="relative date-picker-container">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Date of Birth *
                     </label>
-                    <input
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
-                      style={{
-                        colorScheme: 'light'
-                      }}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowDatePicker(!showDatePicker)}
+                      className="w-full px-4 py-3 pl-12 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 text-left text-gray-900 font-medium hover:border-purple-400 hover:shadow-md transition-all duration-200 flex items-center relative"
+                    >
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <span className={`block ${formData.dateOfBirth ? 'text-purple-700' : 'text-gray-400'}`}>
+                        {formatDateDisplay(formData.dateOfBirth)}
+                      </span>
+                    </button>
+                    
+                    {showDatePicker && (
+                      <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-2xl border-2 border-purple-200 overflow-hidden date-picker-container">
+                        {/* Calendar Header */}
+                        <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <button
+                              type="button"
+                              onClick={() => navigateMonth('prev')}
+                              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                              </svg>
+                            </button>
+                            <h3 className="text-lg font-bold">
+                              {monthNames[datePickerMonth]} {datePickerYear}
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => navigateMonth('next')}
+                              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                          {/* Year Selector */}
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setDatePickerYear(datePickerYear - 1)}
+                              className="px-3 py-1 hover:bg-white/20 rounded-lg transition-colors text-sm"
+                            >
+                              ‹
+                            </button>
+                            <span className="text-sm font-medium px-3">{datePickerYear}</span>
+                            <button
+                              type="button"
+                              onClick={() => setDatePickerYear(datePickerYear + 1)}
+                              className="px-3 py-1 hover:bg-white/20 rounded-lg transition-colors text-sm"
+                            >
+                              ›
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Calendar Grid */}
+                        <div className="p-4">
+                          {/* Day Headers */}
+                          <div className="grid grid-cols-7 gap-1 mb-2">
+                            {dayNames.map((day) => (
+                              <div key={day} className="text-center text-xs font-semibold text-gray-600 py-2">
+                                {day}
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Calendar Days */}
+                          <div className="grid grid-cols-7 gap-1">
+                            {Array.from({ length: getFirstDayOfMonth(datePickerMonth, datePickerYear) }).map((_, index) => (
+                              <div key={`empty-${index}`} className="aspect-square"></div>
+                            ))}
+                            {Array.from({ length: getDaysInMonth(datePickerMonth, datePickerYear) }).map((_, index) => {
+                              const day = index + 1;
+                              const currentDate = new Date(datePickerYear, datePickerMonth, day);
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              const compareDate = new Date(datePickerYear, datePickerMonth, day);
+                              compareDate.setHours(0, 0, 0, 0);
+                              
+                              const isToday = compareDate.getTime() === today.getTime();
+                              const isSelected = formData.dateOfBirth && 
+                                new Date(formData.dateOfBirth).toDateString() === currentDate.toDateString();
+                              const isFuture = compareDate > today;
+                              
+                              return (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  onClick={() => handleDateSelect(day)}
+                                  disabled={isFuture}
+                                  className={`aspect-square rounded-lg text-sm font-medium transition-all duration-200 ${
+                                    isSelected
+                                      ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg scale-110'
+                                      : isToday
+                                      ? 'bg-purple-100 text-purple-700 border-2 border-purple-400'
+                                      : isFuture
+                                      ? 'text-gray-300 cursor-not-allowed opacity-50'
+                                      : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700 hover:scale-105'
+                                  }`}
+                                >
+                                  {day}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
                   </div>
                   <div>
@@ -1116,9 +1357,14 @@ export default function StudentOnboarding() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        School ID *
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          School ID *
+                        </label>
+                        <span className="text-xs text-gray-500 italic">
+                          If not applicable, enter 0
+                        </span>
+                      </div>
                       <input
                         type="text"
                         value={formData.schoolId}
@@ -1309,7 +1555,16 @@ export default function StudentOnboarding() {
                 <h2 className="text-xl font-semibold text-purple-600 mb-6">Privacy & Consent</h2>
             <div className="space-y-6">
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-purple-800 mb-2">Data Usage Consent</h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-purple-800">Data Usage Consent</h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowPrivacyModal(true)}
+                        className="text-sm text-purple-600 hover:text-purple-800 underline font-medium"
+                      >
+                        Read Privacy Policy
+                      </button>
+                    </div>
                     <p className="text-sm text-purple-700 mb-3">
                       By accepting this consent, you agree to allow Taru Learning to collect, process, and use your learning data 
                       to provide personalized educational experiences and track your progress.
@@ -1319,15 +1574,30 @@ export default function StudentOnboarding() {
                         type="checkbox"
                         checked={formData.consentForDataUsage}
                         onChange={(e) => handleInputChange('consentForDataUsage', e.target.checked)}
-                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        disabled={!hasReadPrivacy}
+                        className={`rounded border-gray-300 text-purple-600 focus:ring-purple-500 ${
+                          !hasReadPrivacy ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       />
-                      <span className="text-sm text-purple-700">I consent to the collection and use of my learning data *</span>
+                      <span className={`text-sm text-purple-700 ${!hasReadPrivacy ? 'opacity-50' : ''}`}>
+                        I consent to the collection and use of my learning data *
+                        {!hasReadPrivacy && <span className="block text-xs text-purple-600 mt-1">(Please read the Privacy Policy first)</span>}
+                      </span>
                     </label>
                     {errors.consentForDataUsage && <p className="text-red-500 text-sm mt-1">{errors.consentForDataUsage}</p>}
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Terms and Conditions</h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">Terms and Conditions</h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowTermsModal(true)}
+                        className="text-sm text-purple-600 hover:text-purple-800 underline font-medium"
+                      >
+                        Read Terms & Conditions
+                      </button>
+                    </div>
                     <p className="text-sm text-gray-700 mb-3">
                       Please read and accept our terms and conditions to continue using the platform.
                     </p>
@@ -1336,9 +1606,15 @@ export default function StudentOnboarding() {
                         type="checkbox"
                         checked={formData.termsAndConditionsAccepted}
                         onChange={(e) => handleInputChange('termsAndConditionsAccepted', e.target.checked)}
-                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        disabled={!hasReadTerms}
+                        className={`rounded border-gray-300 text-purple-600 focus:ring-purple-500 ${
+                          !hasReadTerms ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       />
-                      <span className="text-sm text-gray-800">I accept the terms and conditions *</span>
+                      <span className={`text-sm text-gray-800 ${!hasReadTerms ? 'opacity-50' : ''}`}>
+                        I accept the terms and conditions *
+                        {!hasReadTerms && <span className="block text-xs text-gray-600 mt-1">(Please read the Terms & Conditions first)</span>}
+                      </span>
                     </label>
                     {errors.termsAndConditionsAccepted && <p className="text-red-500 text-sm mt-1">{errors.termsAndConditionsAccepted}</p>}
                   </div>
@@ -1376,6 +1652,262 @@ export default function StudentOnboarding() {
           </div>
         </div>
       </section>
+
+      {/* Terms and Conditions Modal */}
+      <AnimatePresence>
+        {showTermsModal && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowTermsModal(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Terms and Conditions</h2>
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                className="px-6 py-4 overflow-y-auto flex-1"
+                onScroll={(e) => {
+                  const target = e.target as HTMLElement;
+                  const scrollPercentage = (target.scrollTop + target.clientHeight) / target.scrollHeight;
+                  if (scrollPercentage >= 0.95) {
+                    setHasReadTerms(true);
+                  }
+                }}
+              >
+                <div className="prose max-w-none">
+                  <h3 className="text-xl font-semibold mb-4">1. Acceptance of Terms</h3>
+                  <p className="text-gray-700 mb-4">
+                    By accessing and using Taru Learning platform, you accept and agree to be bound by the terms and provision of this agreement.
+                  </p>
+                  
+                  <h3 className="text-xl font-semibold mb-4">2. Use License</h3>
+                  <p className="text-gray-700 mb-4">
+                    Permission is granted to temporarily access the materials on Taru Learning's platform for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Modify or copy the materials</li>
+                    <li>Use the materials for any commercial purpose or for any public display</li>
+                    <li>Attempt to reverse engineer any software contained on Taru Learning's platform</li>
+                    <li>Remove any copyright or other proprietary notations from the materials</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">3. User Account</h3>
+                  <p className="text-gray-700 mb-4">
+                    You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">4. Privacy Policy</h3>
+                  <p className="text-gray-700 mb-4">
+                    Your use of Taru Learning is also governed by our Privacy Policy. Please review our Privacy Policy to understand our practices.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">5. Educational Content</h3>
+                  <p className="text-gray-700 mb-4">
+                    All educational content provided on Taru Learning is for educational purposes only. We strive to provide accurate information but do not guarantee the completeness or accuracy of all content.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">6. Limitation of Liability</h3>
+                  <p className="text-gray-700 mb-4">
+                    In no event shall Taru Learning or its suppliers be liable for any damages arising out of the use or inability to use the materials on Taru Learning's platform.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">7. Revisions</h3>
+                  <p className="text-gray-700 mb-4">
+                    Taru Learning may revise these terms of service at any time without notice. By using this platform you are agreeing to be bound by the then current version of these terms of service.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">8. Contact Information</h3>
+                  <p className="text-gray-700 mb-4">
+                    If you have any questions about these Terms and Conditions, please contact us at support@tarulearning.com
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowTermsModal(false);
+                    if (hasReadTerms) {
+                      setHasReadTerms(true);
+                    }
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setHasReadTerms(true);
+                    setShowTermsModal(false);
+                  }}
+                  disabled={!hasReadTerms}
+                  className={`px-6 py-2 rounded-lg transition-all duration-200 ${
+                    hasReadTerms
+                      ? 'bg-gradient-to-r from-[#8B3DFF] to-[#6D18CE] text-white hover:shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  I Have Read and Understand
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Privacy and Consent Modal */}
+      <AnimatePresence>
+        {showPrivacyModal && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPrivacyModal(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Privacy Policy & Data Usage Consent</h2>
+                <button
+                  onClick={() => setShowPrivacyModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                className="px-6 py-4 overflow-y-auto flex-1"
+                onScroll={(e) => {
+                  const target = e.target as HTMLElement;
+                  const scrollPercentage = (target.scrollTop + target.clientHeight) / target.scrollHeight;
+                  if (scrollPercentage >= 0.95) {
+                    setHasReadPrivacy(true);
+                  }
+                }}
+              >
+                <div className="prose max-w-none">
+                  <h3 className="text-xl font-semibold mb-4">1. Information We Collect</h3>
+                  <p className="text-gray-700 mb-4">
+                    Taru Learning collects information that you provide directly to us, including:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Personal information (name, date of birth, contact information)</li>
+                    <li>Educational information (grade, subjects, learning preferences)</li>
+                    <li>Learning progress and performance data</li>
+                    <li>Device information and usage patterns</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">2. How We Use Your Information</h3>
+                  <p className="text-gray-700 mb-4">
+                    We use the information we collect to:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Provide personalized learning experiences tailored to your needs</li>
+                    <li>Track your learning progress and identify areas for improvement</li>
+                    <li>Communicate with you about your account and learning journey</li>
+                    <li>Improve our platform and develop new educational features</li>
+                    <li>Ensure platform security and prevent fraud</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">3. Data Sharing and Disclosure</h3>
+                  <p className="text-gray-700 mb-4">
+                    We do not sell your personal information. We may share your information only in the following circumstances:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>With your parent or guardian (for students under 18)</li>
+                    <li>With your school or educational institution (if applicable)</li>
+                    <li>With service providers who assist us in operating our platform</li>
+                    <li>When required by law or to protect our rights</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">4. Data Security</h3>
+                  <p className="text-gray-700 mb-4">
+                    We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">5. Your Rights</h3>
+                  <p className="text-gray-700 mb-4">
+                    You have the right to:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Access your personal information</li>
+                    <li>Request correction of inaccurate information</li>
+                    <li>Request deletion of your information</li>
+                    <li>Withdraw consent at any time</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">6. Children's Privacy</h3>
+                  <p className="text-gray-700 mb-4">
+                    Taru Learning is designed for children and complies with applicable children's privacy laws. We require parental consent for users under 13 years of age.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">7. Data Retention</h3>
+                  <p className="text-gray-700 mb-4">
+                    We retain your information for as long as your account is active or as needed to provide you services. We may retain certain information for legitimate business purposes or as required by law.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">8. Changes to This Policy</h3>
+                  <p className="text-gray-700 mb-4">
+                    We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">9. Contact Us</h3>
+                  <p className="text-gray-700 mb-4">
+                    If you have any questions about this Privacy Policy, please contact us at privacy@tarulearning.com
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowPrivacyModal(false);
+                    if (hasReadPrivacy) {
+                      setHasReadPrivacy(true);
+                    }
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setHasReadPrivacy(true);
+                    setShowPrivacyModal(false);
+                  }}
+                  disabled={!hasReadPrivacy}
+                  className={`px-6 py-2 rounded-lg transition-all duration-200 ${
+                    hasReadPrivacy
+                      ? 'bg-gradient-to-r from-[#8B3DFF] to-[#6D18CE] text-white hover:shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  I Have Read and Understand
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 } 

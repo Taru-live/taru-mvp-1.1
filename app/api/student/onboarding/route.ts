@@ -187,21 +187,48 @@ export async function POST(request: NextRequest) {
       }
 
       // Initialize student progress record (if it doesn't exist)
-      const existingProgress = await StudentProgress.findOne({ userId: decoded.userId });
+      // Use student._id as studentId since StudentProgress schema uses studentId (not userId)
+      const studentIdString = student._id.toString();
+      const existingProgress = await StudentProgress.findOne({ studentId: studentIdString });
       
       if (!existingProgress) {
-        await StudentProgress.create({
-          userId: decoded.userId,
-          studentId: decoded.userId,
-          moduleProgress: [],
-          pathProgress: [],
-          totalXpEarned: 0,
-          totalModulesCompleted: 0,
-          totalTimeSpent: 0,
-          badgesEarned: [],
-          currentModule: null,
-          currentPath: null
-        });
+        try {
+          await StudentProgress.create({
+            studentId: studentIdString,
+            moduleProgress: [],
+            totalPoints: 0,
+            totalModulesCompleted: 0,
+            totalWatchTime: 0,
+            totalInteractiveTime: 0,
+            totalProjectTime: 0,
+            totalPeerLearningTime: 0,
+            learningStreak: 0,
+            badgesEarned: [],
+            skillLevels: {},
+            learningPreferences: {
+              preferredContentTypes: [],
+              preferredDifficulty: 'beginner',
+              preferredGroupSize: 4,
+              preferredTimeOfDay: 'morning'
+            },
+            aiInsights: {
+              learningStyle: 'visual',
+              strengths: [],
+              weaknesses: [],
+              recommendations: [],
+              lastUpdated: new Date()
+            }
+          });
+        } catch (progressError: any) {
+          // Handle duplicate key error (race condition) - progress might have been created between check and create
+          if (progressError.code === 11000 || progressError.message?.includes('duplicate')) {
+            console.log('Student progress already exists, continuing...');
+            // Progress already exists, which is fine - continue with onboarding
+          } else {
+            // Re-throw other errors
+            throw progressError;
+          }
+        }
       }
 
       // Generate new token with assessment requirement (since onboarding is now complete)

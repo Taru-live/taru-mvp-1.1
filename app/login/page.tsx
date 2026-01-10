@@ -20,9 +20,22 @@ export default function Login() {
   const [error, setError] = useState('');
   const [selectedRole, setSelectedRole] = useState('Student');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [language, setLanguage] = useState('English (USA)');
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   
   // Ensure loading page displays for at least 3 seconds
   const shouldShowLoading = useMinimumDisplayTime(loading, 3000);
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang) setLanguage(savedLang);
+  }, []);
+
+  const handleLanguageChange = (lang: string) => {
+    setLanguage(lang);
+    localStorage.setItem('lang', lang);
+    setIsLanguageDropdownOpen(false);
+  };
 
   useEffect(() => {
     // Track mouse position for interactive effects
@@ -33,6 +46,21 @@ export default function Login() {
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
+
+  useEffect(() => {
+    // Close language dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.language-selector-container')) {
+        setIsLanguageDropdownOpen(false);
+      }
+    };
+
+    if (isLanguageDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isLanguageDropdownOpen])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +163,7 @@ export default function Login() {
 
   return (
     <motion.main 
-      className="min-h-screen flex flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#6D18CE] p-2 sm:p-4 md:p-6 py-4 sm:py-6 md:py-8 lg:py-3 relative w-full"
+      className="h-screen flex flex-col items-center justify-start overflow-x-hidden overflow-y-hidden bg-[#6D18CE] relative w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -226,7 +254,7 @@ export default function Login() {
 
       {/* Mobile Logo - Above White Box */}
       <motion.div
-        className="lg:hidden mb-8 sm:mb-10 md:mb-12 cursor-pointer"
+        className="lg:hidden mb-2 sm:mb-3 cursor-pointer"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.6 }}
@@ -239,24 +267,20 @@ export default function Login() {
           alt="Logo" 
           width={48} 
           height={48} 
-          className="w-12 h-12 sm:w-14 sm:h-14 object-contain mx-auto"
+          className="w-10 h-10 sm:w-12 sm:h-12 object-contain mx-auto"
         />
       </motion.div>
 
       {/* Main Login Popup Container */}
       <motion.div 
-        className="relative w-full max-w-[1400px] bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row"
+        className="relative w-full h-full bg-[#6D18CE] rounded-2xl sm:rounded-3xl md:rounded-[40px] flex flex-col lg:flex-row"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
                  {/* Left Section - Purple Background with Content */}
          <motion.section 
-           className="w-full lg:w-[577px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12"
-           style={{ 
-             minHeight: 'clamp(500px, 80vh, 856px)',
-             height: 'auto'
-           }}
+           className="w-full lg:w-[577px] relative hidden lg:flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 h-full"
            initial={{ x: -100, opacity: 0 }}
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.8 }}
@@ -315,31 +339,72 @@ export default function Login() {
 
                  {/* Right Section - White Form Card */}
          <motion.section 
-           className="w-full lg:w-[823px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 lg:min-h-[856px]"
+           className="w-full lg:w-[823px] bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-lg lg:shadow-[-21px_0px_144px_#6219B5] relative flex-1 h-full overflow-y-auto"
            initial={{ x: 100, opacity: 0 }}
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.8 }}
          >
-
-          {/* Super Admin Login Button - Top Right */}
-          <motion.button
-            onClick={() => router.push('/super-admin-login')}
-            className="absolute top-3 sm:top-4 md:top-6 right-3 sm:right-4 md:right-6 z-10 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:from-red-700 hover:to-red-800 touch-manipulation"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+          {/* Language Selector - Top Right */}
+          <motion.div 
+            className="absolute top-3 sm:top-4 md:top-6 right-3 sm:right-4 md:right-6 z-10 language-selector-container"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
           >
-            🔐 Super Admin
-          </motion.button>
+            <div className="relative">
+              <motion.button
+                onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                className="bg-[#6D18CE] hover:bg-[#5A14B0] text-white rounded-lg px-3 sm:px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <span className="text-lg">🌐</span>
+                <span className="text-xs sm:text-sm font-medium hidden sm:inline">{language}</span>
+                <svg 
+                  className={`w-4 h-4 text-white transition-transform ${isLanguageDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </motion.button>
+              
+              <AnimatePresence>
+                {isLanguageDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50"
+                  >
+                    {['English (USA)', 'हिन्दी', 'मराठी'].map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => handleLanguageChange(lang)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 transition-colors ${
+                          language === lang ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+
+          {/* Super Admin Login Button - Top Right (to the left of language button) */}
+          
 
           {/* Main Content Container */}
-          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-[155px] py-4 sm:py-5 md:py-6 lg:py-16 flex flex-col justify-center">
+          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-[155px] py-3 sm:py-4 md:py-5 lg:py-8 flex flex-col justify-center">
 
             {/* Welcome back Title */}
             <motion.h2 
-              className="mt-0 sm:mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-[32px] leading-tight sm:leading-snug md:leading-[38px] font-bold text-black w-full lg:w-[250px] mx-auto text-center mb-1.5 sm:mb-2 md:mb-3"
+              className="mt-0 sm:mt-1 text-xl sm:text-2xl md:text-3xl lg:text-[32px] leading-tight sm:leading-snug md:leading-[38px] font-bold text-black w-full lg:w-[250px] mx-auto text-center mb-1 sm:mb-1.5 md:mb-2"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.5 }}
@@ -349,7 +414,7 @@ export default function Login() {
 
             {/* Welcome back Subtitle */}
             <motion.p 
-              className="mt-1.5 sm:mt-2 md:mt-3 w-full lg:w-[500px] mx-auto text-center text-base sm:text-lg md:text-xl leading-relaxed sm:leading-7 md:leading-[32px] font-normal text-[#454545] mb-3 sm:mb-4 md:mb-6 lg:mb-8"
+              className="mt-1 sm:mt-1.5 w-full lg:w-[500px] mx-auto text-center text-sm sm:text-base md:text-lg leading-relaxed sm:leading-6 md:leading-7 font-normal text-[#454545] mb-2 sm:mb-3 md:mb-4"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.85, duration: 0.5 }}
@@ -360,37 +425,37 @@ export default function Login() {
             {/* Login Form */}
             <motion.form 
               onSubmit={handleSubmit}
-              className="mt-1.5 sm:mt-2 md:mt-4 w-full lg:w-[514px]"
+              className="mt-1 sm:mt-1.5 md:mt-2 w-full lg:w-[514px]"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.1, duration: 0.6 }}
             >
               {/* Email Input */}
-              <div className="relative mb-2.5 sm:mb-3 md:mb-4">
+              <div className="relative mb-4 sm:mb-5 md:mb-6">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full h-12 sm:h-14 md:h-[60px] px-4 sm:px-6 md:px-[47px] border-[0.5px] border-[#C2C2C2] rounded-full sm:rounded-[70px] text-sm sm:text-base md:text-[16.0016px] leading-tight sm:leading-[19px] font-medium text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                  className="w-full h-11 sm:h-12 md:h-14 px-4 sm:px-5 md:px-6 border-[0.5px] border-[#C2C2C2] rounded-full sm:rounded-[70px] text-sm sm:text-base md:text-[16.0016px] leading-tight sm:leading-[19px] font-medium text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                 />
               </div>
 
               {/* Password Input */}
-              <div className="relative mb-3 sm:mb-4 md:mb-[21px]">
+              <div className="relative mb-4 sm:mb-5 md:mb-6">
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
                   required
-                  className="w-full h-12 sm:h-14 md:h-[60px] px-4 sm:px-6 md:px-[47px] border-[0.5px] border-[#C2C2C2] rounded-full sm:rounded-[70px] text-sm sm:text-base md:text-[16.0016px] leading-tight sm:leading-[19px] font-medium text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                  className="w-full h-11 sm:h-12 md:h-14 px-4 sm:px-5 md:px-6 border-[0.5px] border-[#C2C2C2] rounded-full sm:rounded-[70px] text-sm sm:text-base md:text-[16.0016px] leading-tight sm:leading-[19px] font-medium text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                 />
               </div>
 
               {/* Remember me and Forgot password */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-0 mb-3 sm:mb-4 md:mb-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4 sm:mb-5 md:mb-6">
                 <div className="flex items-center gap-2 sm:gap-[6px]">
                   <input
                     type="checkbox"
@@ -407,7 +472,7 @@ export default function Login() {
               <AnimatePresence>
                 {error && (
                   <motion.div 
-                    className="mb-[18px] alert-error"
+                    className="mb-4 sm:mb-5 md:mb-6 alert-error"
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -422,7 +487,7 @@ export default function Login() {
               <motion.button
                 type="submit"
                 disabled={loading}
-                className="w-full max-w-full lg:max-w-[514px] h-12 sm:h-14 md:h-16 lg:h-[69px] bg-gradient-to-r from-[#6D18CE] to-[#8B5CF6] text-white rounded-full sm:rounded-[90px] font-semibold text-sm sm:text-base md:text-[16.0016px] flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover-glow touch-manipulation"
+                className="w-full max-w-full lg:max-w-[514px] h-11 sm:h-12 md:h-14 lg:h-16 bg-gradient-to-r from-[#6D18CE] to-[#8B5CF6] text-white rounded-full sm:rounded-[90px] font-semibold text-sm sm:text-base md:text-[16.0016px] flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover-glow touch-manipulation"
                 whileHover={{ 
                   scale: 1.02,
                   boxShadow: "0 20px 25px -5px rgba(109, 24, 206, 0.4)"
@@ -463,7 +528,7 @@ export default function Login() {
 
             {/* Register Link */}
             <motion.div 
-              className="mt-3 sm:mt-4 md:mt-6 text-center w-full lg:w-[205px] mb-3 sm:mb-4 md:mb-6"
+              className="mt-4 sm:mt-5 md:mt-6 text-center w-full lg:w-[205px] mb-2 sm:mb-2.5 md:mb-3"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.3, duration: 0.4 }}

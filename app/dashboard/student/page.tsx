@@ -197,6 +197,7 @@ export const dynamic = 'force-dynamic';
 
 export default function StudentDashboard() {
   const [user, setUser] = useState<StudentProfile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [youtubeData, setYoutubeData] = useState<YouTubeData | null>(null);
@@ -447,12 +448,18 @@ export default function StudentDashboard() {
       if (!user) return;
       try {
         setDashboardLoading(true);
-        const response = await fetch('/api/dashboard/student/overview');
+        const response = await fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard data');
         }
         const data = await response.json();
+        console.log('📊 Initial dashboard data - totalModules:', data?.overview?.totalModules);
         setDashboardData(data);
         
         // Fetch real notifications
@@ -498,9 +505,17 @@ export default function StudentDashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (user) {
-        fetch('/api/dashboard/student/overview')
+        fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        })
           .then(response => response.json())
-          .then(data => setDashboardData(data))
+          .then(data => {
+            console.log('🔄 Auto-refreshed dashboard data - totalModules:', data?.overview?.totalModules);
+            setDashboardData(data);
+          })
           .catch(error => console.error('Error refreshing dashboard data:', error));
       }
     }, 30000); // Refresh every 30 seconds
@@ -508,9 +523,9 @@ export default function StudentDashboard() {
     return () => clearInterval(interval);
   }, [user]);
 
-  // Refresh dashboard data when switching to progress tab
+  // Refresh dashboard data when switching to progress or overview tab
   useEffect(() => {
-    if (activeTab === 'progress' && user) {
+    if ((activeTab === 'progress' || activeTab === 'overview') && user) {
       // Force a fresh fetch with cache busting
       fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
         cache: 'no-cache',
@@ -519,8 +534,11 @@ export default function StudentDashboard() {
         }
       })
         .then(response => response.json())
-        .then(data => setDashboardData(data))
-        .catch(error => console.error('Error refreshing progress data:', error));
+        .then(data => {
+          console.log('🔄 Refreshed dashboard data:', data);
+          setDashboardData(data);
+        })
+        .catch(error => console.error('Error refreshing dashboard data:', error));
     }
   }, [activeTab, user]);
 
@@ -1179,29 +1197,74 @@ export default function StudentDashboard() {
           <div className="hidden sm:flex flex-1 items-center max-w-md">
             <motion.div 
               className="relative w-full"
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.2 }}
             >
-              <motion.svg 
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-600 w-5 h-5" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </motion.svg>
+              {/* Animated Background Gradient */}
+              <motion.div
+                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 opacity-20 blur-xl"
+                animate={{
+                  opacity: [0.15, 0.25, 0.15],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Search Icon */}
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                <svg 
+                  className="w-5 h-5 text-purple-600" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    // Switch to modules tab when Enter is pressed
+                    setActiveTab('modules');
+                    // You can add additional search logic here
+                    // For example, filter modules or show search results
+                    console.log('Searching for:', searchQuery);
+                  }
+                }}
                 placeholder="Search modules, topics, or questions..."
-                className="w-full pl-10 pr-4 py-3 rounded-full border-0 bg-gradient-to-r from-gray-100 to-purple-50/50 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:bg-white transition-all duration-300 text-sm shadow-sm hover:shadow-md"
+                className="relative w-full pl-11 pr-16 py-4 rounded-2xl border-2 border-purple-200 bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-200/50 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:border-purple-300"
               />
-              {/* Search Glow Effect */}
+              
+              {/* Fun Decorative Elements */}
               <motion.div
-                className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 pointer-events-none"
-                whileFocus={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-1"
+                initial={{ opacity: 0.5 }}
+                whileHover={{ opacity: 1 }}
+              >
+                <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                  Press Enter
+                </span>
+              </motion.div>
+              
+              {/* Animated Glow Effect */}
+              <motion.div
+                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400/30 via-pink-400/30 to-purple-400/30 opacity-0 pointer-events-none blur-md"
+                animate={{
+                  opacity: [0, 0.3, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
               />
             </motion.div>
           </div>
@@ -1474,7 +1537,7 @@ export default function StudentDashboard() {
                       
                       {/* Right side: Stats cards */}
                        <motion.div 
-                         className="flex gap-4"
+                         className="hidden md:flex gap-4"
                          initial={{ opacity: 0, x: 30 }}
                          animate={{ opacity: 1, x: 0 }}
                          transition={{ delay: 0.3, duration: 0.6 }}
@@ -1583,7 +1646,7 @@ export default function StudentDashboard() {
                 </motion.div>
               )}
               {activeTab === 'learning-path' && <LearningPathTab user={user ? { uniqueId: user.uniqueId ?? undefined, name: user.name ?? undefined } : null} onTabChange={setActiveTab} />}
-              {activeTab === 'modules' && <ModulesTab user={user} />}
+              {activeTab === 'modules' && <ModulesTab user={user} initialSearchQuery={searchQuery} />}
               {activeTab === 'enhanced-learning' && <EnhancedLearningTab />}
               {activeTab === 'progress' && (
                 <div>

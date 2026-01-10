@@ -229,15 +229,9 @@ export default function Home() {
          {/* Login Link */}
          <Link
            href="/login"
-           className="text-white hover:text-blue-300 font-semibold text-sm sm:text-base md:text-lg transition-colors duration-200 bg-black/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20 touch-manipulation"
+           className="text-white bg-black font-semibold text-sm sm:text-base md:text-lg transition-all duration-200 hover:opacity-80 hover:shadow-lg hover:shadow-black/50 hover:scale-110 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20 touch-manipulation inline-block"
          >
-           <motion.span
-             whileHover={{ scale: 1.05 }}
-             whileTap={{ scale: 0.95 }}
-             className="inline-block"
-           >
              Sign In
-           </motion.span>
          </Link>
        </motion.div>
 
