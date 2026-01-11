@@ -104,8 +104,6 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
         <div className="flex items-center gap-2 sm:gap-4">
           <motion.div
             className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center flex-shrink-0"
-            whileHover={{ rotate: 10, scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 300 }}
           >
             <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
           </motion.div>
@@ -139,7 +137,7 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
         className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
+        transition={{ delay: 0.1, duration: 0.6 }}
         whileHover={{ scale: 1.02 }}
       >
         <div className="text-center mb-6 sm:mb-8">
@@ -214,7 +212,6 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
           className="group bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
           whileHover={{ scale: 1.05, y: -5 }}
           onHoverStart={() => setHoveredCard('time')}
           onHoverEnd={() => setHoveredCard(null)}
@@ -282,7 +279,6 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
           className="group bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
           whileHover={{ scale: 1.05, y: -5 }}
           onHoverStart={() => setHoveredCard('modules')}
           onHoverEnd={() => setHoveredCard(null)}
@@ -355,7 +351,6 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
           className="group bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
           whileHover={{ scale: 1.05, y: -5 }}
           onHoverStart={() => setHoveredCard('badges')}
           onHoverEnd={() => setHoveredCard(null)}

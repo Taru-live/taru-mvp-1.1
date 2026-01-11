@@ -724,7 +724,8 @@ export default function StudentDashboard() {
         nickname: user.nickname,
         learningModePreference: user.learningModePreference,
         interestsOutsideClass: user.interestsOutsideClass,
-        preferredCareerDomains: user.preferredCareerDomains
+        preferredCareerDomains: user.preferredCareerDomains,
+        avatar: userAvatar
       }
     : { name: '', email: '', grade: '', school: '', language: 'English', studentKey: 'Not available' };
 
@@ -1186,9 +1187,9 @@ export default function StudentDashboard() {
           
           {/* Animated Border */}
           <motion.div
-            className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"
+            className="absolute bottom-0 left-4 h-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"
             initial={{ width: 0 }}
-            animate={{ width: "100%" }}
+            animate={{ width: "calc(100% - 2rem)" }}
             transition={{ duration: 2, ease: "easeOut" }}
           />
           {/* Enhanced Search Bar - Hidden on mobile, shown on tablet+ */}
@@ -1276,92 +1277,78 @@ export default function StudentDashboard() {
           <div className="flex items-center gap-2 sm:gap-4">
            
             
-             {/* Enhanced Notification Bell */}
-            <div className="relative" ref={notificationRef}>
-               <motion.button 
-                onClick={handleNotificationClick}
-                 className="relative text-gray-900 hover:text-purple-600 transition-colors p-2 rounded-full hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 touch-manipulation group"
-                 whileHover={{ scale: 1.1, rotate: [0, -10, 10, 0] }}
-                 whileTap={{ scale: 0.95 }}
-                 transition={{ duration: 0.2 }}
-              >
-                <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="30.24" height="30.24" transform="translate(0.899902 1.38086)" fill="#F5F5F5"/>
-                  <path d="M16.0204 3.90039C13.6812 3.90039 11.4378 4.82964 9.7837 6.48371C8.12963 8.13778 7.20039 10.3812 7.20039 12.7204V17.1657C7.20057 17.3611 7.15527 17.554 7.06809 17.7289L4.90467 22.0545C4.79899 22.2658 4.74908 22.5006 4.7597 22.7367C4.77032 22.9727 4.8411 23.2021 4.96533 23.4031C5.08956 23.6041 5.2631 23.77 5.46948 23.885C5.67586 24.0001 5.90823 24.0604 6.14451 24.0604H25.8963C26.1325 24.0604 26.3649 24.0001 26.5713 23.885C26.7777 23.77 26.9512 23.6041 27.0754 23.4031C27.1997 23.2021 27.2705 22.9727 27.2811 22.7367C27.2917 22.5006 27.2418 22.2658 27.1361 22.0545L24.9739 17.7289C24.8863 17.5541 24.8406 17.3612 24.8404 17.1657V12.7204C24.8404 10.3812 23.9111 8.13778 22.2571 6.48371C20.603 4.82964 18.3596 3.90039 16.0204 3.90039ZM16.0204 27.8404C15.2384 27.8408 14.4755 27.5987 13.8368 27.1473C13.1982 26.696 12.7153 26.0577 12.4546 25.3204H19.5862C19.3255 26.0577 18.8426 26.696 18.2039 27.1473C17.5653 27.5987 16.8024 27.8408 16.0204 27.8404Z" fill="#A5A5A5"/>
-                  <circle cx="23.58" cy="6.27336" r="5.78118" fill="#FDBB30"/>
-                  <path d="M21.8094 7.82227V7.15526L23.579 5.42054C23.7482 5.24964 23.8893 5.09782 24.0021 4.96508C24.1149 4.83234 24.1995 4.70375 24.2559 4.57931C24.3124 4.45487 24.3406 4.32213 24.3406 4.1811C24.3406 4.02015 24.3041 3.88244 24.2311 3.76795C24.158 3.6518 24.0577 3.56221 23.9299 3.49916C23.8021 3.43611 23.657 3.40458 23.4944 3.40458C23.3268 3.40458 23.1799 3.43942 23.0538 3.50911C22.9277 3.57714 22.8298 3.6742 22.7601 3.80031C22.6921 3.92641 22.6581 4.07657 22.6581 4.25078H21.7795C21.7795 3.92724 21.8534 3.646 22.0011 3.40707C22.1487 3.16814 22.352 2.98314 22.6108 2.85206C22.8713 2.72098 23.17 2.65544 23.5068 2.65544C23.8486 2.65544 24.1489 2.71932 24.4078 2.84708C24.6666 2.97484 24.8674 3.14989 25.0101 3.37223C25.1544 3.59456 25.2266 3.84842 25.2266 4.13381C25.2266 4.32462 25.1901 4.51211 25.1171 4.69629C25.0441 4.88046 24.9155 5.08454 24.7313 5.30854C24.5488 5.53254 24.2924 5.80382 23.9623 6.12239L23.0837 7.01588V7.05073H25.3037V7.82227H21.8094Z" fill="white"/>
-                </svg>
-                 {/* Enhanced Notification count */}
-                {unreadCount > 0 && (
-                   <motion.span 
-                     className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg"
-                     animate={{ 
-                       scale: [1, 1.2, 1],
-                       rotate: [0, 5, -5, 0]
-                     }}
-                     transition={{ 
-                       duration: 2, 
-                       repeat: Infinity, 
-                       ease: "easeInOut" 
-                     }}
-                   >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                   </motion.span>
-                 )}
-                 
-                 {/* Pulsing Ring Effect */}
-                 {unreadCount > 0 && (
-                   <motion.div
-                     className="absolute inset-0 rounded-full border-2 border-orange-400/50"
-                     animate={{
-                       scale: [1, 1.3, 1],
-                       opacity: [0.8, 0, 0.8],
-                     }}
-                     transition={{
-                       duration: 2,
-                       repeat: Infinity,
-                       ease: "easeInOut",
-                     }}
-                   />
-                 )}
-               </motion.button>
-
-            </div>
-            
              {/* Enhanced User Profile Section */}
              <motion.div 
-               className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-gray-200/50 flex items-center gap-3 group hover:shadow-xl transition-all duration-300"
+               className="bg-white/80 backdrop-blur-sm rounded-xl p-1.5 sm:p-3 shadow-lg border border-gray-200/50 flex items-center gap-1.5 sm:gap-3 group hover:shadow-xl transition-all duration-300"
                whileHover={{ scale: 1.02, y: -2 }}
                whileTap={{ scale: 0.98 }}
              >
+               {/* Enhanced Notification Bell */}
+               <div className="relative" ref={notificationRef}>
+                 <motion.button 
+                  onClick={handleNotificationClick}
+                   className="relative text-gray-900 hover:text-purple-600 transition-colors p-1 sm:p-2 rounded-full hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 touch-manipulation group"
+                   whileHover={{ scale: 1.1, rotate: [0, -10, 10, 0] }}
+                   whileTap={{ scale: 0.95 }}
+                   transition={{ duration: 0.2 }}
+                >
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="30.24" height="30.24" transform="translate(0.899902 1.38086)" fill="#F5F5F5"/>
+                    <path d="M16.0204 3.90039C13.6812 3.90039 11.4378 4.82964 9.7837 6.48371C8.12963 8.13778 7.20039 10.3812 7.20039 12.7204V17.1657C7.20057 17.3611 7.15527 17.554 7.06809 17.7289L4.90467 22.0545C4.79899 22.2658 4.74908 22.5006 4.7597 22.7367C4.77032 22.9727 4.8411 23.2021 4.96533 23.4031C5.08956 23.6041 5.2631 23.77 5.46948 23.885C5.67586 24.0001 5.90823 24.0604 6.14451 24.0604H25.8963C26.1325 24.0604 26.3649 24.0001 26.5713 23.885C26.7777 23.77 26.9512 23.6041 27.0754 23.4031C27.1997 23.2021 27.2705 22.9727 27.2811 22.7367C27.2917 22.5006 27.2418 22.2658 27.1361 22.0545L24.9739 17.7289C24.8863 17.5541 24.8406 17.3612 24.8404 17.1657V12.7204C24.8404 10.3812 23.9111 8.13778 22.2571 6.48371C20.603 4.82964 18.3596 3.90039 16.0204 3.90039ZM16.0204 27.8404C15.2384 27.8408 14.4755 27.5987 13.8368 27.1473C13.1982 26.696 12.7153 26.0577 12.4546 25.3204H19.5862C19.3255 26.0577 18.8426 26.696 18.2039 27.1473C17.5653 27.5987 16.8024 27.8408 16.0204 27.8404Z" fill="#A5A5A5"/>
+                    <circle cx="23.58" cy="6.27336" r="5.78118" fill="#FDBB30"/>
+                    <path d="M21.8094 7.82227V7.15526L23.579 5.42054C23.7482 5.24964 23.8893 5.09782 24.0021 4.96508C24.1149 4.83234 24.1995 4.70375 24.2559 4.57931C24.3124 4.45487 24.3406 4.32213 24.3406 4.1811C24.3406 4.02015 24.3041 3.88244 24.2311 3.76795C24.158 3.6518 24.0577 3.56221 23.9299 3.49916C23.8021 3.43611 23.657 3.40458 23.4944 3.40458C23.3268 3.40458 23.1799 3.43942 23.0538 3.50911C22.9277 3.57714 22.8298 3.6742 22.7601 3.80031C22.6921 3.92641 22.6581 4.07657 22.6581 4.25078H21.7795C21.7795 3.92724 21.8534 3.646 22.0011 3.40707C22.1487 3.16814 22.352 2.98314 22.6108 2.85206C22.8713 2.72098 23.17 2.65544 23.5068 2.65544C23.8486 2.65544 24.1489 2.71932 24.4078 2.84708C24.6666 2.97484 24.8674 3.14989 25.0101 3.37223C25.1544 3.59456 25.2266 3.84842 25.2266 4.13381C25.2266 4.32462 25.1901 4.51211 25.1171 4.69629C25.0441 4.88046 24.9155 5.08454 24.7313 5.30854C24.5488 5.53254 24.2924 5.80382 23.9623 6.12239L23.0837 7.01588V7.05073H25.3037V7.82227H21.8094Z" fill="white"/>
+                  </svg>
+                   {/* Enhanced Notification count */}
+                  {unreadCount > 0 && (
+                     <motion.span 
+                       className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-5 sm:h-5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center font-medium shadow-lg"
+                       animate={{ 
+                         scale: [1, 1.2, 1],
+                         rotate: [0, 5, -5, 0]
+                       }}
+                       transition={{ 
+                         duration: 2, 
+                         repeat: Infinity, 
+                         ease: "easeInOut" 
+                       }}
+                     >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                     </motion.span>
+                   )}
+                   
+                   {/* Pulsing Ring Effect */}
+                   {unreadCount > 0 && (
+                     <motion.div
+                       className="absolute inset-0 rounded-full border-2 border-orange-400/50"
+                       animate={{
+                         scale: [1, 1.3, 1],
+                         opacity: [0.8, 0, 0.8],
+                       }}
+                       transition={{
+                         duration: 2,
+                         repeat: Infinity,
+                         ease: "easeInOut",
+                       }}
+                     />
+                   )}
+                 </motion.button>
+               </div>
                {/* Enhanced Circular Avatar */}
-               <motion.button 
-                 className="relative w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-purple-500/25 transition-all duration-300 cursor-pointer"
-                 whileHover={{ rotate: 360 }}
-                 whileTap={{ scale: 0.95 }}
-                 transition={{ duration: 0.6 }}
-                 onClick={() => setIsAvatarSelectorOpen(true)}
-                 title="Change Avatar"
+               <div 
+                 className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
                >
-                <Image src={userAvatar} alt="User Avatar" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
+                <Image src={userAvatar} alt="User Avatar" width={36} height={36} className="w-7 h-7 sm:w-9 sm:h-9 rounded-full object-cover" />
                  
                  {/* Online Status Indicator */}
                  <motion.div
-                   className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"
+                   className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-white"
                    animate={{ scale: [1, 1.2, 1] }}
                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                  />
-                 
-                 {/* Glow Effect */}
-                 <motion.div
-                   className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400/50 to-pink-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                   animate={{ rotate: 360 }}
-                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                 />
-               </motion.button>
+               </div>
                
                {/* Enhanced User Info */}
-              <div className="flex flex-col">
+              <div className="hidden sm:flex flex-col">
                  <motion.span 
                    className="font-bold text-gray-900 text-sm group-hover:text-purple-600 transition-colors duration-300"
                    whileHover={{ x: 2 }}
@@ -1378,7 +1365,7 @@ export default function StudentDashboard() {
                
                {/* Hover Arrow */}
                <motion.div
-                 className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                 className="hidden sm:block ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                  animate={{ x: [0, 3, 0] }}
                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                  onClick={() => setActiveTab('settings')}
@@ -1461,7 +1448,7 @@ export default function StudentDashboard() {
             })}
           </div>
           {/* Main Panel */}
-          <main className="flex-1 min-h-0">
+          <main className="flex-1 min-h-0 rounded-[15px]">
             {/* Tab Content */}
             <AnimatePresence mode="wait">
               <motion.div 
@@ -1478,156 +1465,6 @@ export default function StudentDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
                 >
-                  {/* Welcome Section */}
-                  <motion.div 
-                    className="mb-6"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1, duration: 0.6 }}
-                  >
-                    <div className="flex items-center justify-between">
-                      {/* Left side: Avatar and quest text */}
-                      <motion.div 
-                        className="flex items-center gap-4"
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2, duration: 0.6 }}
-                      >
-                        <motion.button 
-                          className="relative w-16 h-16 sm:w-20 sm:h-20"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          onClick={() => setIsAvatarSelectorOpen(true)}
-                          title="Change Avatar"
-                        >
-                          <Image src={userAvatar} alt="Student Avatar" fill className="rounded-full object-cover shadow-lg hover-bounce" />
-                        </motion.button>
-                        <div>
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3, duration: 0.6 }}
-                          >
-                            <StaggeredText
-                              text={`Welcome back, ${user.name}!`}
-                              className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-1"
-                              delay={0.2}
-                              staggerDelay={0.05}
-                              animationType="fadeUp"
-                            />
-                          </motion.div>
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4, duration: 0.6 }}
-                          >
-                            <TypewriterText
-                              text="Ready for another fun quest?"
-                              className="text-gray-600 text-lg sm:text-xl font-medium"
-                              delay={0.8}
-                              speed={0.04}
-                              cursor={false}
-                            />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                      
-                      {/* Right side: Stats cards */}
-                       <motion.div 
-                         className="hidden md:flex gap-4"
-                         initial={{ opacity: 0, x: 30 }}
-                         animate={{ opacity: 1, x: 0 }}
-                         transition={{ delay: 0.3, duration: 0.6 }}
-                       >
-                        {/* XP Points Card */}
-                        <TiltCard className="min-w-[140px]" tiltStrength={8} glareEffect={true}>
-                          <motion.div 
-                            className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 shadow-sm border border-purple-200 min-h-[100px] hover:shadow-md transition-all duration-300 flex flex-col justify-center hover-bounce group"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4, duration: 0.6 }}
-                          >
-                            <motion.div
-                              className="text-3xl font-bold text-purple-600 group-hover:scale-110 transition-transform duration-300"
-                              animate={{ 
-                                scale: [1, 1.05, 1],
-                                textShadow: [
-                                  "0 0 0px rgba(147, 51, 234, 0)",
-                                  "0 0 10px rgba(147, 51, 234, 0.3)",
-                                  "0 0 0px rgba(147, 51, 234, 0)"
-                                ]
-                              }}
-                              transition={{ 
-                                duration: 2, 
-                                repeat: Infinity, 
-                                ease: "easeInOut",
-                                delay: 0.5
-                              }}
-                            >
-                              <ScrollCounter
-                                from={0}
-                                to={dashboardData?.overview?.totalXp || 0}
-                                duration={2}
-                                className=""
-                              />
-                            </motion.div>
-                            <div className="text-sm text-purple-700 font-medium">XP Points</div>
-                          </motion.div>
-                        </TiltCard>
-                        
-                        {/* Badges Card */}
-                        <motion.div 
-                          className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 shadow-sm border border-emerald-200 min-w-[140px] min-h-[100px] hover:shadow-md transition-all duration-300 flex flex-col justify-center hover-bounce group"
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.5, duration: 0.6 }}
-                        >
-                          <motion.div 
-                            className="text-3xl font-bold text-emerald-600 group-hover:scale-110 transition-transform duration-300"
-                            animate={{ 
-                              scale: [1, 1.05, 1],
-                            }}
-                            transition={{ 
-                              duration: 2,
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                              delay: 1.5
-                            }}
-                          >
-                            {dashboardData?.progress?.badgesEarned?.length || 0}
-                          </motion.div>
-                          <div className="text-sm text-emerald-700 font-medium">Badges</div>
-                        </motion.div>
-                        
-                        {/* Modules Card */}
-                        <motion.div 
-                          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-sm border border-blue-200 min-w-[140px] min-h-[100px] hover:shadow-md transition-all duration-300 flex flex-col justify-center hover-bounce group"
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.6, duration: 0.6 }}
-                        >
-                          <motion.div 
-                            className="text-3xl font-bold text-blue-600 group-hover:scale-110 transition-transform duration-300"
-                            animate={{ 
-                              scale: [1, 1.05, 1],
-                            }}
-                            transition={{ 
-                              duration: 2,
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                              delay: 2
-                            }}
-                          >
-                            {dashboardData?.overview?.totalModules || 0}
-                          </motion.div>
-                          <div className="text-sm text-blue-700 font-medium">Modules</div>
-                        </motion.div>
-                      </motion.div>
-                          </div>
-                  </motion.div>
 
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
@@ -1687,7 +1524,14 @@ export default function StudentDashboard() {
                 </div>
               )}
               {activeTab === 'rewards' && <RewardsTab badges={badgesData} onTabChange={setActiveTab} />}
-              {activeTab === 'settings' && <SettingsTab profile={profileData} onProfileUpdate={handleProfileUpdate} />}
+              {activeTab === 'settings' && (
+                <SettingsTab 
+                  profile={profileData} 
+                  onProfileUpdate={handleProfileUpdate}
+                  onAvatarChange={handleAvatarSelect}
+                  availableAvatars={AVAILABLE_AVATARS}
+                />
+              )}
               {/* Fallback for unknown tab */}
               {![
                 'overview',
@@ -1733,6 +1577,7 @@ export default function StudentDashboard() {
             style={{
               width: '310.06px',
               height: '643.67px',
+              marginRight: '1rem',
             }}
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1813,7 +1658,7 @@ export default function StudentDashboard() {
                 
                 {/* Name */}
                 <span 
-                  className="absolute font-bold text-black flex items-center"
+                  className="absolute font-bold text-black hidden sm:flex items-center"
                   style={{
                     left: '56.85px',
                     top: '5.42px',
@@ -1834,7 +1679,7 @@ export default function StudentDashboard() {
                 
                 {/* ID */}
                 <span 
-                  className="absolute text-gray-600 flex items-center"
+                  className="absolute text-gray-600 hidden sm:flex items-center"
                   style={{
                     left: '56.85px',
                     top: '22.48px',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { 
   User, 
   Mail, 
@@ -34,11 +35,14 @@ interface ProfileData {
   learningModePreference?: string;
   interestsOutsideClass?: string[];
   preferredCareerDomains?: string[];
+  avatar?: string;
 }
 
 interface SettingsTabProps {
   profile: ProfileData;
   onProfileUpdate?: (updatedProfile: Partial<ProfileData>) => void;
+  onAvatarChange?: (avatarPath: string) => void;
+  availableAvatars?: string[];
 }
 
 export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabProps) {
@@ -169,13 +173,9 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
         transition={{ delay: 0.2 }}
       >
         <div className="flex items-center gap-3 sm:gap-4">
-          <motion.div
-            className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0"
-            whileHover={{ rotate: 10, scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
+          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
             <Settings className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600" />
-          </motion.div>
+          </div>
           <div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{profile.name}</h2>
             <p className="text-gray-600 text-sm sm:text-base md:text-lg">Update your Details!</p>
@@ -230,8 +230,20 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
         <div className="lg:w-1/3">
           {/* Avatar Section */}
           <div className="text-center mb-4 sm:mb-6">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
-              {profile.name.charAt(0).toUpperCase()}
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center overflow-hidden">
+              {profile.avatar ? (
+                <Image 
+                  src={profile.avatar} 
+                  alt={profile.name} 
+                  width={96} 
+                  height={96} 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span className="text-white text-2xl sm:text-3xl font-bold">
+                  {profile.name.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-gray-900">{profile.name}</h3>
             <p className="text-xs sm:text-sm text-gray-500">Student</p>
@@ -305,7 +317,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                     type="text"
                     value={editedProfile.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                     placeholder="Enter your full name"
                   />
                 ) : (
@@ -324,7 +336,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                   <div className="relative">
                     <input
                       type="date"
-                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                       placeholder="dd/mm/yyyy"
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -382,7 +394,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                 {isEditing ? (
                   <input
                     type="text"
-                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                     placeholder="Enter guardian name"
                   />
                 ) : (
@@ -504,7 +516,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                     type="text"
                     value={editedProfile.school}
                     onChange={(e) => handleInputChange('school', e.target.value)}
-                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                     placeholder="Enter your school name"
                   />
                 ) : (

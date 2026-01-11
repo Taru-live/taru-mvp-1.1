@@ -396,8 +396,6 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
           <div className="flex items-center gap-3 sm:gap-4 md:gap-6 w-full lg:w-auto">
             <motion.div
               className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl flex-shrink-0"
-              whileHover={{ rotate: 15, scale: 1.1 }}
-              transition={{ type: "spring", stiffness: 300 }}
             >
               <Target className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
               <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">

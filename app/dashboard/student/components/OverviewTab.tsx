@@ -426,7 +426,7 @@ export default function OverviewTab({
   }, [dashboardData]);
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden">
+    <div className="relative w-full min-h-screen overflow-hidden rounded-[15px]">
       {/* Background decorative vectors */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div 
@@ -452,10 +452,14 @@ export default function OverviewTab({
       </div>
 
       <div className="relative z-10 px-2 sm:px-4 md:px-8 pr-4 sm:pr-6 md:pr-12 py-6 max-w-7xl mx-auto w-full">
-        {/* Overview Section */}
-        <div className="mb-8">
-          <h2 className="text-[20px] font-bold text-black mb-4">Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        {/* Overview and Course You're taking Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Left Column - Overview and Course You're taking */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Overview Section */}
+            <div>
+              <h2 className="text-[20px] font-bold text-black mb-4">Overview</h2>
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Course in Progress */}
             <motion.div 
               className="bg-[#F5F5F5] rounded-[10.56px] p-4"
@@ -467,7 +471,7 @@ export default function OverviewTab({
                 <div className="w-[18.7px] h-[18.7px] bg-[#FF8C23] rounded-[3.44px] flex items-center justify-center">
                   <div className="w-[14.54px] h-[14.54px] bg-white rounded-sm" />
                 </div>
-                <span className="text-[11.43px] font-medium text-[#878787]">Course in Progress</span>
+                <span className="text-[14px] font-semibold text-[#878787]">Course in Progress</span>
               </div>
               <div className="text-[36.08px] font-bold text-black mb-2">
                 {overviewStats.inProgress.toString().padStart(2, '0')}
@@ -490,7 +494,7 @@ export default function OverviewTab({
                 <div className="w-[18.7px] h-[18.7px] bg-[#00A679] rounded-[3.44px] flex items-center justify-center">
                   <CheckCircle2 className="w-[14.54px] h-[14.54px] text-white" />
                 </div>
-                <span className="text-[11.43px] font-medium text-[#878787]">Course Completed</span>
+                <span className="text-[14px] font-semibold text-[#878787]">Course Completed</span>
               </div>
               <div className="text-[36.08px] font-bold text-black mb-2">
                 {overviewStats.completed.toString().padStart(2, '0')}
@@ -513,7 +517,7 @@ export default function OverviewTab({
                 <div className="w-[18.7px] h-[18.7px] bg-[#4281EE] rounded-[3.44px] flex items-center justify-center">
                   <Award className="w-[14.54px] h-[14.54px] text-white" />
                 </div>
-                <span className="text-[11.43px] font-medium text-[#878787]">Certificates Earned</span>
+                <span className="text-[14px] font-semibold text-[#878787]">Certificates Earned</span>
               </div>
               <div className="text-[36.08px] font-bold text-black mb-2">
                 {overviewStats.certificates.toString().padStart(2, '0')}
@@ -536,7 +540,7 @@ export default function OverviewTab({
                 <div className="w-[18.7px] h-[18.7px] bg-[#FFC700] rounded-[3.44px] flex items-center justify-center">
                   <Bot className="w-[14.54px] h-[14.54px] text-white" />
                 </div>
-                <span className="text-[11.43px] font-medium text-[#878787]">Ai Avatar Support</span>
+                <span className="text-[14px] font-semibold text-[#878787]">Ai Avatar Support</span>
               </div>
               <div className="text-[36.08px] font-bold text-black mb-2">
                 {overviewStats.aiSupport}
@@ -547,14 +551,12 @@ export default function OverviewTab({
                 </span>
               </div>
             </motion.div>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Course You're taking */}
-          <div className="lg:col-span-2 w-full overflow-hidden">
-            <h2 className="text-[20px] font-bold text-black mb-4 px-2 sm:px-0">Course You're taking</h2>
+            {/* Course You're taking Section */}
+            <div>
+              <h2 className="text-[20px] font-bold text-black mb-4 px-2 sm:px-0">Course You're taking</h2>
             <div className="bg-[#F5F5F5] rounded-[15px] p-3 sm:p-6 overflow-x-auto">
               {/* Table Header - Hidden on mobile */}
               <div className="hidden md:grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-4 pb-4 border-b border-[#DDDDDD] mb-4">
@@ -654,11 +656,12 @@ export default function OverviewTab({
                 </div>
               )}
             </div>
+            </div>
 
             {/* Continue Learning Section */}
             <div className="mt-12">
               <h2 className="text-[20px] font-bold text-black mb-4">Continue Learning</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 md:gap-6">
                 {continueLearningModules.length > 0 ? (
                   continueLearningModules.map((module, index) => {
                     // Ensure unique key
@@ -666,7 +669,10 @@ export default function OverviewTab({
                     return (
                     <motion.div
                       key={uniqueKey}
-                      className="relative pb-20 cursor-pointer"
+                      className="relative cursor-pointer w-full"
+                      style={{
+                        height: '181px',
+                      }}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 * index }}
@@ -675,7 +681,9 @@ export default function OverviewTab({
                       {/* Course Image */}
                       <div 
                         className="w-full h-[181px] rounded-[15px] overflow-hidden relative"
-                        style={{ backgroundColor: module.color + '40' }}
+                        style={{ 
+                          backgroundColor: '#D9D9D9',
+                        }}
                       >
                         <div 
                           className="w-full h-full bg-gradient-to-br opacity-60"
@@ -686,14 +694,66 @@ export default function OverviewTab({
                       </div>
                       
                       {/* Course Info Card */}
-                      <div className="bg-white rounded-[15px] p-4 absolute top-[157px] left-0 right-0" style={{ boxShadow: '0px 4px 35px rgba(88, 14, 172, 0.15)' }}>
-                        <h3 className="text-[16px] font-bold text-black mb-3 truncate">{module.title}</h3>
-                        <div className="flex items-center gap-2">
-                          <div className="bg-[#F5F5F5] rounded-full px-3 py-1">
-                            <span className="text-[9.38px] font-medium text-[#787878]">⏱️ {module.duration}</span>
+                      <div 
+                        className="bg-white rounded-[15px] absolute h-[80px] md:h-[110px] flex flex-col justify-center md:justify-start"
+                        style={{ 
+                          width: 'calc(100% - 18px)',
+                          left: '9px',
+                          top: '120px',
+                          boxShadow: '0px 4px 35px rgba(88, 14, 172, 0.15)',
+                          padding: '14px 16px',
+                        }}
+                      >
+                        <h3 
+                          className="font-bold text-black mb-3 truncate hidden md:block"
+                          style={{
+                            fontFamily: 'Inter',
+                            fontSize: '16px',
+                            lineHeight: '19px',
+                            fontWeight: 700,
+                            color: '#000000',
+                          }}
+                        >
+                          {module.title}
+                        </h3>
+                        <div className="flex flex-col md:flex-row items-center md:items-center justify-center md:justify-start gap-2 mb-0 md:mb-2">
+                          <div 
+                            className="bg-[#F5F5F5] rounded-full flex items-center justify-center w-full md:w-[80px]"
+                            style={{
+                              height: '24px',
+                            }}
+                          >
+                            <span 
+                              className="text-center"
+                              style={{
+                                fontFamily: 'Inter',
+                                fontSize: '12px',
+                                lineHeight: '14px',
+                                fontWeight: 500,
+                                color: '#787878',
+                              }}
+                            >
+                              ⏱️ {module.duration}
+                            </span>
                           </div>
-                          <div className="bg-[#6D18CE] rounded-full px-3 py-1">
-                            <span className="text-[9.38px] font-medium text-white">{module.xp}+ XP</span>
+                          <div 
+                            className="bg-[#6D18CE] rounded-full flex items-center justify-center w-full md:w-[65.01px]"
+                            style={{
+                              height: '24px',
+                            }}
+                          >
+                            <span 
+                              className="text-center"
+                              style={{
+                                fontFamily: 'Inter',
+                                fontSize: '12px',
+                                lineHeight: '14px',
+                                fontWeight: 500,
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              {module.xp}+ XP
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -710,7 +770,7 @@ export default function OverviewTab({
           </div>
 
           {/* Right Column - Upcoming Tests */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 mt-8 md:mt-0">
             <div className="bg-[#F5F5F5] rounded-[15px] p-6 sticky top-6">
               <h2 className="text-[20px] font-bold text-black mb-6">Upcoming Tests</h2>
               

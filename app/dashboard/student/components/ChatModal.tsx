@@ -684,11 +684,14 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
               <div className="flex gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                 <motion.button
                   onClick={() => setInputMode('text')}
-                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 text-xs font-medium transition-all duration-200 ${
                     inputMode === 'text'
                       ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
+                  style={{
+                    borderRadius: '20px'
+                  }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -697,11 +700,14 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
                 </motion.button>
                 <motion.button
                   onClick={() => setInputMode('voice')}
-                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 text-xs font-medium transition-all duration-200 ${
                     inputMode === 'voice'
                       ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
+                  style={{
+                    borderRadius: '20px'
+                  }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -712,11 +718,14 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
               
               <div className="flex gap-2 items-center">
                 <motion.button
-                  className={`flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9 p-1 border rounded-xl transition-colors touch-manipulation flex items-center justify-center ${
+                  className={`flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9 p-1 border transition-colors touch-manipulation flex items-center justify-center ${
                     inputMode === 'voice'
                       ? 'border-purple-300 bg-gradient-to-r from-purple-600 to-blue-600 text-white'
                       : 'border-gray-300 hover:bg-gray-50 text-gray-600'
                   }`}
+                  style={{
+                    borderRadius: '20px'
+                  }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   title={inputMode === 'voice' ? "Start voice recording" : "Switch to voice mode"}
@@ -729,7 +738,10 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={inputMode === 'text' ? "Ask me anything about your learning..." : "Tap the mic to speak..."}
-                  className="flex-1 h-8 sm:h-9 px-2 sm:px-2.5 py-1 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none text-gray-900 bg-white text-sm touch-manipulation"
+                  className="flex-1 h-8 sm:h-9 px-2 sm:px-2.5 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none text-gray-900 bg-white text-sm touch-manipulation"
+                  style={{
+                    borderRadius: '20px'
+                  }}
                   rows={1}
                   disabled={isLoading || inputMode === 'voice'}
                   whileFocus={{ 

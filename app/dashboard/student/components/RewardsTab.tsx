@@ -127,25 +127,17 @@ export default function RewardsTab({ badges, onTabChange }: RewardsTabProps) {
         transition={{ delay: 0.2, duration: 0.6 }}
       >
         <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="hidden sm:block"
-          >
+          <div className="hidden sm:block">
             <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-500" />
-          </motion.div>
+          </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
             <Crown className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-purple-600" />
             <span>My Rewards & Badges</span>
             <Crown className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-purple-600" />
           </h2>
-          <motion.div
-            animate={{ rotate: [0, -10, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="hidden sm:block"
-          >
+          <div className="hidden sm:block">
             <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-500" />
-          </motion.div>
+          </div>
         </div>
         <motion.p 
           className="text-gray-600 text-base sm:text-lg md:text-xl px-4"

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, 
@@ -105,6 +106,7 @@ interface ModulesTabProps {
 }
 
 export default function ModulesTab({ user, initialSearchQuery = '', onProgressUpdate }: ModulesTabProps) {
+  const router = useRouter();
   const [youtubeData, setYoutubeData] = useState<YoutubeData | null>(null);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
@@ -1875,13 +1877,52 @@ When any threat is found, these tools give details so you can quickly fix the pr
                 </span>
               </div>
               
-              {/* Hierarchical View: Modules -> Submodules -> Chapters */}
-              <div className="space-y-6">
-                {youtubeData.modules.map((module) => {
-                  const isModuleExpanded = expandedModules.has(module.moduleId);
-                  
-                  return (
-                    <div key={module.moduleId} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+              {/* Modules Display based on viewMode */}
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {youtubeData.modules.map((module) => {
+                    const totalChapters = module.submodules.reduce((sum, sub) => sum + sub.chapters.length, 0);
+                    return (
+                      <motion.div
+                        key={module.moduleId}
+                        className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-xl transition-shadow"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ y: -5 }}
+                        onClick={() => {
+                          router.push(`/modules/youtube/${module.moduleId}`);
+                        }}
+                      >
+                        <div className="p-6">
+                          <div className="flex items-center justify-center mb-4">
+                            <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                              <BookOpen className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+                            {module.moduleTitle}
+                          </h3>
+                          <p className="text-gray-600 text-sm mb-4 text-center line-clamp-3">
+                            {module.moduleDescription}
+                          </p>
+                          <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                            <span>{module.submodules.length} submodules</span>
+                            <span>•</span>
+                            <span>{totalChapters} chapters</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Hierarchical View: Modules -> Submodules -> Chapters */
+                <div className="space-y-6">
+                  {youtubeData.modules.map((module) => {
+                    const isModuleExpanded = expandedModules.has(module.moduleId);
+                    
+                    return (
+                      <div key={module.moduleId} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
                       {/* Module Header */}
                       <div 
                         className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -1948,7 +1989,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                 {/* Chapters */}
                                 {isSubmoduleExpanded && (
                                   <div className="bg-gray-50/30">
-                                    {viewMode === 'grid' ? (
+                                    {(viewMode as 'grid' | 'list') === 'grid' ? (
                                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
                                         {submodule.chapters
                                           .filter(chapter => {
@@ -1974,13 +2015,14 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                             return (
                                               <motion.div 
                                                 key={chapter.chapterId} 
-                                                className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                                                className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: chapterIndex * 0.1 }}
                                                 whileHover={{ scale: 1.02 }}
                                                 onHoverStart={() => setHoveredVideo(chapterId)}
                                                 onHoverEnd={() => setHoveredVideo(null)}
+                                                onClick={() => router.push(`/modules/youtube/${module.moduleId}/chapter/${chapter.chapterId}`)}
                                               >
                                                 {/* Video Section */}
                                                 <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
@@ -2045,7 +2087,10 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                           {/* Play Overlay */}
                                                           <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                                                             <motion.button
-                                                              onClick={() => setPlayingVideo(chapterId)}
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                router.push(`/modules/youtube/${module.moduleId}/chapter/${chapter.chapterId}`);
+                                                              }}
                                                               className="pointer-events-auto p-6 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 rounded-full shadow-2xl transform transition-all duration-300 border-2 border-white/20"
                                                               whileHover={{ scale: 1.15, boxShadow: "0 0 30px rgba(239, 68, 68, 0.6)" }}
                                                               whileTap={{ scale: 0.95 }}
@@ -2440,8 +2485,9 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   )
                 })}
                 </div>
-              </div>
-            ) : isFirstTimeGeneration && scraping ? (
+              )}
+            </div>
+          ) : isFirstTimeGeneration && scraping ? (
               // First-time generation waiting UI
               <div className="text-center py-20 px-4">
                 <div className="max-w-2xl mx-auto">
