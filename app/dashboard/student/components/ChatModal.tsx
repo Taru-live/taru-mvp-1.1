@@ -72,13 +72,14 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
       // If it's HTML, render it safely
       return (
         <div 
-          className="html-content"
+          className="html-content break-words overflow-wrap-anywhere"
+          style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
           dangerouslySetInnerHTML={{ __html: extractedHTML }}
         />
       );
     } else {
       // If it's plain text, render as text
-      return <p className="text-xs sm:text-sm leading-relaxed">{extractedHTML}</p>;
+      return <p className="text-xs sm:text-sm leading-relaxed break-words overflow-wrap-anywhere" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{extractedHTML}</p>;
     }
   };
 
@@ -439,6 +440,9 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
            margin: 0;
            padding: 0;
          }
+         .scrollbar-hide::-webkit-scrollbar {
+           display: none;
+         }
       `}</style>
       
       <AnimatePresence>
@@ -451,7 +455,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
           onClick={onClose}
         >
           <motion.div 
-            className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl sm:max-w-3xl h-[90vh] sm:h-[600px] max-h-[90vh] flex flex-col border border-gray-200 overflow-hidden"
+            className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl sm:max-w-5xl h-[90vh] sm:h-[600px] max-h-[90vh] flex flex-col border border-gray-200 overflow-hidden"
             variants={modalVariants}
             initial="hidden"
             animate="visible"
@@ -483,23 +487,42 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
 
             {/* Messages */}
             <motion.div 
-              className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-gradient-to-b from-gray-50 to-gray-100"
+              className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-gradient-to-b from-gray-50 to-gray-100 scrollbar-hide"
+              style={{ 
+                scrollbarWidth: 'none', /* Firefox */
+                msOverflowStyle: 'none', /* IE and Edge */
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.4 }}
             >
               {/* Welcome text at the start of chatbox */}
               <motion.div
-                className="flex justify-center items-center mb-4 sm:mb-6"
+                className="flex flex-col justify-center items-center mb-4 sm:mb-6"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.4 }}
               >
+                {/* Mask group image */}
+                <motion.div
+                  className="mb-3 sm:mb-4"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                >
+                  <Image
+                    src="/icons/Mask group.png"
+                    alt="Chatbot Icon"
+                    width={80}
+                    height={80}
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                  />
+                </motion.div>
                 <motion.p
                   className="text-gray-700 text-sm sm:text-base md:text-lg font-medium"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.4 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
                 >
                   What can i help you?
                 </motion.p>
@@ -535,11 +558,8 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
                     )}
                     
                     <motion.div
-                      className={`max-w-[85%] sm:max-w-[80%] p-2.5 sm:p-3 rounded-2xl ${
-                        message.isUser
-                          ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-br-md shadow-md'
-                          : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'
-                      }`}
+                      className="max-w-[50%] p-2.5 sm:p-3 rounded-2xl bg-white text-gray-900 shadow-sm border border-gray-100 break-words overflow-wrap-anywhere"
+                      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                       whileHover={{ 
                         scale: 1.02,
                         transition: { duration: 0.2 }
@@ -548,9 +568,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
                       {extractResponseContent(message)}
                       
                       <motion.p 
-                        className={`text-xs mt-1 ${
-                          message.isUser ? 'text-white/70' : 'text-gray-500'
-                        }`}
+                        className="text-xs mt-1 text-gray-500"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2, duration: 0.3 }}

@@ -451,7 +451,7 @@ export default function OverviewTab({
         />
       </div>
 
-      <div className="relative z-10 px-2 sm:px-4 md:px-8 py-6 max-w-7xl mx-auto w-full">
+      <div className="relative z-10 px-2 sm:px-4 md:px-8 pr-4 sm:pr-6 md:pr-12 py-6 max-w-7xl mx-auto w-full">
         {/* Overview Section */}
         <div className="mb-8">
           <h2 className="text-[20px] font-bold text-black mb-4">Overview</h2>

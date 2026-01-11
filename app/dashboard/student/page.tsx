@@ -1729,79 +1729,252 @@ export default function StudentDashboard() {
       <AnimatePresence>
         {isNotificationOpen && (
           <motion.div 
-            className="fixed right-4 top-20 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-[10001]"
+            className="fixed right-4 top-14 z-[10001]"
+            style={{
+              width: '310.06px',
+              height: '643.67px',
+            }}
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            {/* User Profile Header */}
-            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
-              <div className="flex items-center gap-3">
-                {/* Purple Notification Bell */}
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="30.24" height="30.24" transform="translate(0.899902 1.38086)" fill="#F5F5F5"/>
-                    <path d="M16.0204 3.90039C13.6812 3.90039 11.4378 4.82964 9.7837 6.48371C8.12963 8.13778 7.20039 10.3812 7.20039 12.7204V17.1657C7.20057 17.3611 7.15527 17.554 7.06809 17.7289L4.90467 22.0545C4.79899 22.2658 4.74908 22.5006 4.7597 22.7367C4.77032 22.9727 4.8411 23.2021 4.96533 23.4031C5.08956 23.6041 5.2631 23.77 5.46948 23.885C5.67586 24.0001 5.90823 24.0604 6.14451 24.0604H25.8963C26.1325 24.0604 26.3649 24.0001 26.5713 23.885C26.7777 23.77 26.9512 23.6041 27.0754 23.4031C27.1997 23.2021 27.2705 22.9727 27.2811 22.7367C27.2917 22.5006 27.2418 22.2658 27.1361 22.0545L24.9739 17.7289C24.8863 17.5541 24.8406 17.3612 24.8404 17.1657V12.7204C24.8404 10.3812 23.9111 8.13778 22.2571 6.48371C20.603 4.82964 18.3596 3.90039 16.0204 3.90039ZM16.0204 27.8404C15.2384 27.8408 14.4755 27.5987 13.8368 27.1473C13.1982 26.696 12.7153 26.0577 12.4546 25.3204H19.5862C19.3255 26.0577 18.8426 26.696 18.2039 27.1473C17.5653 27.5987 16.8024 27.8408 16.0204 27.8404Z" fill="#A5A5A5"/>
-                    <circle cx="23.58" cy="6.27336" r="5.78118" fill="#FDBB30"/>
-                    <path d="M21.8094 7.82227V7.15526L23.579 5.42054C23.7482 5.24964 23.8893 5.09782 24.0021 4.96508C24.1149 4.83234 24.1995 4.70375 24.2559 4.57931C24.3124 4.45487 24.3406 4.32213 24.3406 4.1811C24.3406 4.02015 24.3041 3.88244 24.2311 3.76795C24.158 3.6518 24.0577 3.56221 23.9299 3.49916C23.8021 3.43611 23.657 3.40458 23.4944 3.40458C23.3268 3.40458 23.1799 3.43942 23.0538 3.50911C22.9277 3.57714 22.8298 3.6742 22.7601 3.80031C22.6921 3.92641 22.6581 4.07657 22.6581 4.25078H21.7795C21.7795 3.92724 21.8534 3.646 22.0011 3.40707C22.1487 3.16814 22.352 2.98314 22.6108 2.85206C22.8713 2.72098 23.17 2.65544 23.5068 2.65544C23.8486 2.65544 24.1489 2.71932 24.4078 2.84708C24.6666 2.97484 24.8674 3.14989 25.0101 3.37223C25.1544 3.59456 25.2266 3.84842 25.2266 4.13381C25.2266 4.32462 25.1901 4.51211 25.1171 4.69629C25.0441 4.88046 24.9155 5.08454 24.7313 5.30854C24.5488 5.53254 24.2924 5.80382 23.9623 6.12239L23.0837 7.01588V7.05073H25.3037V7.82227H21.8094Z" fill="white"/>
+            {/* Header with Notification Bell and User Profile */}
+            <div className="relative" style={{ width: '310.06px', height: '67.67px', marginBottom: '18.27px' }}>
+              {/* Notification Bell with Badge */}
+              <div 
+                className="absolute rounded-full"
+                style={{
+                  width: '250px',
+                  height: '67.67px',
+                  left: '60px',
+                  top: '0px',
+                  background: '#F5F5F5',
+                  borderRadius: '135.35px',
+                }}
+              >
+                {/* Notification Icon */}
+                <div style={{ position: 'absolute', left: '20.31px', top: '17.6px', width: '32.48px', height: '32.48px' }}>
+                  <div className="relative" style={{ width: '100%', height: '100%' }}>
+                  <svg width="33" height="33" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16.0204 3.90039C13.6812 3.90039 11.4378 4.82964 9.7837 6.48371C8.12963 8.13778 7.20039 10.3812 7.20039 12.7204V17.1657C7.20057 17.3611 7.15527 17.554 7.06809 17.7289L4.90467 22.0545C4.79899 22.2658 4.74908 22.5006 4.7597 22.7367C4.77032 22.9727 4.8411 23.2021 4.96533 23.4031C5.08956 23.6041 5.2631 23.77 5.46948 23.885C5.67586 24.0001 5.90823 24.0604 6.14451 24.0604H25.8963C26.1325 24.0604 26.3649 24.0001 26.5713 23.885C26.7777 23.77 26.9512 23.6041 27.0754 23.4031C27.1997 23.2021 27.2705 22.9727 27.2811 22.7367C27.2917 22.5006 27.2418 22.2658 27.1361 22.0545L24.9739 17.7289C24.8863 17.5541 24.8406 17.3612 24.8404 17.1657V12.7204C24.8404 10.3812 23.9111 8.13778 22.2571 6.48371C20.603 4.82964 18.3596 3.90039 16.0204 3.90039ZM16.0204 27.8404C15.2384 27.8408 14.4755 27.5987 13.8368 27.1473C13.1982 26.696 12.7153 26.0577 12.4546 25.3204H19.5862C19.3255 26.0577 18.8426 26.696 18.2039 27.1473C17.5653 27.5987 16.8024 27.8408 16.0204 27.8404Z" fill="#6D18CE"/>
                   </svg>
-                </div>
-                
-                      {/* User Avatar and Info */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                          <Image src={userAvatar} alt="User Avatar" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
-                        </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-gray-900 text-sm">
-                      {user.name}
-                    </span>
-                    <span className="text-xs text-gray-600">
-                      #{user.uniqueId?.toString() || '0000'}
-                    </span>
+                  
+                  {/* Badge - Upper right corner of bell icon */}
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <div 
+                      className="absolute rounded-full flex items-center justify-center"
+                      style={{
+                        width: '14px',
+                        height: '14px',
+                        right: '-2px',
+                        top: '-2px',
+                        background: '#FDBB30',
+                      }}
+                    >
+                      <span 
+                        className="text-white font-semibold flex items-center justify-center"
+                        style={{
+                          fontSize: '8px',
+                          lineHeight: '14px',
+                          fontFamily: 'Inter',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {notifications.filter(n => !n.read).length > 9 ? '9+' : notifications.filter(n => !n.read).length}
+                      </span>
+                    </div>
+                  )}
                   </div>
                 </div>
+              </div>
+
+              {/* User Profile Section */}
+              <div className="absolute" style={{ left: '120px', top: '9.47px', width: '158px', height: '48.01px' }}>
+                {/* Avatar */}
+                <div 
+                  className="absolute rounded-full overflow-hidden flex-shrink-0"
+                  style={{
+                    width: '47.37px',
+                    height: '47.37px',
+                    left: '0px',
+                    top: '0px',
+                    background: '#6C18CD',
+                  }}
+                >
+                  <Image 
+                    src={userAvatar} 
+                    alt="User Avatar" 
+                    width={47} 
+                    height={47} 
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+                
+                {/* Name */}
+                <span 
+                  className="absolute font-bold text-black flex items-center"
+                  style={{
+                    left: '56.85px',
+                    top: '5.42px',
+                    width: '100px',
+                    height: '22px',
+                    fontFamily: 'Inter',
+                    fontWeight: 700,
+                    fontSize: '18.5843px',
+                    lineHeight: '22px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title={user.name}
+                >
+                  {user.name}
+                </span>
+                
+                {/* ID */}
+                <span 
+                  className="absolute text-gray-600 flex items-center"
+                  style={{
+                    left: '56.85px',
+                    top: '22.48px',
+                    width: '100px',
+                    height: '25px',
+                    fontFamily: 'Inter',
+                    fontWeight: 400,
+                    fontSize: '12.0239px',
+                    lineHeight: '24px',
+                    color: '#454545',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  #{user.uniqueId?.toString() || '0000'}
+                </span>
               </div>
             </div>
 
             {/* Notifications List */}
-            <div className="max-h-80 overflow-y-auto bg-gray-50">
+            <div 
+              className="overflow-y-auto"
+              style={{
+                position: 'absolute',
+                top: '85.94px',
+                left: '0px',
+                width: '301.39px',
+                height: '557.74px',
+              }}
+            >
               {notifications.length > 0 ? (
-                notifications.map((notification, index) => (
-                  <div
-                    key={notification.id}
-                    className="bg-white mx-3 my-2 rounded-lg shadow-sm border border-gray-100 p-3 cursor-pointer hover:shadow-md transition-all duration-200"
-                    onClick={() => markNotificationAsRead(notification.id)}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Purple Circle Icon */}
-                      <div className="w-3 h-3 bg-purple-600 rounded-full flex-shrink-0 mt-1"></div>
-                      
-                      <div className="flex-1 min-w-0">
-                        {/* Notification Header */}
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900">
-                              {notification.title}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {formatNotificationTime(notification.date)}
-                            </span>
+                <div className="flex flex-col gap-3">
+                  {notifications.map((notification, index) => (
+                    <div
+                      key={notification.id}
+                      className="flex flex-col cursor-pointer"
+                      style={{
+                        padding: '12.41px 14.1828px',
+                        background: 'rgba(255, 255, 255, 0.88)',
+                        boxShadow: '21.4841px 15.0389px 79.4912px rgba(0, 0, 0, 0.16)',
+                        borderRadius: '17.7285px',
+                      }}
+                      onClick={() => markNotificationAsRead(notification.id)}
+                    >
+                      {/* Notification Header */}
+                      <div className="flex flex-row justify-start items-center mb-2.5" style={{ gap: '14.18px' }}>
+                        <div className="flex flex-row items-center" style={{ gap: '5.32px' }}>
+                          {/* App Icon */}
+                          <div className="relative" style={{ width: '14.18px', height: '14.18px' }}>
+                            <div 
+                              className="absolute rounded"
+                              style={{
+                                width: '12.41px',
+                                height: '12.41px',
+                                left: '0.89px',
+                                top: '0.89px',
+                                background: '#6D18CE',
+                              }}
+                            />
                           </div>
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          
+                          {/* App Name */}
+                          <span 
+                            className="text-purple-600"
+                            style={{
+                              fontFamily: 'Roboto',
+                              fontWeight: 400,
+                              fontSize: '10.6371px',
+                              lineHeight: '14px',
+                              color: '#6D18CE',
+                            }}
+                          >
+                            Hangouts
+                          </span>
+                          
+                          {/* Arrow Icon */}
+                          <svg 
+                            width="14.18" 
+                            height="14.18" 
+                            viewBox="0 0 14 14" 
+                            fill="none"
+                            style={{ transform: 'matrix(-1, 0, 0, 1, 0, 0)' }}
+                          >
+                            <path 
+                              d="M3.28 5.05L8.33 9.84L3.28 5.05Z" 
+                              fill="#A1A1A1"
+                              style={{ transform: 'matrix(1, 0, 0, -1, 0, 0)' }}
+                            />
                           </svg>
-                        </div>
-                        
-                        {/* Notification Content */}
-                        <div className="text-sm text-gray-700">
-                          <span className="font-medium">Hi {user.name}!</span> {notification.message}
+                          
+                          {/* Time */}
+                          <span 
+                            className="text-gray-600"
+                            style={{
+                              fontFamily: 'Roboto',
+                              fontWeight: 400,
+                              fontSize: '10.6371px',
+                              lineHeight: '14px',
+                              color: '#595959',
+                            }}
+                          >
+                            {formatNotificationTime(notification.date)}
+                          </span>
                         </div>
                       </div>
+
+                      {/* Notification Content */}
+                      <div className="flex flex-col" style={{ gap: '3.55px' }}>
+                        {/* Title */}
+                        <span 
+                          className="text-gray-900"
+                          style={{
+                            fontFamily: 'Roboto',
+                            fontWeight: 400,
+                            fontSize: '13.2964px',
+                            lineHeight: '18px',
+                            color: '#222222',
+                          }}
+                        >
+                          {notification.title}
+                        </span>
+                        
+                        {/* Message */}
+                        <span 
+                          className="text-gray-600"
+                          style={{
+                            fontFamily: 'Roboto',
+                            fontWeight: 400,
+                            fontSize: '11.5235px',
+                            lineHeight: '18px',
+                            color: '#686868',
+                          }}
+                        >
+                          {notification.message}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               ) : (
                 <div className="px-4 py-8 text-center text-gray-500">
                   <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1812,20 +1985,6 @@ export default function StudentDashboard() {
               )}
             </div>
 
-            {/* Action Buttons */}
-            {notifications.length > 0 && (
-              <div className="px-4 py-3 border-t border-gray-200 bg-white">
-                <div className="flex items-center justify-between">
-                  <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
-                    Share
-                  </button>
-                  <div className="w-px h-4 bg-gray-300"></div>
-                  <button className="text-sm text-red-600 hover:text-red-700 font-medium">
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
