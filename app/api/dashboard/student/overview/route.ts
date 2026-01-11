@@ -148,21 +148,77 @@ export async function GET(request: NextRequest) {
         ? Math.round(scoresWithQuiz.reduce((sum: number, mp: any) => sum + mp.quizScore, 0) / scoresWithQuiz.length)
         : 0;
 
-      // Get recent activity (last 5 modules worked on)
+      // Get recent activity - fetch chapters from YouTube URL and map to student progress
+      // First, get all chapters from YouTube data
+      const allChapters: any[] = [];
+      if (youtubeData && youtubeData.Module && youtubeData.Module.length > 0) {
+        youtubeData.Module.forEach((moduleItem: any, moduleIndex: number) => {
+          const chapterKey = Object.keys(moduleItem)[0]; // e.g., "Chapter 1"
+          const chapterData = moduleItem[chapterKey];
+          
+          if (chapterData && chapterData.videoTitle && chapterData.videoUrl) {
+            allChapters.push({
+              chapterKey: chapterKey,
+              chapterIndex: moduleIndex + 1,
+              videoTitle: chapterData.videoTitle,
+              videoUrl: chapterData.videoUrl,
+              moduleIndex: moduleIndex
+            });
+          }
+        });
+      }
+      
+      // Map student progress to chapters from YouTube data
       recentActivity = studentProgress.moduleProgress
         .sort((a: any, b: any) => new Date(b.lastAccessedAt || b.startedAt).getTime() - new Date(a.lastAccessedAt || a.startedAt).getTime())
-        .slice(0, 5)
+        .slice(0, 10) // Get more to ensure we have enough chapters
         .map((mp: any) => {
           const isCompleted = mp.quizScore >= 75 || mp.completedAt;
+          
+          // Find matching chapter from YouTube data
+          let moduleName = mp.moduleId;
+          let moduleSubject = 'Mathematics';
+          let moduleDuration = '20 min';
+          let chapterVideoUrl = '';
+          
+          // Try to find chapter by moduleId (chapterKey)
+          const matchedChapter = allChapters.find((chapter: any) => chapter.chapterKey === mp.moduleId);
+          
+          if (matchedChapter) {
+            moduleName = matchedChapter.videoTitle || matchedChapter.chapterKey;
+            moduleSubject = `Chapter ${matchedChapter.chapterIndex}`;
+            chapterVideoUrl = matchedChapter.videoUrl;
+            moduleDuration = '20 min'; // Default duration
+          } else if (youtubeData && youtubeData.Module && youtubeData.Module.length > 0) {
+            // Fallback: try to find by index if chapterKey doesn't match
+            const moduleIndex = youtubeData.Module.findIndex((module: any) => {
+              const chapterKey = Object.keys(module)[0];
+              return chapterKey === mp.moduleId;
+            });
+            
+            if (moduleIndex !== -1) {
+              const chapterKey = Object.keys(youtubeData.Module[moduleIndex])[0];
+              const chapter = youtubeData.Module[moduleIndex][chapterKey];
+              moduleName = chapter.videoTitle || chapterKey;
+              moduleSubject = `Chapter ${moduleIndex + 1}`;
+              chapterVideoUrl = chapter.videoUrl || '';
+            }
+          }
+          
           return {
             moduleId: mp.moduleId,
             status: isCompleted ? 'completed' : 'in-progress',
             progress: isCompleted ? 100 : Math.min(mp.quizScore || 0, 100),
             xpEarned: mp.pointsEarned || 0,
             lastAccessed: mp.lastAccessedAt || mp.startedAt,
-            moduleName: mp.moduleId // Using moduleId as name for now
+            moduleName: moduleName,
+            moduleSubject: moduleSubject,
+            moduleDuration: moduleDuration,
+            videoUrl: chapterVideoUrl
           };
-        });
+        })
+        .filter((activity: any) => activity.moduleName && activity.moduleName !== activity.moduleId) // Filter out invalid entries
+        .slice(0, 5); // Return top 5
     }
 
     // Get recommended modules (chapters not started yet)
@@ -237,6 +293,49 @@ export async function GET(request: NextRequest) {
       return sum + (mp.videoProgress?.watchTime || 0);
     }, 0) || 0;
 
+    // Get all chapters from YouTube data for display
+    const allChaptersFromYouTube: any[] = [];
+    if (youtubeData && youtubeData.Module && youtubeData.Module.length > 0) {
+      youtubeData.Module.forEach((moduleItem: any, moduleIndex: number) => {
+        const chapterKey = Object.keys(moduleItem)[0];
+        const chapterData = moduleItem[chapterKey];
+        
+        if (chapterData && chapterData.videoTitle && chapterData.videoUrl) {
+          // Check if this chapter is in student progress
+          const progressData = studentProgress?.moduleProgress?.find((mp: any) => mp.moduleId === chapterKey);
+          
+          // Calculate real XP from progress data if available
+          let chapterXp = 100; // Default XP
+          if (progressData) {
+            chapterXp = progressData.pointsEarned || 0;
+            // If no pointsEarned, calculate from quiz score
+            if (chapterXp === 0 && progressData.quizScore > 0) {
+              chapterXp = Math.round(progressData.quizScore * 0.5) + 25; // Base 25 + quiz performance
+              if (progressData.quizScore >= 75 || progressData.completedAt) {
+                chapterXp += 75; // Completion bonus
+              }
+            }
+          }
+          
+          allChaptersFromYouTube.push({
+            chapterKey: chapterKey,
+            chapterIndex: moduleIndex + 1,
+            videoTitle: chapterData.videoTitle,
+            videoUrl: chapterData.videoUrl,
+            moduleId: chapterKey,
+            name: chapterData.videoTitle,
+            subject: `Chapter ${moduleIndex + 1}`,
+            description: `Chapter: ${chapterKey}`,
+            xpPoints: chapterXp,
+            estimatedDuration: '20 min',
+            hasProgress: !!progressData,
+            progress: progressData ? (progressData.quizScore >= 75 || progressData.completedAt ? 100 : Math.min(progressData.quizScore || 0, 100)) : 0,
+            status: progressData ? (progressData.quizScore >= 75 || progressData.completedAt ? 'completed' : 'in-progress') : 'not-started'
+          });
+        }
+      });
+    }
+
     const dashboardData = {
       overview: {
         totalModules,
@@ -253,6 +352,7 @@ export async function GET(request: NextRequest) {
       recentActivity,
       notifications: [], // TODO: Implement notifications system
       recommendedModules,
+      allChapters: allChaptersFromYouTube, // Add all chapters from YouTube
       progress: {
         totalTimeSpent,
         badgesEarned,

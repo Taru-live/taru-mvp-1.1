@@ -418,7 +418,7 @@ export default function Register() {
          >
           {/* Language Selector - Top Right */}
           <motion.div 
-            className="absolute top-3 sm:top-4 md:top-6 right-3 sm:right-4 md:right-6 z-10 language-selector-container"
+            className="absolute top-2 sm:top-3 md:top-6 right-2 sm:right-3 md:right-6 z-10 language-selector-container"
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
@@ -426,7 +426,7 @@ export default function Register() {
             <div className="relative">
               <motion.button
                 onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                className="bg-[#6D18CE] hover:bg-[#5A14B0] text-white rounded-lg px-3 sm:px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
+                className="bg-[#6D18CE] hover:bg-[#5A14B0] text-white rounded-lg px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 shadow-lg transition-colors flex items-center gap-1 sm:gap-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -469,20 +469,20 @@ export default function Register() {
           </motion.div>
 
           {/* Main Content Container */}
-          <div className="px-4 sm:px-6 md:px-8 lg:px-[60px] py-4 sm:py-5 md:py-6 lg:py-[40px] h-full flex flex-col">
+          <div className="px-3 sm:px-4 md:px-6 lg:px-[60px] pt-1 sm:pt-2 md:pt-4 lg:pt-[40px] pb-0 sm:pb-0 md:pb-4 lg:pb-[40px] h-full flex flex-col">
             {/* Role Selector Tabs */}
             <motion.div 
-              className="w-full h-12 sm:h-14 md:h-[56px] mb-3 sm:mb-4 md:mb-6"
+              className="w-full h-10 sm:h-12 md:h-[56px] mb-1.5 sm:mb-2 md:mb-6"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.9, duration: 0.5 }}
             >
-              <div className="flex bg-[#F2F4F7] rounded-xl p-1 h-full">
+              <div className="flex bg-[#F2F4F7] rounded-xl p-0.5 sm:p-1 h-full">
                 {['student', 'teacher', 'parent', 'organization'].map((role, index) => (
                   <motion.button 
                     key={role}
                     onClick={() => handleRoleChange(role)}
-                    className={`flex-1 px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 rounded-lg font-normal text-xs sm:text-[12px] transition-all duration-200 touch-manipulation ${
+                    className={`flex-1 px-1 sm:px-2 md:px-4 py-1 sm:py-1.5 md:py-3 rounded-lg font-normal text-[10px] sm:text-xs md:text-[12px] transition-all duration-200 touch-manipulation ${
                       selectedRole === role 
                         ? 'bg-white text-[#101828] shadow-sm' 
                         : 'text-[#667085]'
@@ -501,7 +501,7 @@ export default function Register() {
 
             {/* Create Account Title */}
             <motion.h2 
-              className="text-xl sm:text-2xl md:text-[24.7297px] leading-tight sm:leading-snug md:leading-[30px] font-bold text-black mb-3 sm:mb-4 md:mb-6 w-auto lg:w-[190px]"
+              className="text-lg sm:text-xl md:text-[24.7297px] leading-tight sm:leading-snug md:leading-[30px] font-bold text-black mb-1.5 sm:mb-2 md:mb-6 w-auto lg:w-[190px]"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.5 }}
@@ -512,22 +512,22 @@ export default function Register() {
             {/* Registration Form */}
             <motion.form 
               onSubmit={handleSubmit}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col min-h-0"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.1, duration: 0.6 }}
             >
               {/* Form Fields Container */}
-              <div className="flex-1 space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 overflow-y-auto">
+              <div className="flex-shrink-0 space-y-1.5 sm:space-y-2 md:space-y-5 lg:space-y-6">
                 {/* Full Name */}
                 <div className="relative">
-                  <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">Full Name</label>
+                  <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Full Name</label>
                   <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                     required
                   />
                 </div>
@@ -535,7 +535,7 @@ export default function Register() {
                 {/* Guardian Name / Contact Person - Only for organization role */}
                 {selectedRole === 'organization' && (
                   <div className="relative">
-                    <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">
+                    <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">
                       Contact Person
                     </label>
                     <input
@@ -544,16 +544,16 @@ export default function Register() {
                       value={formData.guardianName}
                       onChange={handleInputChange}
                       placeholder="e.g., John Doe, HR Manager"
-                      className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                      className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                       required
                     />
                   </div>
                 )}
 
                                  {/* Class/Grade and Language - Side by side */}
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8 lg:gap-[378px]">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-8 lg:gap-[378px]">
                    <div className="relative">
-                     <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">
+                     <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">
                        {selectedRole === 'student' ? 'Class/Grade' : 
                         selectedRole === 'teacher' ? 'Subject' : 
                         selectedRole === 'parent' ? 'Student ID' : 
@@ -566,7 +566,7 @@ export default function Register() {
                             name="classGrade"
                             value={formData.classGrade}
                             onChange={handleInputChange}
-                            className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-8 touch-manipulation"
+                            className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-6 sm:pr-8 touch-manipulation"
                             required
                           >
                          <option value="" disabled>Select Grade</option>
@@ -586,7 +586,7 @@ export default function Register() {
                           <option value="Grade 12">Grade 12</option>
                         </select>
                         <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                          <svg className="w-4 h-4 text-[#C2C2C2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 text-[#C2C2C2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </div>
@@ -597,7 +597,7 @@ export default function Register() {
                             name="classGrade"
                             value={formData.classGrade}
                             onChange={handleInputChange}
-                            className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-8 touch-manipulation"
+                            className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-6 sm:pr-8 touch-manipulation"
                             required
                           >
                             <option value="" disabled>Select Subject</option>
@@ -626,7 +626,7 @@ export default function Register() {
                             name="classGrade"
                             value={formData.classGrade}
                             onChange={handleInputChange}
-                            className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-8 touch-manipulation"
+                            className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-6 sm:pr-8 touch-manipulation"
                             required
                           >
                             <option value="" disabled>Select Organization Type</option>
@@ -653,13 +653,13 @@ export default function Register() {
                          value={formData.classGrade}
                          onChange={handleInputChange}
                          placeholder="e.g., STUabc123def"
-                         className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                         className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                          required
                        />
                      )}
                    </div>
                    <div className="relative">
-                     <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">
+                     <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">
                        {selectedRole === 'student' ? 'Language' : 
                         selectedRole === 'teacher' ? 'Experience' : 
                         selectedRole === 'parent' ? 'Location' : 
@@ -672,7 +672,7 @@ export default function Register() {
                            name="language"
                            value={formData.language}
                            onChange={handleInputChange}
-                           className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-8"
+                           className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-6 sm:pr-8"
                            required
                          >
                          <option value="" disabled>Select Language</option>
@@ -710,7 +710,7 @@ export default function Register() {
                            name="language"
                            value={formData.language}
                            onChange={handleInputChange}
-                           className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-8"
+                           className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-6 sm:pr-8"
                            required
                          >
                            <option value="" disabled>Select Experience</option>
@@ -733,7 +733,7 @@ export default function Register() {
                            name="language"
                            value={formData.language}
                            onChange={handleInputChange}
-                           className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-8"
+                           className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors appearance-none cursor-pointer pr-6 sm:pr-8"
                            required
                          >
                            <option value="" disabled>Select Industry</option>
@@ -765,7 +765,7 @@ export default function Register() {
                          value={formData.language}
                          onChange={handleInputChange}
                          placeholder="Enter location"
-                         className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                         className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                          required
                        />
                      )}
@@ -775,13 +775,13 @@ export default function Register() {
                 {/* Location - Only for student role */}
                 {selectedRole === 'student' && (
                   <div className="relative">
-                    <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">Location</label>
+                    <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Location</label>
                     <input
                       type="text"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                      className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                       required
                     />
                   </div>
@@ -789,39 +789,39 @@ export default function Register() {
 
                 {/* Email */}
                 <div className="relative">
-                  <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">Email Address</label>
+                  <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Email Address</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                     required
                   />
                 </div>
 
                 {/* Password */}
                 <div className="relative">
-                  <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">Password</label>
+                  <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Password</label>
                   <input
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                     required
                   />
                 </div>
 
                 {/* Confirm Password */}
                 <div className="relative">
-                  <label className="block text-sm sm:text-base md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-1">Confirm Password</label>
+                  <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Confirm Password</label>
                   <input
                     type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-1 text-sm sm:text-base md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
                     required
                   />
                 </div>
@@ -831,7 +831,7 @@ export default function Register() {
               <AnimatePresence>
                 {error && (
                   <motion.div 
-                    className="my-2 alert-error"
+                    className="my-1 sm:my-2 alert-error text-xs sm:text-sm"
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -843,11 +843,11 @@ export default function Register() {
               </AnimatePresence>
 
               {/* Bottom Section */}
-              <div className="mt-4 sm:mt-5 md:mt-6 lg:mt-8 space-y-3 sm:space-y-4">
+              <div className="mt-1 sm:mt-2 md:mt-6 lg:mt-8 space-y-1.5 sm:space-y-2 md:space-y-4 flex-shrink-0">
                 {/* Register Button */}
                 <motion.button
                   type="submit"
-                  className="w-full lg:w-[514px] h-12 sm:h-14 md:h-16 lg:h-[69px] bg-gradient-to-r from-[#6D18CE] to-[#8B5CF6] text-white rounded-full sm:rounded-[90px] font-semibold text-sm sm:text-base md:text-[16.0016px] flex items-center justify-center mx-auto shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover-glow touch-manipulation"
+                  className="w-full lg:w-[514px] h-10 sm:h-12 md:h-16 lg:h-[69px] bg-gradient-to-r from-[#6D18CE] to-[#8B5CF6] text-white rounded-full sm:rounded-[90px] font-semibold text-xs sm:text-sm md:text-[16.0016px] flex items-center justify-center mx-auto shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover-glow touch-manipulation"
                   disabled={isLoading}
                   whileHover={{ 
                     scale: 1.02,
@@ -889,15 +889,15 @@ export default function Register() {
 
                 {/* Sign In Link */}
                 <motion.div 
-                  className="text-center w-full lg:w-[205px] mx-auto"
+                  className="text-center w-full lg:w-[205px] mx-auto px-2 sm:px-0 mb-0 sm:mb-0 md:mb-0 lg:mb-0"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 2.0, duration: 0.4 }}
                 >
-                  <span className="text-xs sm:text-[13px] leading-tight sm:leading-[16px] text-black">Already have an account? </span>
+                  <span className="text-xs sm:text-[13px] leading-tight sm:leading-[16px] text-black block sm:inline">Already have an account? </span>
                   <Link
                     href="/login"
-                    className="text-[#6D18CE] hover:text-[#5A14B0] font-semibold text-xs sm:text-[13px] transition-colors duration-200 touch-manipulation"
+                    className="text-[#6D18CE] hover:text-[#5A14B0] font-semibold text-xs sm:text-[13px] transition-colors duration-200 touch-manipulation inline-block mt-1 sm:mt-0"
                   >
                     <motion.span
                       whileHover={{ scale: 1.05 }}

@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, Bot, CheckCircle2, ChevronRight, Computer, Calculator, FlaskConical, Palette, MessageSquare, BookOpen, GraduationCap } from 'lucide-react';
 
 interface OverviewTabProps {
   courses: any[];
   onTabChange: (tab: string) => void;
+  onRefresh?: () => void | Promise<void>;
   dashboardData?: {
     overview?: {
       totalXp?: number;
@@ -29,6 +30,9 @@ interface OverviewTabProps {
       xpEarned: number;
       lastAccessed: string;
       moduleName?: string;
+      moduleSubject?: string;
+      moduleDuration?: string;
+      videoUrl?: string;
     }>;
     recommendedModules?: Array<{
       id: string;
@@ -38,6 +42,21 @@ interface OverviewTabProps {
       xpPoints: number;
       estimatedDuration: string | number;
       videoUrl?: string;
+    }>;
+    allChapters?: Array<{
+      chapterKey: string;
+      chapterIndex: number;
+      videoTitle: string;
+      videoUrl: string;
+      moduleId: string;
+      name: string;
+      subject: string;
+      description: string;
+      xpPoints: number;
+      estimatedDuration: string;
+      hasProgress: boolean;
+      progress: number;
+      status: string;
     }>;
     assessment?: {
       diagnosticCompleted?: boolean;
@@ -98,22 +117,79 @@ const formatDate = (dateString: string) => {
 export default function OverviewTab({ 
   courses, 
   onTabChange, 
+  onRefresh,
   dashboardData, 
   user
 }: OverviewTabProps) {
   
+  // Refresh data when component mounts or when switching to this tab
+  useEffect(() => {
+    if (onRefresh) {
+      // Refresh data when tab becomes active to ensure latest data
+      const refreshTimer = setTimeout(() => {
+        onRefresh();
+      }, 100);
+      return () => clearTimeout(refreshTimer);
+    }
+  }, [onRefresh]);
+  
+  // Monitor dashboardData changes to ensure proper display
+  useEffect(() => {
+    if (dashboardData) {
+      // Log data availability for debugging
+      const hasData = !!(
+        dashboardData.overview ||
+        dashboardData.recentActivity?.length ||
+        dashboardData.allChapters?.length ||
+        dashboardData.recommendedModules?.length
+      );
+      
+      if (!hasData) {
+        console.warn('⚠️ OverviewTab: No data available, may need refresh');
+      }
+    }
+  }, [dashboardData]);
+  
+  // Log data for debugging
+  useEffect(() => {
+    if (dashboardData) {
+      console.log('📊 OverviewTab received data:', {
+        totalModules: dashboardData.overview?.totalModules,
+        completedModules: dashboardData.overview?.completedModules,
+        inProgressModules: dashboardData.overview?.inProgressModules,
+        totalXp: dashboardData.overview?.totalXp,
+        recentActivityCount: dashboardData.recentActivity?.length || 0,
+        allChaptersCount: dashboardData.allChapters?.length || 0,
+        recommendedModulesCount: dashboardData.recommendedModules?.length || 0
+      });
+    }
+  }, [dashboardData]);
+  
   // Calculate real data from dashboardData
   const overviewStats = useMemo(() => {
+    // Calculate AI Support based on actual module engagement
+    // AI Support represents how many modules the user has engaged with (indicating AI-powered platform usage)
+    const totalModules = dashboardData?.overview?.totalModules || 0;
+    const inProgressModules = dashboardData?.overview?.inProgressModules || 0;
+    const completedModules = dashboardData?.overview?.completedModules || 0;
+    const engagedModules = inProgressModules + completedModules;
+    
+    // Calculate as percentage of total modules engaged with
+    // This represents the user's engagement with the AI-powered learning platform
+    const aiSupportPercentage = totalModules > 0 
+      ? Math.min(Math.round((engagedModules / totalModules) * 100), 100)
+      : 0;
+    
     return {
-      inProgress: dashboardData?.overview?.inProgressModules || 0,
-      completed: dashboardData?.overview?.completedModules || 0,
+      inProgress: inProgressModules,
+      completed: completedModules,
       certificates: dashboardData?.progress?.badgesEarned?.length || 0,
-      aiSupport: 100, // Placeholder for AI support metric
+      aiSupport: aiSupportPercentage, // Real AI support metric: percentage of modules engaged with
       totalXp: dashboardData?.overview?.totalXp || 0,
     };
   }, [dashboardData]);
 
-  // Process courses from courses prop or recentActivity
+  // Process courses from courses prop, allChapters, or recentActivity
   const activeCourses = useMemo(() => {
     // Use courses prop if available (already processed by parent)
     if (courses && courses.length > 0) {
@@ -150,53 +226,102 @@ export default function OverviewTab({
       });
     }
 
-    // Fallback to processing recentActivity
-    if (!dashboardData?.recentActivity || dashboardData.recentActivity.length === 0) {
-      return [];
+    // Priority 1: Use allChapters from YouTube URL (chapters with progress)
+    if (dashboardData?.allChapters && dashboardData.allChapters.length > 0) {
+      // Filter chapters that have progress (started or completed)
+      const chaptersWithProgress = dashboardData.allChapters
+        .filter((chapter: any) => chapter.hasProgress && chapter.status !== 'not-started')
+        .sort((a: any, b: any) => {
+          // Sort by progress status: completed first, then by progress percentage
+          if (a.status === 'completed' && b.status !== 'completed') return -1;
+          if (a.status !== 'completed' && b.status === 'completed') return 1;
+          return b.progress - a.progress;
+        })
+        .slice(0, 5);
+
+      if (chaptersWithProgress.length > 0) {
+        return chaptersWithProgress.map((chapter: any, index: number) => {
+          const subject = chapter.subject || 'Mathematics';
+          const Icon = getSubjectIcon(subject);
+          const color = subjectColors[subject] || '#EFC806';
+          
+          const totalLessons = 10;
+          const lessonsCompleted = Math.round((chapter.progress / 100) * totalLessons);
+          // Use real XP from chapter data (calculated from actual progress)
+          const xp = chapter.xpPoints || 0;
+
+          return {
+            id: `chapter-${chapter.chapterKey}-${index}`,
+            title: chapter.videoTitle || chapter.name,
+            lessonsCompleted,
+            totalLessons,
+            duration: chapter.estimatedDuration || '20 min',
+            xp,
+            icon: Icon,
+            color,
+            progress: chapter.progress,
+            moduleId: chapter.moduleId || chapter.chapterKey,
+            videoUrl: chapter.videoUrl,
+          };
+        });
+      }
     }
 
-    return dashboardData.recentActivity.slice(0, 5).map((activity) => {
-      // Find matching module info from recommendedModules
-      const matchedModule = dashboardData.recommendedModules?.find(
-        (m) => m.id === activity.moduleId
-      );
+    // Priority 2: Fallback to processing recentActivity - use real module data
+    if (dashboardData?.recentActivity && dashboardData.recentActivity.length > 0) {
+      return dashboardData.recentActivity.slice(0, 5).map((activity: any) => {
+        // Use module subject from activity if available, otherwise try to find from recommendedModules
+        let subject = activity.moduleSubject || 'Mathematics';
+        const matchedModule = dashboardData.recommendedModules?.find(
+          (m: any) => m.id === activity.moduleId
+        );
+        if (matchedModule && 'subject' in matchedModule) {
+          subject = matchedModule.subject;
+        }
+        
+        const Icon = getSubjectIcon(subject);
+        const color = subjectColors[subject] || '#EFC806';
+        
+        // Use real module name from activity
+        const moduleName = activity.moduleName || activity.moduleId;
+        
+        // Use real duration from activity if available, otherwise estimate
+        let duration = activity.moduleDuration || '20 min';
+        if (!activity.moduleDuration && activity.progress > 0) {
+          // Estimate based on progress if no duration available
+          const baseDuration = 20;
+          duration = `${Math.round(baseDuration * (activity.progress / 100))} min`;
+        }
+        
+        // Calculate lessons completed (assuming 10 lessons per module)
+        const totalLessons = 10;
+        const lessonsCompleted = Math.round((activity.progress / 100) * totalLessons);
+        
+        // Use real XP earned from activity
+        const xp = activity.xpEarned || Math.round(activity.progress * 0.8);
 
-      const subject = (matchedModule && 'subject' in matchedModule) ? matchedModule.subject : 'Mathematics';
-      const Icon = getSubjectIcon(subject);
-      const color = subjectColors[subject] || '#EFC806';
-      
-      // Calculate lessons completed (assuming 10 lessons per module)
-      const totalLessons = 10;
-      const lessonsCompleted = Math.round((activity.progress / 100) * totalLessons);
-      
-      // Calculate duration (estimate based on progress)
-      const baseDuration = 20; // Base 20 minutes per module
-      const duration = Math.round(baseDuration * (activity.progress / 100));
-      
-      // Calculate XP earned
-      const xp = activity.xpEarned || Math.round(activity.progress * 0.8);
+        // Ensure unique ID by converting to string and adding index if needed
+        const uniqueId = activity.moduleId 
+          ? String(activity.moduleId).replace(/[^a-zA-Z0-9]/g, '-')
+          : `activity-${Date.now()}-${Math.random()}`;
 
-      const moduleName = (matchedModule && 'name' in matchedModule) 
-        ? matchedModule.name 
-        : (activity.moduleName || activity.moduleId);
+        return {
+          id: uniqueId,
+          title: moduleName,
+          lessonsCompleted,
+          totalLessons,
+          duration: duration,
+          xp,
+          icon: Icon,
+          color,
+          progress: activity.progress,
+          moduleId: activity.moduleId, // Include moduleId for navigation
+          videoUrl: activity.videoUrl,
+        };
+      });
+    }
 
-      // Ensure unique ID by converting to string and adding index if needed
-      const uniqueId = activity.moduleId 
-        ? String(activity.moduleId).replace(/[^a-zA-Z0-9]/g, '-')
-        : `activity-${Date.now()}-${Math.random()}`;
-
-      return {
-        id: uniqueId,
-        title: moduleName,
-        lessonsCompleted,
-        totalLessons,
-        duration: `${duration} min`,
-        xp,
-        icon: Icon,
-        color,
-        progress: activity.progress,
-      };
-    });
+    return [];
   }, [courses, dashboardData]);
 
   // Process continue learning modules
@@ -232,7 +357,7 @@ export default function OverviewTab({
     });
   }, [dashboardData]);
 
-  // Generate upcoming tests from assessment or create placeholder
+  // Generate upcoming tests from real data only (no placeholders)
   const upcomingTests = useMemo(() => {
     const tests: Array<{
       id: string;
@@ -255,21 +380,39 @@ export default function OverviewTab({
       });
     }
 
-    // Add placeholder tests if no real tests available
-    if (tests.length === 0) {
-      // Use active courses to generate test suggestions
-      activeCourses.slice(0, 3).forEach((course, index) => {
-        tests.push({
-          id: `test-${index + 1}`,
-          course: course.title,
-          testName: `Module Quiz ${index + 1}`,
-          date: formatDate(new Date(Date.now() + (index + 1) * 7 * 24 * 60 * 60 * 1000).toISOString()) || 'Soon',
-          icon: course.icon,
-          color: course.color,
+    // Add real module quizzes that are in progress but not completed
+    // These are modules where user has started but hasn't achieved 75%+ score
+    if (dashboardData?.recentActivity && dashboardData.recentActivity.length > 0) {
+      dashboardData.recentActivity
+        .filter((activity: any) => 
+          activity.status === 'in-progress' && 
+          activity.progress > 0 && 
+          activity.progress < 75
+        )
+        .slice(0, 3)
+        .forEach((activity: any, index: number) => {
+          // Find matching module info for icon and color
+          const matchedModule = dashboardData.recommendedModules?.find(
+            (m: any) => m.id === activity.moduleId
+          );
+          const subject = (matchedModule && 'subject' in matchedModule) 
+            ? matchedModule.subject 
+            : 'Mathematics';
+          const Icon = getSubjectIcon(subject);
+          const color = subjectColors[subject] || '#EFC806';
+          
+          tests.push({
+            id: `module-quiz-${activity.moduleId}-${index}`,
+            course: activity.moduleName || activity.moduleId,
+            testName: 'Module Quiz',
+            date: formatDate(activity.lastAccessed) || 'Continue',
+            icon: Icon,
+            color: color,
+          });
         });
-      });
     }
 
+    // Only return real tests, no placeholder generation
     return tests.length > 0 ? tests : [
       {
         id: 'no-tests',
@@ -280,7 +423,7 @@ export default function OverviewTab({
         color: '#878787',
       },
     ];
-  }, [dashboardData, activeCourses]);
+  }, [dashboardData]);
 
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
@@ -308,17 +451,7 @@ export default function OverviewTab({
         />
       </div>
 
-      {/* AI Bot floating button */}
-      <motion.button
-        className="fixed bottom-8 right-8 w-[68px] h-[68px] bg-[#6D18CE] rounded-full flex items-center justify-center shadow-lg z-50 hover:scale-110 transition-transform"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onTabChange('enhanced-learning')}
-      >
-        <span className="text-3xl">🤖</span>
-      </motion.button>
-
-      <div className="relative z-10 px-8 py-6 max-w-7xl mx-auto">
+      <div className="relative z-10 px-2 sm:px-4 md:px-8 py-6 max-w-7xl mx-auto w-full">
         {/* Overview Section */}
         <div className="mb-8">
           <h2 className="text-[20px] font-bold text-black mb-4">Overview</h2>
@@ -341,7 +474,7 @@ export default function OverviewTab({
               </div>
               <div className="inline-block bg-[#6D18CE] rounded-full px-5 py-2 min-w-[70px] text-center">
                 <span className="text-[11px] font-medium text-white">
-                  {Math.round(overviewStats.totalXp * 0.1)}+ XP
+                  {Math.max(overviewStats.inProgress * 25, 0)}+ XP
                 </span>
               </div>
             </motion.div>
@@ -364,7 +497,7 @@ export default function OverviewTab({
               </div>
               <div className="inline-block bg-[#6D18CE] rounded-full px-5 py-2 min-w-[70px] text-center">
                 <span className="text-[11px] font-medium text-white">
-                  {Math.round(overviewStats.totalXp * 0.15)}+ XP
+                  {Math.max(overviewStats.completed * 100, 0)}+ XP
                 </span>
               </div>
             </motion.div>
@@ -387,7 +520,7 @@ export default function OverviewTab({
               </div>
               <div className="inline-block bg-[#6D18CE] rounded-full px-5 py-2 min-w-[70px] text-center">
                 <span className="text-[11px] font-medium text-white">
-                  {Math.round(overviewStats.totalXp * 0.2)}+ XP
+                  {Math.max(overviewStats.certificates * 50, 0)}+ XP
                 </span>
               </div>
             </motion.div>
@@ -410,7 +543,7 @@ export default function OverviewTab({
               </div>
               <div className="inline-block bg-[#6D18CE] rounded-full px-5 py-2 min-w-[70px] text-center">
                 <span className="text-[11px] font-medium text-white">
-                  {Math.round(overviewStats.totalXp * 0.25)}+ XP
+                  {Math.max(Math.round(overviewStats.aiSupport * 2), 0)}+ XP
                 </span>
               </div>
             </motion.div>
@@ -420,11 +553,11 @@ export default function OverviewTab({
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Course You're taking */}
-          <div className="lg:col-span-2">
-            <h2 className="text-[20px] font-bold text-black mb-4">Course You're taking</h2>
-            <div className="bg-[#F5F5F5] rounded-[15px] p-6">
-              {/* Table Header */}
-              <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-4 pb-4 border-b border-[#DDDDDD] mb-4">
+          <div className="lg:col-span-2 w-full overflow-hidden">
+            <h2 className="text-[20px] font-bold text-black mb-4 px-2 sm:px-0">Course You're taking</h2>
+            <div className="bg-[#F5F5F5] rounded-[15px] p-3 sm:p-6 overflow-x-auto">
+              {/* Table Header - Hidden on mobile */}
+              <div className="hidden md:grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-4 pb-4 border-b border-[#DDDDDD] mb-4">
                 <div></div>
                 <div className="text-[14px] font-semibold text-[#878787]">Course title</div>
                 <div className="text-[14px] font-semibold text-[#878787]">Lessons Completed</div>
@@ -432,22 +565,65 @@ export default function OverviewTab({
                 <div className="text-[14px] font-semibold text-[#878787]">XP Points</div>
               </div>
 
-              {/* Course Rows */}
+              {/* Course Rows - Show real module data */}
               {activeCourses.length > 0 ? (
                 activeCourses.map((course, index) => {
                   const Icon = course.icon;
                   const percentage = Math.round((course.lessonsCompleted / course.totalLessons) * 100);
                   // Ensure unique key by combining id with index
                   const uniqueKey = `${course.id || 'course'}-${index}`;
+                  const moduleId = (course as any).moduleId;
+                  
                   return (
                     <motion.div
                       key={uniqueKey}
-                      className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-4 items-center py-4 border-b border-[#DDDDDD] last:border-0"
+                      className="md:grid md:grid-cols-[auto_1fr_1fr_1fr_1fr] md:gap-4 md:items-center py-3 md:py-4 border-b border-[#DDDDDD] last:border-0 cursor-pointer hover:bg-gray-50 transition-colors rounded-lg px-2"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 * index }}
+                      onClick={() => {
+                        if (moduleId) {
+                          // Navigate to module page
+                          window.location.href = `/modules/${moduleId}`;
+                        } else {
+                          // Navigate to modules tab
+                          onTabChange('modules');
+                        }
+                      }}
                     >
-                      <div className="flex items-center justify-center w-[47px]">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-[40px] h-[40px] rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: course.color }}
+                        >
+                          <Icon className="w-[24px] h-[24px] text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[14px] font-semibold text-black truncate" title={course.title}>
+                            {course.title}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="md:hidden grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-[#878787]">Lessons: </span>
+                          <span className="font-semibold text-black">
+                            {course.lessonsCompleted.toString().padStart(2, '0')}/{course.totalLessons} ({percentage}%)
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#878787]">Duration: </span>
+                          <span className="font-semibold text-black">{course.duration}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-[#878787]">XP Points: </span>
+                          <span className="font-semibold text-black">{course.xp}+ XP</span>
+                        </div>
+                      </div>
+
+                      {/* Desktop Layout */}
+                      <div className="hidden md:flex items-center justify-center w-[47px]">
                         <div 
                           className="w-[47px] h-[47px] rounded-full flex items-center justify-center"
                           style={{ backgroundColor: course.color }}
@@ -455,18 +631,26 @@ export default function OverviewTab({
                           <Icon className="w-[30px] h-[30px] text-white" />
                         </div>
                       </div>
-                      <div className="text-[14px] font-semibold text-black truncate">{course.title}</div>
-                      <div className="text-[14px] font-semibold text-black">
+                      <div className="hidden md:block text-[14px] font-semibold text-black truncate" title={course.title}>
+                        {course.title}
+                      </div>
+                      <div className="hidden md:block text-[14px] font-semibold text-black">
                         {course.lessonsCompleted.toString().padStart(2, '0')}/{course.totalLessons} ({percentage}%)
                       </div>
-                      <div className="text-[14px] font-semibold text-black">{course.duration}</div>
-                      <div className="text-[14px] font-semibold text-black">{course.xp}+ XP</div>
+                      <div className="hidden md:block text-[14px] font-semibold text-black">{course.duration}</div>
+                      <div className="hidden md:block text-[14px] font-semibold text-black">{course.xp}+ XP</div>
                     </motion.div>
                   );
                 })
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  <p className="text-sm">No active courses yet. Start learning to see your progress here!</p>
+                  <p className="text-sm mb-2">No active courses yet.</p>
+                  <button
+                    onClick={() => onTabChange('modules')}
+                    className="text-[#6D18CE] hover:text-[#5A14B0] font-medium text-sm underline"
+                  >
+                    Browse available modules to start learning
+                  </button>
                 </div>
               )}
             </div>

@@ -325,25 +325,8 @@ export default function ParentDashboard() {
             }
           } catch (error) {
             console.error('Error fetching notifications:', error);
-            // Fallback to sample notifications if API fails
-            setNotifications([
-              {
-                id: '1',
-                title: 'Child Progress Update',
-                message: `${dashData.student?.name || 'Your child'} completed Mathematics Basics module.`,
-                type: 'success',
-                date: new Date().toISOString(),
-                read: false
-              },
-              {
-                id: '2',
-                title: 'Weekly Report Available',
-                message: 'Your child\'s weekly learning report is now available for review.',
-                type: 'info',
-                date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-                read: false
-              }
-            ]);
+            // Use empty array if API fails - no placeholder notifications
+            setNotifications([]);
           }
         } else {
           setChild(null);

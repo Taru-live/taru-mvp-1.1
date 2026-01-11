@@ -359,7 +359,38 @@ export async function GET(request: NextRequest) {
           subject,
           currentGrade: getGradeFromScore((stats.completed / stats.total) * 100),
           improvement: Math.round((stats.completed / stats.total) * 100),
-          attendance: 95, // Mock data for now
+          attendance: (() => {
+            // Calculate real attendance based on learning activity
+            // Attendance = percentage of days with activity in last 30 days
+            if (!progress?.moduleProgress) return 0;
+            
+            const last30Days = new Set<string>();
+            const now = Date.now();
+            const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+            
+            progress.moduleProgress.forEach((mp: any) => {
+              // Check lastAccessedAt dates
+              if (mp.lastAccessedAt) {
+                const accessDate = new Date(mp.lastAccessedAt);
+                if (accessDate.getTime() >= thirtyDaysAgo) {
+                  const dateKey = accessDate.toISOString().split('T')[0];
+                  last30Days.add(dateKey);
+                }
+              }
+              
+              // Check completedAt dates
+              if (mp.completedAt) {
+                const completedDate = new Date(mp.completedAt);
+                if (completedDate.getTime() >= thirtyDaysAgo) {
+                  const dateKey = completedDate.toISOString().split('T')[0];
+                  last30Days.add(dateKey);
+                }
+              }
+            });
+            
+            // Calculate percentage (days with activity / 30 days)
+            return Math.min(Math.round((last30Days.size / 30) * 100), 100);
+          })(),
           assignmentsCompleted: stats.completed,
           totalAssignments: stats.total
         });

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
 import Module from '@/models/Module';
+import StudentProgress from '@/models/StudentProgress';
+import User from '@/models/User';
+import YoutubeUrl from '@/models/YoutubeUrl';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,33 +58,122 @@ export async function GET(request: NextRequest) {
         classGrade: student.classGrade || 'Not specified'
       }));
 
-    // Get recent activity (mock data for now)
-    const recentActivity = [
-      {
-        id: 1,
-        action: 'Student completed module',
-        student: 'John Doe',
-        module: 'Algebra Basics',
-        time: '2 hours ago',
-        type: 'completion'
-      },
-      {
-        id: 2,
-        action: 'Assignment submitted',
-        student: 'Jane Smith',
-        module: 'Science Report',
-        time: '4 hours ago',
-        type: 'submission'
-      },
-      {
-        id: 3,
-        action: 'New student joined',
-        student: 'Mike Johnson',
-        module: 'Grade 7',
-        time: '1 day ago',
-        type: 'enrollment'
+    // Get real recent activity from StudentProgress
+    const recentActivity: any[] = [];
+    
+    // Get all student progress data for teacher's students
+    const studentIds = students.map(s => s.uniqueId);
+    const allProgress = await StudentProgress.find({ studentId: { $in: studentIds } });
+    
+    // Collect recent module completions and activities
+    const activities: any[] = [];
+    
+    for (const progress of allProgress) {
+      const student = students.find(s => s.uniqueId === progress.studentId);
+      if (!student) continue;
+      
+      // Get student user data for name
+      const studentUser = await User.findById(student.userId);
+      const studentName = studentUser?.name || student.fullName || 'Unknown Student';
+      
+      // Process module progress for recent completions
+      if (progress.moduleProgress && progress.moduleProgress.length > 0) {
+        for (const mp of progress.moduleProgress) {
+          // Get module name from YouTube data or Module collection
+          let moduleName = mp.moduleId;
+          
+          // Try to get module name from YouTube data
+          const youtubeData = await YoutubeUrl.findOne({ uniqueid: progress.studentId });
+          if (youtubeData && youtubeData.Module) {
+            const moduleItem = youtubeData.Module.find((item: any) => {
+              const chapterKey = Object.keys(item)[0];
+              return chapterKey === mp.moduleId;
+            });
+            if (moduleItem) {
+              const chapterKey = Object.keys(moduleItem)[0];
+              moduleName = moduleItem[chapterKey]?.videoTitle || moduleName;
+            }
+          }
+          
+          // If still not found, try Module collection
+          if (moduleName === mp.moduleId) {
+            const module = await Module.findOne({ moduleId: mp.moduleId });
+            if (module) {
+              moduleName = module.title || moduleName;
+            }
+          }
+          
+          // Add completion activity if module was recently completed
+          if (mp.completedAt) {
+            const timeDiff = Date.now() - new Date(mp.completedAt).getTime();
+            const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+            const daysAgo = Math.floor(hoursAgo / 24);
+            
+            let timeAgo = '';
+            if (daysAgo > 0) {
+              timeAgo = `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+            } else if (hoursAgo > 0) {
+              timeAgo = `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+            } else {
+              timeAgo = 'Just now';
+            }
+            
+            activities.push({
+              id: `${progress.studentId}-${mp.moduleId}-${mp.completedAt}`,
+              action: 'Student completed module',
+              student: studentName,
+              module: moduleName,
+              time: timeAgo,
+              type: 'completion',
+              timestamp: mp.completedAt
+            });
+          }
+          
+          // Add recent access activity (last 24 hours)
+          if (mp.lastAccessedAt) {
+            const timeDiff = Date.now() - new Date(mp.lastAccessedAt).getTime();
+            const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+            
+            if (hoursAgo < 24 && !mp.completedAt) {
+              const timeAgo = hoursAgo > 0 ? `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago` : 'Just now';
+              activities.push({
+                id: `${progress.studentId}-${mp.moduleId}-access-${mp.lastAccessedAt}`,
+                action: 'Student accessed module',
+                student: studentName,
+                module: moduleName,
+                time: timeAgo,
+                type: 'access',
+                timestamp: mp.lastAccessedAt
+              });
+            }
+          }
+        }
       }
-    ];
+      
+      // Add enrollment activity for recently joined students
+      if (student.createdAt) {
+        const timeDiff = Date.now() - new Date(student.createdAt).getTime();
+        const daysAgo = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        
+        if (daysAgo <= 7) {
+          activities.push({
+            id: `${student._id}-enrollment`,
+            action: 'New student joined',
+            student: studentName,
+            module: student.classGrade || 'Unknown Grade',
+            time: daysAgo === 0 ? 'Today' : `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`,
+            type: 'enrollment',
+            timestamp: student.createdAt
+          });
+        }
+      }
+    }
+    
+    // Sort by timestamp (most recent first) and take top 10
+    recentActivity.push(...activities
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 10)
+    );
 
     // Get subject distribution
     const subjectDistribution = modules.reduce((acc, module) => {
@@ -112,15 +204,75 @@ export async function GET(request: NextRequest) {
         grades: gradeDistribution
       },
       charts: {
-        // Placeholder for chart data
-        studentProgress: {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          data: [20, 35, 45, 60]
-        },
-        assignmentCompletion: {
-          labels: ['Math', 'Science', 'English', 'History'],
-          data: [85, 70, 90, 65]
-        }
+        // Real chart data based on actual student progress
+        studentProgress: (() => {
+          // Calculate progress over last 4 weeks
+          const weeks = [];
+          const now = new Date();
+          for (let i = 3; i >= 0; i--) {
+            const weekStart = new Date(now);
+            weekStart.setDate(weekStart.getDate() - (i * 7));
+            weekStart.setHours(0, 0, 0, 0);
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 7);
+            
+            // Count modules completed in this week
+            let weekCompletions = 0;
+            for (const progress of allProgress) {
+              if (progress.moduleProgress) {
+                weekCompletions += progress.moduleProgress.filter((mp: any) => {
+                  if (!mp.completedAt) return false;
+                  const completedDate = new Date(mp.completedAt);
+                  return completedDate >= weekStart && completedDate < weekEnd;
+                }).length;
+              }
+            }
+            
+            weeks.push({
+              label: `Week ${4 - i}`,
+              data: weekCompletions
+            });
+          }
+          
+          return {
+            labels: weeks.map(w => w.label),
+            data: weeks.map(w => w.data)
+          };
+        })(),
+        assignmentCompletion: (() => {
+          // Calculate completion rates by subject from modules
+          const subjectCompletion: Record<string, { total: number; completed: number }> = {};
+          
+          for (const progress of allProgress) {
+            if (progress.moduleProgress) {
+              for (const mp of progress.moduleProgress) {
+                // Try to get subject from module
+                const module = modules.find(m => m.moduleId === mp.moduleId || m._id.toString() === mp.moduleId);
+                const subject = module?.subject || 'General';
+                
+                if (!subjectCompletion[subject]) {
+                  subjectCompletion[subject] = { total: 0, completed: 0 };
+                }
+                
+                subjectCompletion[subject].total++;
+                if (mp.completedAt || mp.quizScore >= 75) {
+                  subjectCompletion[subject].completed++;
+                }
+              }
+            }
+          }
+          
+          const labels: string[] = [];
+          const data: number[] = [];
+          
+          Object.entries(subjectCompletion).forEach(([subject, stats]) => {
+            labels.push(subject);
+            data.push(stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0);
+          });
+          
+          return { labels, data };
+        })()
       }
     };
 

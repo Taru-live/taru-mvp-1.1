@@ -119,123 +119,20 @@ const getRandomAvatar = () => {
 
 export default function TeacherDashboard() {
   const [user, setUser] = useState<TeacherProfile | null>(null);
-  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile>({
-    _id: '1',
-    name: 'John Teacher',
-    email: 'john.teacher@school.com',
-    role: 'teacher',
-    avatar: '/avatars/Group-1.svg',
-    profile: {
-      subjectSpecialization: 'Mathematics',
-      experienceYears: 7
-    }
-  });
+  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [dashboardStats, setDashboardStats] = useState<any>(null);
   const [teacherStats, setTeacherStats] = useState<TeacherStats>({
-    totalStudents: 25,
-    activeStudents: 20,
-    averageProgress: 75,
-    totalAssignments: 8,
-    averageScore: 85,
-    totalXpAcrossStudents: 2500
+    totalStudents: 0,
+    activeStudents: 0,
+    averageProgress: 0,
+    totalAssignments: 0,
+    averageScore: 0,
+    totalXpAcrossStudents: 0
   });
 
-  // Sample data
-  const [students, setStudents] = useState<StudentData[]>([
-    {
-      id: '1',
-      userId: 'user1',
-      fullName: 'John Doe',
-      email: 'john.doe@school.com',
-      classGrade: 'Grade 7',
-      schoolName: 'ABC School',
-      uniqueId: 'STU001',
-      onboardingCompleted: true,
-      joinedAt: '2024-01-15',
-      totalModulesCompleted: 8,
-      totalXpEarned: 450,
-      learningStreak: 5,
-      badgesEarned: 3,
-      assessmentCompleted: true,
-      diagnosticCompleted: true,
-      diagnosticScore: 85
-    },
-    {
-      id: '2',
-      userId: 'user2',
-      fullName: 'Jane Smith',
-      email: 'jane.smith@school.com',
-      classGrade: 'Grade 7',
-      schoolName: 'ABC School',
-      uniqueId: 'STU002',
-      onboardingCompleted: true,
-      joinedAt: '2024-01-10',
-      totalModulesCompleted: 6,
-      totalXpEarned: 320,
-      learningStreak: 3,
-      badgesEarned: 2,
-      assessmentCompleted: true,
-      diagnosticCompleted: true,
-      diagnosticScore: 78
-    },
-    {
-      id: '3',
-      userId: 'user3',
-      fullName: 'Mike Johnson',
-      email: 'mike.johnson@school.com',
-      classGrade: 'Grade 8',
-      schoolName: 'ABC School',
-      uniqueId: 'STU003',
-      onboardingCompleted: false,
-      joinedAt: '2024-01-20',
-      totalModulesCompleted: 2,
-      totalXpEarned: 120,
-      learningStreak: 1,
-      badgesEarned: 0,
-      assessmentCompleted: false,
-      diagnosticCompleted: false,
-      diagnosticScore: 0
-    }
-  ]);
-
-  const [modules, setModules] = useState<ModuleData[]>([
-    {
-      id: '1',
-      title: 'Algebra Fundamentals',
-      subject: 'Mathematics',
-      grade: 'Grade 7',
-      difficulty: 'intermediate',
-      duration: 45,
-      points: 100
-    },
-    {
-      id: '2',
-      title: 'Photosynthesis Process',
-      subject: 'Science',
-      grade: 'Grade 8',
-      difficulty: 'beginner',
-      duration: 30,
-      points: 75
-    },
-    {
-      id: '3',
-      title: 'Creative Writing',
-      subject: 'English',
-      grade: 'Grade 6',
-      difficulty: 'beginner',
-      duration: 40,
-      points: 80
-    },
-    {
-      id: '4',
-      title: 'World War II',
-      subject: 'History',
-      grade: 'Grade 9',
-      difficulty: 'advanced',
-      duration: 60,
-      points: 150
-    }
-  ]);
+  // Real data - will be populated from API
+  const [students, setStudents] = useState<StudentData[]>([]);
+  const [modules, setModules] = useState<ModuleData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [subjectSpecialization, setSubjectSpecialization] = useState('');
@@ -300,33 +197,8 @@ export default function TeacherDashboard() {
     // Load dashboard data
     loadDashboardData();
     
-    // Initialize notifications
-    setNotifications([
-      {
-        id: '1',
-        title: 'New Student Joined',
-        message: 'A new student has joined your class and completed their profile setup.',
-        date: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-        read: false,
-        type: 'success'
-      },
-      {
-        id: '2',
-        title: 'Assignment Submitted',
-        message: '3 students have submitted their latest assignment. Review their work.',
-        date: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-        read: false,
-        type: 'info'
-      },
-      {
-        id: '3',
-        title: 'Progress Report Ready',
-        message: 'Weekly progress report for your class is now available for download.',
-        date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        read: true,
-        type: 'info'
-      }
-    ]);
+    // Initialize notifications - will be populated from real data
+    setNotifications([]);
   }, [])
 
   const loadDashboardData = async () => {
@@ -424,6 +296,11 @@ export default function TeacherDashboard() {
   }
 
   const handleSaveProfile = async () => {
+    if (!teacherProfile) {
+      alert('Profile data not available. Please refresh the page.');
+      return;
+    }
+    
     try {
       const response = await fetch('/api/teacher/profile', {
         method: 'PUT',
@@ -2106,24 +1983,30 @@ export default function TeacherDashboard() {
 
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              {/* Profile Settings */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      value={teacherProfile.name || ''}
-                      onChange={(e) => setTeacherProfile(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={teacherProfile.email}
+              {!teacherProfile ? (
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                  <p className="text-gray-500">Loading profile data...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Profile Settings */}
+                  <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Settings</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input
+                          type="text"
+                          value={teacherProfile.name || ''}
+                          onChange={(e) => setTeacherProfile(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input
+                          type="email"
+                          value={teacherProfile.email || ''}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                       readOnly
                     />
@@ -2133,10 +2016,10 @@ export default function TeacherDashboard() {
                     <input
                       type="text"
                       value={teacherProfile.profile?.subjectSpecialization || ''}
-                      onChange={(e) => setTeacherProfile(prev => ({ 
+                      onChange={(e) => setTeacherProfile(prev => prev ? ({ 
                         ...prev, 
-                        profile: { ...prev.profile, subjectSpecialization: e.target.value }
-                      }))}
+                        profile: { ...(prev.profile || {}), subjectSpecialization: e.target.value }
+                      }) : null)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                       placeholder="Enter your subject specialization"
                     />
@@ -2146,10 +2029,10 @@ export default function TeacherDashboard() {
                     <input
                       type="number"
                       value={teacherProfile.profile?.experienceYears || ''}
-                      onChange={(e) => setTeacherProfile(prev => ({ 
+                      onChange={(e) => setTeacherProfile(prev => prev ? ({ 
                         ...prev, 
-                        profile: { ...prev.profile, experienceYears: parseInt(e.target.value) || 0 }
-                      }))}
+                        profile: { ...(prev.profile || {}), experienceYears: parseInt(e.target.value) || 0 }
+                      }) : null)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                       placeholder="Enter years of experience"
                       min="0"
@@ -2283,6 +2166,8 @@ export default function TeacherDashboard() {
                   </button>
                 </div>
               </div>
+                </>
+              )}
             </div>
           )}
             </div>

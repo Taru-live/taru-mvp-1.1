@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from './components/Sidebar';
 import ModulesTab from './components/ModulesTab';
@@ -471,25 +471,8 @@ export default function StudentDashboard() {
           }
         } catch (error) {
           console.error('Error fetching notifications:', error);
-          // Fallback to sample notifications if API fails
-          setNotifications([
-            {
-              id: '1',
-              title: 'New Module Available!',
-              message: 'Mathematics Advanced Topics is now available in your learning path.',
-              type: 'info',
-              date: new Date().toISOString(),
-              read: false
-            },
-            {
-              id: '2',
-              title: 'Quiz Reminder',
-              message: 'Don&apos;t forget to complete your Science quiz before tomorrow.',
-              type: 'warning',
-              date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-              read: false
-            }
-          ]);
+          // Use empty array if API fails - no placeholder notifications
+          setNotifications([]);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -523,24 +506,38 @@ export default function StudentDashboard() {
     return () => clearInterval(interval);
   }, [user]);
 
-  // Refresh dashboard data when switching to progress or overview tab
-  useEffect(() => {
-    if ((activeTab === 'progress' || activeTab === 'overview') && user) {
-      // Force a fresh fetch with cache busting
-      fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
+  // Shared refresh function for all tabs
+  const refreshDashboardData = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache'
         }
-      })
-        .then(response => response.json())
-        .then(data => {
-          console.log('🔄 Refreshed dashboard data:', data);
-          setDashboardData(data);
-        })
-        .catch(error => console.error('Error refreshing dashboard data:', error));
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+      
+      const data = await response.json();
+      console.log('🔄 Refreshed dashboard data - totalModules:', data?.overview?.totalModules);
+      setDashboardData(data);
+      return data;
+    } catch (error) {
+      console.error('Error refreshing dashboard data:', error);
+      throw error;
     }
-  }, [activeTab, user]);
+  }, [user]);
+
+  // Refresh dashboard data when switching to progress or overview tab
+  useEffect(() => {
+    if ((activeTab === 'progress' || activeTab === 'overview') && user) {
+      refreshDashboardData();
+    }
+  }, [activeTab, user, refreshDashboardData]);
 
   // Function to test API connectivity
   const testApiConnectivity = async () => {
@@ -834,7 +831,8 @@ export default function StudentDashboard() {
   // Handle clicks outside notification dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      const target = event.target as Node | null;
+      if (notificationRef.current && target && !notificationRef.current.contains(target)) {
         setIsNotificationOpen(false);
       }
     };
@@ -1636,9 +1634,25 @@ export default function StudentDashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
                   >
-                  <OverviewTab 
+                  <OverviewTab
                     courses={courses}
                     onTabChange={setActiveTab}
+                    onRefresh={async () => {
+                      // Refresh dashboard data with cache busting
+                      try {
+                        const response = await fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
+                          cache: 'no-cache',
+                          headers: {
+                            'Cache-Control': 'no-cache'
+                          }
+                        });
+                        const data = await response.json();
+                        setDashboardData(data);
+                        console.log('🔄 Overview tab refreshed - totalModules:', data?.overview?.totalModules);
+                      } catch (error) {
+                        console.error('Error refreshing dashboard data:', error);
+                      }
+                    }}
                     dashboardData={dashboardData}
                     user={user ? { uniqueId: user.uniqueId || undefined } : undefined}
                   />
@@ -1646,7 +1660,13 @@ export default function StudentDashboard() {
                 </motion.div>
               )}
               {activeTab === 'learning-path' && <LearningPathTab user={user ? { uniqueId: user.uniqueId ?? undefined, name: user.name ?? undefined } : null} onTabChange={setActiveTab} />}
-              {activeTab === 'modules' && <ModulesTab user={user} initialSearchQuery={searchQuery} />}
+              {activeTab === 'modules' && (
+                <ModulesTab 
+                  user={user} 
+                  initialSearchQuery={searchQuery}
+                  onProgressUpdate={refreshDashboardData}
+                />
+              )}
               {activeTab === 'enhanced-learning' && <EnhancedLearningTab />}
               {activeTab === 'progress' && (
                 <div>
@@ -1661,21 +1681,7 @@ export default function StudentDashboard() {
                     <ProgressTab 
                       progress={progressData} 
                       onTabChange={setActiveTab} 
-                      onRefresh={async () => {
-                        // Refresh dashboard data with cache busting
-                        try {
-                          const response = await fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
-                            cache: 'no-cache',
-                            headers: {
-                              'Cache-Control': 'no-cache'
-                            }
-                          });
-                          const data = await response.json();
-                          setDashboardData(data);
-                        } catch (error) {
-                          console.error('Error refreshing dashboard data:', error);
-                        }
-                      }} 
+                      onRefresh={refreshDashboardData} 
                     />
                   )}
                 </div>

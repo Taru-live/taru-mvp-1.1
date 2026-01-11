@@ -224,16 +224,18 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
       width: "80px",
       transition: {
         type: "spring" as const,
-        stiffness: 400,
-        damping: 40
+        stiffness: 300,
+        damping: 30,
+        duration: 0.4
       }
     },
     expanded: {
       width: "320px",
       transition: {
         type: "spring" as const,
-        stiffness: 400,
-        damping: 40
+        stiffness: 300,
+        damping: 30,
+        duration: 0.4
       }
     }
   };
@@ -261,8 +263,8 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
 
   return (
     <>
-      {/* Hamburger Button - Only visible on mobile */}
-      {(isMobile || isActuallyMobile) && (
+      {/* Hamburger Button - Only visible on mobile when sidebar is closed */}
+      {(isMobile || isActuallyMobile) && !isOpen && (
         <motion.button
           onClick={onToggle}
           className="fixed top-4 left-4 z-[60] p-2 bg-white rounded-lg shadow-lg border border-gray-200 md:hidden"
@@ -271,7 +273,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          title={`Mobile Mode - ${isOpen ? 'Open' : 'Closed'}`}
+          title="Open Menu"
         >
           <Menu className="w-6 h-6 text-gray-700" />
         </motion.button>
@@ -315,9 +317,10 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               >
+                {/* Logo on top left */}
                 <div className="flex items-center">
                   <motion.div 
-                    className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-3"
+                    className="w-12 h-12 rounded-full flex items-center justify-center mr-3"
                     whileHover={{ scale: 1.1, rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
@@ -332,7 +335,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
                   </motion.div>
                 </div>
                 
-                {/* Close Button - Only visible on mobile */}
+                {/* Close Button - Only visible on mobile when sidebar is open */}
                 <motion.button
                   onClick={onToggle}
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -489,7 +492,12 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
                 <motion.div 
                 className="hidden md:block"
                 animate={{ opacity: isHovered ? 1 : 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  duration: 0.4
+                }}
               >
                 <span className="text-lg font-bold text-gray-800">Taru</span>
               </motion.div>
@@ -497,14 +505,25 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
             </motion.div>
             
             {/* Navigation */}
-            <nav className={`flex flex-col ${isHovered ? 'gap-2' : 'gap-0.5'}`}>
+            <motion.nav 
+              className="flex flex-col"
+              animate={{
+                gap: isHovered ? "2rem" : "0.5rem"
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                duration: 0.4
+              }}
+            >
               {items.map((item, index) => (
                 <motion.button
                   key={item.id}
                   onClick={() => handleTabChange(item.id)}
                   className={`
-                    flex items-center gap-3 px-4 py-2 rounded-3xl text-left transition-all duration-300 
-                    font-medium text-gray-900 relative overflow-hidden group
+                    flex items-center gap-3 px-4 py-3 rounded-3xl text-left transition-all duration-300 
+                    font-medium text-gray-900 relative overflow-hidden group w-full min-h-[48px]
                     ${activeTab === item.id 
                       ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
                       : 'hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 active:bg-purple-200'
@@ -533,7 +552,12 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
                   <motion.span 
                     className="text-sm"
                     animate={{ opacity: isHovered ? 1 : 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ 
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 30,
+                      duration: 0.4
+                    }}
                   >
                     {item.label}
                   </motion.span>
@@ -547,7 +571,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
                   )}
                 </motion.button>
               ))}
-            </nav>
+            </motion.nav>
             
             {/* Logout Button */}
             <motion.button
@@ -573,7 +597,12 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
               <motion.span 
                 className="text-sm"
                 animate={{ opacity: isHovered ? 1 : 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  duration: 0.4
+                }}
               >
                 Logout
               </motion.span>

@@ -101,9 +101,10 @@ interface ModulesTabProps {
     
   } | null;
   initialSearchQuery?: string;
+  onProgressUpdate?: () => void | Promise<void>;
 }
 
-export default function ModulesTab({ user, initialSearchQuery = '' }: ModulesTabProps) {
+export default function ModulesTab({ user, initialSearchQuery = '', onProgressUpdate }: ModulesTabProps) {
   const [youtubeData, setYoutubeData] = useState<YoutubeData | null>(null);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
@@ -1037,6 +1038,17 @@ export default function ModulesTab({ user, initialSearchQuery = '' }: ModulesTab
               [selectedChapter]: score
             }));
           }, 100);
+          
+          // Refresh dashboard data to sync with other tabs
+          if (onProgressUpdate) {
+            console.log('🔄 Triggering dashboard refresh after quiz submission');
+            setTimeout(() => {
+              onProgressUpdate();
+            }, 500); // Small delay to ensure backend has processed the update
+          }
+          
+          // Also refresh progress data
+          fetchProgressData();
 
           // Check if module is completed (score >= 75%)
           if (score >= 75 && selectedChapter !== null) {
@@ -1984,24 +1996,62 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                           allowFullScreen
                                                         />
                                                       ) : (
-                                                        <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
-                                                          {/* Video Thumbnail */}
-                                                          <img
-                                                            src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                                                            alt={chapter.youtubeTitle}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => {
-                                                              const target = e.target as HTMLImageElement;
-                                                              target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                                                            }}
-                                                          />
+                                                        <div className="w-full h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center relative overflow-hidden">
+                                                          {/* Animated Background Pattern */}
+                                                          <div className="absolute inset-0 opacity-20">
+                                                            <div className="absolute top-0 left-0 w-full h-full">
+                                                              <div className="absolute top-10 left-10 w-32 h-32 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
+                                                              <div className="absolute bottom-10 right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                                                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+                                                            </div>
+                                                          </div>
+                                                          
+                                                          {/* Geometric Shapes */}
+                                                          <div className="absolute inset-0 opacity-10">
+                                                            <motion.div
+                                                              className="absolute top-4 right-4 w-16 h-16 border-2 border-white/30 rounded-lg"
+                                                              animate={{ rotate: [0, 90, 0] }}
+                                                              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                                                            />
+                                                            <motion.div
+                                                              className="absolute bottom-4 left-4 w-12 h-12 border-2 border-white/30 rounded-full"
+                                                              animate={{ scale: [1, 1.2, 1] }}
+                                                              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                                            />
+                                                          </div>
+                                                          
+                                                          {/* Video Placeholder Content - Icon Only */}
+                                                          <div className="absolute inset-0 flex items-center justify-center z-10">
+                                                            <motion.div
+                                                              animate={{ scale: [1, 1.1, 1] }}
+                                                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                                            >
+                                                              <div className="relative">
+                                                                <div className="absolute inset-0 bg-white/20 rounded-full blur-xl"></div>
+                                                                <div className="relative bg-white/10 backdrop-blur-sm rounded-full p-6 border-2 border-white/30">
+                                                                  <Video className="w-16 h-16 text-white mx-auto" />
+                                                                </div>
+                                                              </div>
+                                                            </motion.div>
+                                                          </div>
+                                                          
+                                                          {/* Title at Bottom */}
+                                                          <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/60 via-black/40 to-transparent px-4 py-3">
+                                                            <p className="text-white text-sm font-semibold line-clamp-2 text-center drop-shadow-lg">
+                                                              {chapter.youtubeTitle}
+                                                            </p>
+                                                          </div>
+                                                          
                                                           {/* Play Overlay */}
-                                                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                                          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                                                             <motion.button
                                                               onClick={() => setPlayingVideo(chapterId)}
-                                                              className="p-6 bg-red-600 hover:bg-red-700 rounded-full shadow-2xl transform transition-all duration-300 hover:scale-110"
-                                                              whileHover={{ scale: 1.1 }}
-                                                              whileTap={{ scale: 0.9 }}
+                                                              className="pointer-events-auto p-6 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 rounded-full shadow-2xl transform transition-all duration-300 border-2 border-white/20"
+                                                              whileHover={{ scale: 1.15, boxShadow: "0 0 30px rgba(239, 68, 68, 0.6)" }}
+                                                              whileTap={{ scale: 0.95 }}
+                                                              initial={{ scale: 0 }}
+                                                              animate={{ scale: 1 }}
+                                                              transition={{ type: "spring", stiffness: 200, damping: 15 }}
                                                             >
                                                               <Play className="w-12 h-12 text-white" />
                                                             </motion.button>
@@ -2224,22 +2274,48 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                 className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300"
                                               >
                                                 <div className="flex items-center gap-6">
-                                                  {/* Video Thumbnail */}
-                                                  <div className="relative w-32 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                                    {videoId ? (
-                                                      <img
-                                                        src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
-                                                        alt={chapter.youtubeTitle}
-                                                        className="w-full h-full object-cover"
+                                                  {/* Video Placeholder */}
+                                                  <div className="relative w-32 h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-lg overflow-hidden flex-shrink-0 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                                                    {/* Animated Background Pattern */}
+                                                    <div className="absolute inset-0 opacity-20">
+                                                      <motion.div
+                                                        className="absolute top-0 right-0 w-16 h-16 bg-white/20 rounded-full blur-xl"
+                                                        animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+                                                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                                                       />
-                                                    ) : (
-                                                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                                        <Video className="w-8 h-8" />
-                                                      </div>
-                                                    )}
-                                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                                      <PlayCircle className="w-6 h-6 text-white" />
                                                     </div>
+                                                    
+                                                    {/* Geometric Accent */}
+                                                    <div className="absolute top-1 right-1 w-2 h-2 bg-white/40 rounded-full"></div>
+                                                    <div className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+                                                    
+                                                    {/* Icon Container */}
+                                                    <div className="w-full h-full flex items-center justify-center relative z-10">
+                                                      <motion.div
+                                                        animate={{ scale: [1, 1.1, 1] }}
+                                                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                                      >
+                                                        <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 border border-white/20 shadow-lg">
+                                                          <Video className="w-5 h-5 text-white" />
+                                                        </div>
+                                                      </motion.div>
+                                                    </div>
+                                                    
+                                                    {/* Play Button Overlay */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                                                      <motion.div
+                                                        initial={{ scale: 0.8, opacity: 0 }}
+                                                        whileHover={{ scale: 1.1 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        transition={{ duration: 0.2 }}
+                                                        className="bg-white/25 backdrop-blur-sm rounded-full p-1.5 border border-white/40 shadow-md"
+                                                      >
+                                                        <PlayCircle className="w-4 h-4 text-white" />
+                                                      </motion.div>
+                                                    </div>
+                                                    
+                                                    {/* Shine Effect on Hover */}
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none"></div>
                                                   </div>
                                                   
                                                   {/* Content */}

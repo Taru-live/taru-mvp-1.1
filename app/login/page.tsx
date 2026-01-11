@@ -400,7 +400,7 @@ export default function Login() {
           
 
           {/* Main Content Container */}
-          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-[155px] py-3 sm:py-4 md:py-5 lg:py-8 flex flex-col justify-center">
+          <div className="relative w-full h-full px-4 sm:px-6 md:px-8 lg:px-[155px] py-3 sm:py-4 md:py-5 lg:py-8 flex flex-col justify-center items-center lg:items-center">
 
             {/* Welcome back Title */}
             <motion.h2 
@@ -425,7 +425,7 @@ export default function Login() {
             {/* Login Form */}
             <motion.form 
               onSubmit={handleSubmit}
-              className="mt-1 sm:mt-1.5 md:mt-2 w-full lg:w-[514px]"
+              className="mt-1 sm:mt-1.5 md:mt-2 w-full lg:w-[514px] lg:mx-auto"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.1, duration: 0.6 }}
@@ -528,7 +528,7 @@ export default function Login() {
 
             {/* Register Link */}
             <motion.div 
-              className="mt-4 sm:mt-5 md:mt-6 text-center w-full lg:w-[205px] mb-2 sm:mb-2.5 md:mb-3"
+              className="mt-4 sm:mt-5 md:mt-6 text-center w-full lg:w-[205px] lg:mx-auto mb-2 sm:mb-2.5 md:mb-3"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.3, duration: 0.4 }}
