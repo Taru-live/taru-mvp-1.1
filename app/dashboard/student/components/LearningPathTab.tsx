@@ -61,9 +61,10 @@ interface LearningPathTabProps {
     name?: string;
   } | null;
   onTabChange?: (tab: string) => void;
+  isParentView?: boolean;
 }
 
-export default function LearningPathTab({ user, onTabChange }: LearningPathTabProps) {
+export default function LearningPathTab({ user, onTabChange, isParentView = false }: LearningPathTabProps) {
   const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
   const [currentPath, setCurrentPath] = useState<LearningPath | null>(null);
   const [loading, setLoading] = useState(true);
@@ -420,19 +421,21 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto">
-            <motion.button
-              onClick={() => router.push('/career-exploration')}
-              className="group relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 shadow-xl hover:shadow-2xl overflow-hidden text-sm sm:text-base md:text-lg font-semibold"
-              whileHover={{ scale: 1.05, y: -3 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 relative z-10" />
-              <span className="relative z-10">Choose New Path</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
-            </motion.button>
-          </div>
+          {!isParentView && (
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto">
+              <motion.button
+                onClick={() => router.push('/career-exploration')}
+                className="group relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 shadow-xl hover:shadow-2xl overflow-hidden text-sm sm:text-base md:text-lg font-semibold"
+                whileHover={{ scale: 1.05, y: -3 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 relative z-10" />
+                <span className="relative z-10">Choose New Path</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
+              </motion.button>
+            </div>
+          )}
         </motion.div>
 
         {/* Enhanced Error and Success Messages */}
@@ -597,26 +600,28 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
                     </div>
                     
                     {/* Enhanced Actions */}
-                    <div className="flex gap-2 sm:ml-4 md:ml-6 self-start sm:self-center">
-                      {currentPath?._id !== path._id && (
+                    {!isParentView && (
+                      <div className="flex gap-2 sm:ml-4 md:ml-6 self-start sm:self-center">
+                        {currentPath?._id !== path._id && (
+                          <motion.button
+                            onClick={() => setActivePath(path)}
+                            className="group p-2 sm:p-3 text-purple-600 hover:bg-purple-100 rounded-lg sm:rounded-xl transition-all duration-300 border border-purple-200 hover:border-purple-300"
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
+                          </motion.button>
+                        )}
                         <motion.button
-                          onClick={() => setActivePath(path)}
-                          className="group p-2 sm:p-3 text-purple-600 hover:bg-purple-100 rounded-lg sm:rounded-xl transition-all duration-300 border border-purple-200 hover:border-purple-300"
-                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          onClick={() => confirmDelete(path)}
+                          className="group p-2 sm:p-3 text-red-600 hover:bg-red-100 rounded-lg sm:rounded-xl transition-all duration-300 border border-red-200 hover:border-red-300"
+                          whileHover={{ scale: 1.1, rotate: -5 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
+                          <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
                         </motion.button>
-                      )}
-                      <motion.button
-                        onClick={() => confirmDelete(path)}
-                        className="group p-2 sm:p-3 text-red-600 hover:bg-red-100 rounded-lg sm:rounded-xl transition-all duration-300 border border-red-200 hover:border-red-300"
-                        whileHover={{ scale: 1.1, rotate: -5 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300" />
-                      </motion.button>
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Enhanced Focus Areas */}
@@ -746,17 +751,19 @@ export default function LearningPathTab({ user, onTabChange }: LearningPathTabPr
                 </div>
               </div>
 
-              <motion.button
-                onClick={() => onTabChange?.('modules')}
-                className="group relative w-full sm:w-auto bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 hover:from-purple-700 hover:via-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base md:text-lg transition-all duration-300 shadow-2xl hover:shadow-3xl flex items-center justify-center gap-2 sm:gap-3 md:gap-4 overflow-hidden"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <Rocket className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                <span className="relative z-10">Start Learning Journey</span>
-                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 group-hover:translate-x-2 transition-transform duration-300" />
-              </motion.button>
+              {!isParentView && (
+                <motion.button
+                  onClick={() => onTabChange?.('modules')}
+                  className="group relative w-full sm:w-auto bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 hover:from-purple-700 hover:via-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base md:text-lg transition-all duration-300 shadow-2xl hover:shadow-3xl flex items-center justify-center gap-2 sm:gap-3 md:gap-4 overflow-hidden"
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <Rocket className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                  <span className="relative z-10">Start Learning Journey</span>
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 group-hover:translate-x-2 transition-transform duration-300" />
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}

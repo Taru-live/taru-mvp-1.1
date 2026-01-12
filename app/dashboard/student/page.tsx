@@ -1239,7 +1239,7 @@ export default function StudentDashboard() {
                   }
                 }}
                 placeholder="Search modules, topics, or questions..."
-                className="relative w-full pl-11 pr-16 py-4 rounded-2xl border-2 border-purple-200 bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-200/50 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:border-purple-300"
+                className="relative w-full pl-11 pr-16 py-4 rounded-[135px] border-2 border-purple-200 bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-200/50 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:border-purple-300"
               />
               
               {/* Fun Decorative Elements */}
@@ -1255,7 +1255,7 @@ export default function StudentDashboard() {
               
               {/* Animated Glow Effect */}
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400/30 via-pink-400/30 to-purple-400/30 opacity-0 pointer-events-none blur-md"
+                className="absolute inset-0 rounded-[135px] bg-gradient-to-r from-purple-400/30 via-pink-400/30 to-purple-400/30 opacity-0 pointer-events-none blur-md"
                 animate={{
                   opacity: [0, 0.3, 0],
                 }}

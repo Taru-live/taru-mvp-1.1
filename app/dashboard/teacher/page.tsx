@@ -158,6 +158,7 @@ export default function TeacherDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [searchQuery, setSearchQuery] = useState('');
   const [language, setLanguage] = useState('English (USA)');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isRightPanelHovered, setIsRightPanelHovered] = useState(false);
@@ -1083,46 +1084,94 @@ export default function TeacherDashboard() {
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40 pointer-events-none"></div>
         
-        {/* Top Bar */}
-        <div className="relative z-10 flex items-center justify-between w-full px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-gray-200/50">
+        {/* Enhanced Top Bar */}
+        <div className={`flex items-center justify-between w-full px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-md border-b border-gray-200/50 relative shadow-sm transition-all duration-300 ${isNotificationOpen ? 'blur-sm pointer-events-none' : ''}`}>
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-blue-500/5 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-blue-500/5 pointer-events-none" />
           
           {/* Animated Border */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent pointer-events-none"></div>
-          
-          {/* Search Bar - Hidden on mobile, shown on tablet+ */}
+          <motion.div
+            className="absolute bottom-0 left-4 h-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"
+            initial={{ width: 0 }}
+            animate={{ width: "calc(100% - 2rem)" }}
+            transition={{ duration: 2, ease: "easeOut" }}
+          />
+          {/* Enhanced Search Bar - Hidden on mobile, shown on tablet+ */}
           <div className="hidden sm:flex flex-1 items-center max-w-md">
             <motion.div 
               className="relative w-full"
-              whileFocus={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.2 }}
             >
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-600 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              {/* Animated Background Gradient */}
+              <motion.div
+                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 opacity-20 blur-xl"
+                animate={{
+                  opacity: [0.15, 0.25, 0.15],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Search Icon */}
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                <svg 
+                  className="w-5 h-5 text-purple-600" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    console.log('Searching for:', searchQuery);
+                  }
+                }}
                 placeholder="Search students, assignments..."
-                className="w-full pl-10 pr-4 py-3 rounded-full border-0 bg-white text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:bg-white transition-all duration-200 text-sm shadow-sm"
+                className="relative w-full pl-11 pr-16 py-4 rounded-[135px] border-2 border-purple-200 bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-200/50 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:border-purple-300"
+              />
+              
+              {/* Fun Decorative Elements */}
+              <motion.div
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-1"
+                initial={{ opacity: 0.5 }}
+                whileHover={{ opacity: 1 }}
+              >
+                <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                  Press Enter
+                </span>
+              </motion.div>
+              
+              {/* Animated Glow Effect */}
+              <motion.div
+                className="absolute inset-0 rounded-[135px] bg-gradient-to-r from-purple-400/30 via-pink-400/30 to-purple-400/30 opacity-0 pointer-events-none blur-md"
+                animate={{
+                  opacity: [0, 0.3, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
               />
             </motion.div>
           </div>
           
-          {/* Mobile: Hamburger Menu and Logo - Only show if sidebar is not open */}
-          {isMobile && (
-            <div className="flex sm:hidden items-center flex-1">
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 rounded-lg bg-white border border-gray-200/50 hover:bg-gray-50 transition-all duration-200 shadow-sm mr-3"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <span className="text-lg font-bold text-gray-800">Teacher Dashboard</span>
-            </div>
-          )}
+          {/* Mobile: Logo and User Info */}
+          <div className="flex sm:hidden items-center flex-1 justify-center ml-12">
+            <span className="text-lg font-bold text-gray-800">Dashboard</span>
+          </div>
           
           {/* User Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
@@ -1138,90 +1187,107 @@ export default function TeacherDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </motion.button>
-            {/* Notification Bell */}
-            <motion.button
-              className="relative p-2 rounded-full bg-white border border-gray-200/50 hover:bg-gray-50 transition-all duration-200 shadow-sm"
-              onClick={handleNotificationClick}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              
-              {/* Notification Badge */}
-              {unreadCount > 0 && (
-                <motion.div
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 0.2 }}
+           
+             {/* Enhanced User Profile Section */}
+             <motion.div 
+               className="bg-white/80 backdrop-blur-sm rounded-xl p-1.5 sm:p-3 shadow-lg border border-gray-200/50 flex items-center gap-1.5 sm:gap-3 group hover:shadow-xl transition-all duration-300"
+               whileHover={{ scale: 1.02, y: -2 }}
+               whileTap={{ scale: 0.98 }}
+             >
+               {/* Enhanced Notification Bell */}
+               <div className="relative" ref={notificationRef}>
+                 <motion.button 
+                  onClick={handleNotificationClick}
+                   className="relative text-gray-900 hover:text-purple-600 transition-colors p-1 sm:p-2 rounded-full hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 touch-manipulation group"
+                   whileHover={{ scale: 1.1, rotate: [0, -10, 10, 0] }}
+                   whileTap={{ scale: 0.95 }}
+                   transition={{ duration: 0.2 }}
                 >
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </motion.div>
-              )}
-              
-              {/* Pulsing Effect */}
-              {unreadCount > 0 && (
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-red-500/20 pointer-events-none"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              )}
-            </motion.button>
-            
-            {/* User Profile Section */}
-            <motion.div 
-              className="bg-white rounded-xl p-3 shadow-sm border border-gray-200/50 flex items-center gap-3 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setIsAvatarSelectorOpen(true)}
-            >
-              {/* Animated Avatar */}
-              <motion.div 
-                className="relative w-10 h-10 rounded-full overflow-hidden"
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Image 
-                  src={userAvatar} 
-                  alt="Teacher Avatar" 
-                  width={40} 
-                  height={40} 
-                  className="w-full h-full object-cover" 
-                />
-                
-                {/* Online Status Indicator */}
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                
-                {/* Glow Effect */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/20 to-pink-500/20 opacity-0 hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
-              </motion.div>
-              
-              {/* User Info */}
-              <div className="flex flex-col">
-                <span className="font-bold text-gray-900 text-sm">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="30.24" height="30.24" transform="translate(0.899902 1.38086)" fill="#F5F5F5"/>
+                    <path d="M16.0204 3.90039C13.6812 3.90039 11.4378 4.82964 9.7837 6.48371C8.12963 8.13778 7.20039 10.3812 7.20039 12.7204V17.1657C7.20057 17.3611 7.15527 17.554 7.06809 17.7289L4.90467 22.0545C4.79899 22.2658 4.74908 22.5006 4.7597 22.7367C4.77032 22.9727 4.8411 23.2021 4.96533 23.4031C5.08956 23.6041 5.2631 23.77 5.46948 23.885C5.67586 24.0001 5.90823 24.0604 6.14451 24.0604H25.8963C26.1325 24.0604 26.3649 24.0001 26.5713 23.885C26.7777 23.77 26.9512 23.6041 27.0754 23.4031C27.1997 23.2021 27.2705 22.9727 27.2811 22.7367C27.2917 22.5006 27.2418 22.2658 27.1361 22.0545L24.9739 17.7289C24.8863 17.5541 24.8406 17.3612 24.8404 17.1657V12.7204C24.8404 10.3812 23.9111 8.13778 22.2571 6.48371C20.603 4.82964 18.3596 3.90039 16.0204 3.90039ZM16.0204 27.8404C15.2384 27.8408 14.4755 27.5987 13.8368 27.1473C13.1982 26.696 12.7153 26.0577 12.4546 25.3204H19.5862C19.3255 26.0577 18.8426 26.696 18.2039 27.1473C17.5653 27.5987 16.8024 27.8408 16.0204 27.8404Z" fill="#A5A5A5"/>
+                    <circle cx="23.58" cy="6.27336" r="5.78118" fill="#FDBB30"/>
+                    <path d="M21.8094 7.82227V7.15526L23.579 5.42054C23.7482 5.24964 23.8893 5.09782 24.0021 4.96508C24.1149 4.83234 24.1995 4.70375 24.2559 4.57931C24.3124 4.45487 24.3406 4.32213 24.3406 4.1811C24.3406 4.02015 24.3041 3.88244 24.2311 3.76795C24.158 3.6518 24.0577 3.56221 23.9299 3.49916C23.8021 3.43611 23.657 3.40458 23.4944 3.40458C23.3268 3.40458 23.1799 3.43942 23.0538 3.50911C22.9277 3.57714 22.8298 3.6742 22.7601 3.80031C22.6921 3.92641 22.6581 4.07657 22.6581 4.25078H21.7795C21.7795 3.92724 21.8534 3.646 22.0011 3.40707C22.1487 3.16814 22.352 2.98314 22.6108 2.85206C22.8713 2.72098 23.17 2.65544 23.5068 2.65544C23.8486 2.65544 24.1489 2.71932 24.4078 2.84708C24.6666 2.97484 24.8674 3.14989 25.0101 3.37223C25.1544 3.59456 25.2266 3.84842 25.2266 4.13381C25.2266 4.32462 25.1901 4.51211 25.1171 4.69629C25.0441 4.88046 24.9155 5.08454 24.7313 5.30854C24.5488 5.53254 24.2924 5.80382 23.9623 6.12239L23.0837 7.01588V7.05073H25.3037V7.82227H21.8094Z" fill="white"/>
+                  </svg>
+                   {/* Enhanced Notification count */}
+                  {unreadCount > 0 && (
+                     <motion.span 
+                       className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-5 sm:h-5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center font-medium shadow-lg"
+                       animate={{ 
+                         scale: [1, 1.2, 1],
+                         rotate: [0, 5, -5, 0]
+                       }}
+                       transition={{ 
+                         duration: 2, 
+                         repeat: Infinity, 
+                         ease: "easeInOut" 
+                       }}
+                     >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                     </motion.span>
+                   )}
+                   
+                   {/* Pulsing Ring Effect */}
+                   {unreadCount > 0 && (
+                     <motion.div
+                       className="absolute inset-0 rounded-full border-2 border-orange-400/50"
+                       animate={{
+                         scale: [1, 1.3, 1],
+                         opacity: [0.8, 0, 0.8],
+                       }}
+                       transition={{
+                         duration: 2,
+                         repeat: Infinity,
+                         ease: "easeInOut",
+                       }}
+                     />
+                   )}
+                 </motion.button>
+               </div>
+               {/* Enhanced Circular Avatar */}
+               <div 
+                 className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
+               >
+                <Image src={userAvatar} alt="User Avatar" width={36} height={36} className="w-7 h-7 sm:w-9 sm:h-9 rounded-full object-cover" />
+                 
+                 {/* Online Status Indicator */}
+                 <motion.div
+                   className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-white"
+                   animate={{ scale: [1, 1.2, 1] }}
+                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                 />
+               </div>
+               
+               {/* Enhanced User Info */}
+              <div className="hidden sm:flex flex-col">
+                 <motion.span 
+                   className="font-bold text-gray-900 text-sm group-hover:text-purple-600 transition-colors duration-300"
+                   whileHover={{ x: 2 }}
+                 >
                   {user.name}
-                </span>
-                <span className="text-xs text-gray-600">
+                 </motion.span>
+                 <motion.span 
+                   className="text-xs text-gray-600 group-hover:text-purple-500 transition-colors duration-300"
+                   whileHover={{ x: 2 }}
+                 >
                   Teacher
-                </span>
+                 </motion.span>
               </div>
-              
-              {/* Hover Arrow */}
-              <motion.div
-                className="text-gray-400"
-                animate={{ x: [0, 2, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </motion.div>
-            </motion.div>
+               
+               {/* Hover Arrow */}
+               <motion.div
+                 className="hidden sm:block ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                 animate={{ x: [0, 3, 0] }}
+                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                 onClick={() => setActiveTab('settings')}
+               >
+                 <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                 </svg>
+               </motion.div>
+             </motion.div>
           </div>
-                </div>
+        </div>
                 
         {/* Main Content with Responsive Layout */}
         <div className="dashboard-content">
@@ -1257,18 +1323,14 @@ export default function TeacherDashboard() {
                             className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-1"
                             delay={0.1}
                           />
-                          <TypewriterText
-                            text="Teaching dashboard"
-                            className="text-gray-600 text-lg sm:text-xl font-medium"
-                            delay={1000}
-                          />
+                      
                         </div>
                       </div>
                 
                       {/* Right side: Stats cards */}
                       <div className="flex gap-4">
                         {/* Students Card */}
-                        <TiltCard className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 shadow-sm border border-purple-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
+                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 shadow-sm border border-purple-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
                         <ScrollCounter
                           from={0}
                           to={teacherStats.totalStudents || 0}
@@ -1276,10 +1338,10 @@ export default function TeacherDashboard() {
                           className="text-3xl font-bold text-purple-600"
                         />
                           <div className="text-sm text-gray-900 font-medium">Total Students</div>
-                        </TiltCard>
+                        </div>
                         
                         {/* Active Students Card */}
-                        <TiltCard className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 shadow-sm border border-blue-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
+                        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 shadow-sm border border-blue-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
                         <ScrollCounter
                           from={0}
                           to={teacherStats.activeStudents || 0}
@@ -1287,10 +1349,10 @@ export default function TeacherDashboard() {
                           className="text-3xl font-bold text-blue-600"
                         />
                           <div className="text-sm text-gray-900 font-medium">Active Students</div>
-                        </TiltCard>
+                        </div>
                 
                         {/* Average Progress Card */}
-                        <TiltCard className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 shadow-sm border border-green-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 shadow-sm border border-green-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
                         <ScrollCounter
                           from={0}
                           to={teacherStats.averageProgress || 0}
@@ -1298,10 +1360,10 @@ export default function TeacherDashboard() {
                           className="text-3xl font-bold text-green-600"
                         />
                           <div className="text-sm text-gray-900 font-medium">Avg Progress</div>
-                        </TiltCard>
+                        </div>
                         
                         {/* Total XP Card */}
-                        <TiltCard className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-6 shadow-sm border border-purple-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
+                        <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-6 shadow-sm border border-purple-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
                         <ScrollCounter
                           from={0}
                           to={teacherStats.totalXpAcrossStudents || 0}
@@ -1309,7 +1371,7 @@ export default function TeacherDashboard() {
                           className="text-3xl font-bold text-purple-600"
                         />
                           <div className="text-sm text-gray-900 font-medium">Total XP</div>
-                        </TiltCard>
+                        </div>
                       </div>
                 </div>
               </div>
@@ -1318,34 +1380,34 @@ export default function TeacherDashboard() {
                   <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Quick Actions */}
                     <StaggerItem>
-                      <TiltCard className="bg-white rounded-xl shadow-sm p-6 border border-gray-200/50">
+                      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200/50">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                         <div className="space-y-3">
-                          <MagneticButton 
+                          <button 
                             onClick={() => setShowAddStudentForm(true)}
-                            className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 text-sm font-medium shadow-lg"
+                            className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium shadow-lg"
                           >
                             Add New Student
-                          </MagneticButton>
-                          <MagneticButton 
+                          </button>
+                          <button 
                             onClick={() => setShowCreateAssignmentForm(true)}
-                            className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 text-sm font-medium shadow-lg"
+                            className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg text-sm font-medium shadow-lg"
                           >
                             Create Assignment
-                          </MagneticButton>
-                          <MagneticButton 
+                          </button>
+                          <button 
                             onClick={() => setActiveTab('analytics')}
-                            className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 text-sm font-medium shadow-lg"
+                            className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm font-medium shadow-lg"
                           >
                             View Reports
-                          </MagneticButton>
+                          </button>
                         </div>
-                      </TiltCard>
+                      </div>
                     </StaggerItem>
 
                     {/* Class Overview */}
                     <StaggerItem>
-                      <TiltCard className="bg-white rounded-xl shadow-sm p-6 border border-gray-200/50">
+                      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200/50">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Class Overview</h3>
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
@@ -1361,12 +1423,12 @@ export default function TeacherDashboard() {
                             <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">{modules.length || 0}</span>
                           </div>
                         </div>
-                      </TiltCard>
+                      </div>
                     </StaggerItem>
 
                     {/* Recent Activity */}
                     <StaggerItem>
-                      <TiltCard className="bg-white rounded-xl shadow-sm p-6 border border-gray-200/50">
+                      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200/50">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
                         <div className="space-y-3">
                           <div className="text-sm text-gray-600">
@@ -1382,7 +1444,7 @@ export default function TeacherDashboard() {
                             <div className="text-xs text-gray-500">6 hours ago</div>
                           </div>
                         </div>
-                      </TiltCard>
+                      </div>
                     </StaggerItem>
                   </StaggerContainer>
                 </>
@@ -1570,35 +1632,35 @@ export default function TeacherDashboard() {
 
                 {/* Module Filters */}
                 <div className="mb-6 flex flex-wrap gap-4">
-                  <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">All Subjects</option>
-                    <option value="mathematics">Mathematics</option>
-                    <option value="science">Science</option>
-                    <option value="english">English</option>
-                    <option value="history">History</option>
+                  <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900" style={{ backgroundColor: 'white', color: '#111827' }}>
+                    <option value="" style={{ backgroundColor: 'white', color: '#111827' }}>All Subjects</option>
+                    <option value="mathematics" style={{ backgroundColor: 'white', color: '#111827' }}>Mathematics</option>
+                    <option value="science" style={{ backgroundColor: 'white', color: '#111827' }}>Science</option>
+                    <option value="english" style={{ backgroundColor: 'white', color: '#111827' }}>English</option>
+                    <option value="history" style={{ backgroundColor: 'white', color: '#111827' }}>History</option>
                   </select>
-                  <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">All Grades</option>
-                    <option value="Pre-K">Pre-K</option>
-                    <option value="Kindergarten">Kindergarten</option>
-                    <option value="1">Grade 1</option>
-                    <option value="2">Grade 2</option>
-                    <option value="3">Grade 3</option>
-                    <option value="4">Grade 4</option>
-                    <option value="5">Grade 5</option>
-                    <option value="6">Grade 6</option>
-                    <option value="7">Grade 7</option>
-                    <option value="8">Grade 8</option>
-                    <option value="9">Grade 9</option>
-                    <option value="10">Grade 10</option>
-                    <option value="11">Grade 11</option>
-                    <option value="12">Grade 12</option>
+                  <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900" style={{ backgroundColor: 'white', color: '#111827' }}>
+                    <option value="" style={{ backgroundColor: 'white', color: '#111827' }}>All Grades</option>
+                    <option value="Pre-K" style={{ backgroundColor: 'white', color: '#111827' }}>Pre-K</option>
+                    <option value="Kindergarten" style={{ backgroundColor: 'white', color: '#111827' }}>Kindergarten</option>
+                    <option value="1" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 1</option>
+                    <option value="2" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 2</option>
+                    <option value="3" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 3</option>
+                    <option value="4" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 4</option>
+                    <option value="5" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 5</option>
+                    <option value="6" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 6</option>
+                    <option value="7" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 7</option>
+                    <option value="8" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 8</option>
+                    <option value="9" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 9</option>
+                    <option value="10" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 10</option>
+                    <option value="11" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 11</option>
+                    <option value="12" style={{ backgroundColor: 'white', color: '#111827' }}>Grade 12</option>
                   </select>
-                  <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">All Difficulty</option>
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
+                  <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900" style={{ backgroundColor: 'white', color: '#111827' }}>
+                    <option value="" style={{ backgroundColor: 'white', color: '#111827' }}>All Difficulty</option>
+                    <option value="beginner" style={{ backgroundColor: 'white', color: '#111827' }}>Beginner</option>
+                    <option value="intermediate" style={{ backgroundColor: 'white', color: '#111827' }}>Intermediate</option>
+                    <option value="advanced" style={{ backgroundColor: 'white', color: '#111827' }}>Advanced</option>
                   </select>
                 </div>
 
@@ -2173,62 +2235,6 @@ export default function TeacherDashboard() {
             </div>
         </main>
         
-        {/* Right Panel */}
-        <aside 
-          className={`dashboard-right-panel ${isRightPanelOpen ? 'open' : ''} flex flex-col justify-between`}
-          onMouseEnter={() => !isMobile && setIsRightPanelHovered(true)}
-          onMouseLeave={() => !isMobile && setIsRightPanelHovered(false)}
-        >
-          {/* Arrow indicator for expandability - centered in collapsed state (desktop only) */}
-          {!isMobile && (
-            <div className={`flex justify-center items-center ${isRightPanelHovered ? 'h-16' : 'flex-1'}`}>
-              <div 
-                className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:border-gray-300 transition-all duration-200 shadow-md"
-                style={{ transform: isRightPanelHovered ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          )}
-            
-          {/* Panel Content */}
-          <div className="flex-1 flex flex-col transition-all duration-300 p-4">
-              {/* Title and Close button for mobile */}
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 transition-opacity duration-200"
-                    style={{ opacity: isMobile ? 1 : (isRightPanelHovered ? 1 : 0) }}>
-                  Class Alerts
-                </h3>
-            {isMobile && (
-                <button 
-                  onClick={() => setIsRightPanelOpen(false)}
-                    className="w-8 h-8 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:border-gray-300 transition-all duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                )}
-              </div>
-              
-            <div className="space-y-3">
-                <div className={`text-center text-gray-400 text-sm py-8 transition-opacity duration-200 ${isMobile ? '' : 'opacity-0 pointer-events-none'}`} 
-                     style={!isMobile ? { opacity: isRightPanelHovered ? 1 : 0 } : {}}>
-                  No class alerts
-              </div>
-            </div>
-          </div>
-        </aside>
-        
-        {/* Mobile Right Panel Overlay */}
-        {isRightPanelOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
-            onClick={() => setIsRightPanelOpen(false)}
-          />
-        )}
         </div>
       </div>
 

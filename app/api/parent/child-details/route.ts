@@ -32,51 +32,63 @@ export async function GET(request: NextRequest) {
     }
 
     // Get linked student
-    const studentId = user.profile?.linkedStudentId;
-    if (!studentId) {
+    const linkedStudentId = user.profile?.linkedStudentId;
+    if (!linkedStudentId) {
       return NextResponse.json({ error: 'No linked student found' }, { status: 404 });
     }
 
-    const student = await Student.findById(studentId);
+    // linkedStudentId is a userId, not a student _id
+    const student = await Student.findOne({ userId: linkedStudentId });
     if (!student) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    }
+
+    // Get student user data for email (email is stored in User model, not Student model)
+    const studentUser = await User.findById(linkedStudentId);
+    if (!studentUser) {
+      return NextResponse.json({ error: 'Student user data not found' }, { status: 404 });
     }
 
     // Get student's teachers
     const teachers = await Teacher.find({ 
       schoolId: student.schoolId,
       isActive: true 
-    });
+    }).catch(() => []); // Return empty array if query fails
 
     // Get organization and branch details
     let organization = null;
     let branch = null;
 
     if (student.schoolId) {
-      branch = await Branch.findById(student.schoolId);
-      if (branch) {
-        organization = await Organization.findById(branch.organizationId);
+      try {
+        branch = await Branch.findById(student.schoolId);
+        if (branch && branch.organizationId) {
+          organization = await Organization.findById(branch.organizationId);
+        }
+      } catch (error) {
+        console.error('Error fetching organization/branch:', error);
+        // Continue without organization/branch data
       }
     }
 
     return NextResponse.json({
       student: {
         id: student._id,
-        fullName: student.fullName,
-        email: student.email,
-        classGrade: student.classGrade,
-        schoolName: student.schoolName,
-        uniqueId: student.uniqueId,
-        onboardingCompleted: student.onboardingCompleted,
-        isActive: student.isActive
+        fullName: student.fullName || 'N/A',
+        email: studentUser.email || 'N/A',
+        classGrade: student.classGrade || 'N/A',
+        schoolName: student.schoolName || 'N/A',
+        uniqueId: student.uniqueId || 'N/A',
+        onboardingCompleted: student.onboardingCompleted || false,
+        isActive: student.isActive !== undefined ? student.isActive : true
       },
       teachers: teachers.map(teacher => ({
         id: teacher._id,
-        fullName: teacher.fullName,
-        email: teacher.email,
-        subjectSpecialization: teacher.subjectSpecialization,
-        experienceYears: teacher.experienceYears,
-        phoneNumber: teacher.phoneNumber
+        fullName: teacher.fullName || 'N/A',
+        email: teacher.email || 'N/A',
+        subjectSpecialization: teacher.subjectSpecialization || 'N/A',
+        experienceYears: teacher.experienceYears || 0,
+        phoneNumber: teacher.phoneNumber || 'N/A'
       })),
       organization: organization ? {
         id: organization._id,
@@ -106,6 +118,14 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching child details:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    }, { status: 500 });
   }
 }
