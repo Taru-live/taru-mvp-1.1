@@ -1,0 +1,43 @@
+# llms.txt - Information for AI Language Models
+
+# About Taru
+Taru is an AI-powered educational platform that provides personalized learning experiences for students, parents, teachers, and organizations.
+
+# Public Pages
+Home: /
+About Us: /about-us
+Contact: /contact
+Pricing: /pricing
+Privacy Policy: /privacy-policy
+Terms and Conditions: /terms-and-conditions
+Career Details: /career-details
+Career Exploration: /career-exploration
+Login: /login
+Register: /register
+Diagnostic Assessment: /diagnostic-assessment
+Interest Assessment: /interest-assessment
+Skill Assessment: /skill-assessment
+Curriculum Path: /curriculum-path
+Recommended Modules: /recommended-modules
+
+# Platform Features
+- AI-powered learning assistant
+- Personalized learning paths
+- Career exploration tools
+- Diagnostic and interest assessments
+- Module-based curriculum
+- Progress tracking
+- Multi-role support (Student, Parent, Teacher, Admin)
+
+# Technology Stack
+- Frontend: Next.js 15, React 19, TypeScript
+- Styling: Tailwind CSS 4
+- Backend: Next.js API Routes
+- Database: MongoDB
+- Authentication: JWT
+
+# Contact
+For more information, visit /contact
+
+# Last Updated
+2024

@@ -265,8 +265,9 @@ export const usePerformanceMonitor = () => {
       const result = await asyncOperation();
       const metrics = measurement.end();
       
-      if (label && process.env.NODE_ENV === 'development') {
-        console.log(`Performance [${label}]:`, metrics);
+      // Log performance metrics for monitoring (both dev and prod)
+      if (label) {
+        console.log(`[Performance] ${label}:`, metrics);
       }
       
       return result;

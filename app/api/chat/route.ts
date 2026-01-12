@@ -92,11 +92,26 @@ async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
       clearTimeout(timeoutId);
 
       try {
-        rawResponse = await webhookResponse.json();
-        console.log('N8N Response:', JSON.stringify(rawResponse, null, 2));
-      } catch (parseError) {
-        console.error('Failed to parse n8n response as JSON:', parseError);
-        rawResponse = { error: 'Invalid JSON response from n8n' };
+        // Check if response has content before parsing
+        const responseText = await webhookResponse.text();
+        console.log('N8N Raw Response Text:', responseText);
+        
+        if (!responseText || responseText.trim().length === 0) {
+          console.warn('Empty response from n8n webhook');
+          rawResponse = { error: 'Empty response from n8n webhook' };
+        } else {
+          try {
+            rawResponse = JSON.parse(responseText);
+            console.log('N8N Response:', JSON.stringify(rawResponse, null, 2));
+          } catch (parseError) {
+            console.error('Failed to parse n8n response as JSON:', parseError);
+            console.error('Response text was:', responseText);
+            rawResponse = { error: 'Invalid JSON response from n8n', rawText: responseText };
+          }
+        }
+      } catch (readError) {
+        console.error('Failed to read n8n response:', readError);
+        rawResponse = { error: 'Failed to read response from n8n' };
       }
     } catch (fetchError: unknown) {
       const error = fetchError as Error & { code?: string };
@@ -281,6 +296,16 @@ function extractN8nResponse(data: Record<string, unknown>) {
       const getFromFirst = (keys: string[]) => keys.map(k => flatFirst[k]).find(v => typeof v === 'string' && v.trim().length > 0);
       responseText = getFromFirst(['output', 'result', 'response', 'message', 'text', 'content', 'answer']) || 
                     Object.values(flatFirst).find(v => typeof v === 'string' && v.trim().length > 20) as string;
+    }
+  }
+  
+  // Handle error cases - if we have an error but no response text, provide a helpful message
+  if (!responseText && data?.error) {
+    const errorMsg = typeof data.error === 'string' ? data.error : 'Unknown error';
+    if (errorMsg.includes('Empty response') || errorMsg.includes('Invalid JSON')) {
+      responseText = 'I received an empty or invalid response from the server. Please try again in a moment.';
+    } else {
+      responseText = `I encountered an issue: ${errorMsg}. Please try again.`;
     }
   }
   

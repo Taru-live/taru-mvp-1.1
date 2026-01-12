@@ -708,37 +708,42 @@ function CareerDetailsContent() {
   }
 
   // Extract output dynamically from N8N API response
-  console.log('🔍 Career details state:', careerDetails);
-  console.log('🔍 Output object:', careerDetails?.output);
+  // Monitoring: Log career details for debugging and monitoring
+  console.log('[CareerDetails] Career details state:', {
+    hasOutput: !!careerDetails?.output,
+    uniqueid: careerDetails?.uniqueid,
+    _id: careerDetails?._id,
+  });
   
   if (careerDetails?.output) {
-    console.log('🔍 Extracted career details:', {
+    console.log('[CareerDetails] Extracted career details:', {
       output: careerDetails.output,
       uniqueid: careerDetails.uniqueid,
       _id: careerDetails._id,
-      id: careerDetails.id
+      id: careerDetails.id,
     });
-    console.log('🔍 Career details output structure:', {
+    
+    console.log('[CareerDetails] Career details structure:', {
       greeting: careerDetails.output.greeting,
       overviewLength: Array.isArray(careerDetails.output.overview) ? careerDetails.output.overview.length : 0,
       focusAreasLength: Array.isArray(careerDetails.output.focusAreas) ? careerDetails.output.focusAreas.length : 0,
       learningPathLength: Array.isArray(careerDetails.output.learningPath) ? careerDetails.output.learningPath.length : undefined,
       modulesLength: Array.isArray(careerDetails.output.modules) ? careerDetails.output.modules.length : undefined,
       timeRequired: careerDetails.output.timeRequired,
-      finalTip: careerDetails.output.finalTip
+      finalTip: careerDetails.output.finalTip,
     });
     
     if (Array.isArray(careerDetails.output.overview)) {
-      console.log('🔍 Overview array content:', careerDetails.output.overview);
+      console.log('[CareerDetails] Overview array:', careerDetails.output.overview);
     }
     if (Array.isArray(careerDetails.output.focusAreas)) {
-      console.log('🔍 Focus areas array content:', careerDetails.output.focusAreas);
+      console.log('[CareerDetails] Focus areas array:', careerDetails.output.focusAreas);
     }
     if (Array.isArray(careerDetails.output.modules)) {
-      console.log('🔍 Modules array content:', careerDetails.output.modules);
+      console.log('[CareerDetails] Modules array:', careerDetails.output.modules);
     }
     if (Array.isArray(careerDetails.output.learningPath)) {
-      console.log('🔍 Learning path array content:', careerDetails.output.learningPath);
+      console.log('[CareerDetails] Learning path array:', careerDetails.output.learningPath);
     }
   }
   
@@ -770,7 +775,7 @@ function CareerDetailsContent() {
   
   // Extract data from N8N API response
   if (careerDetails?.output) {
-    console.log('✅ Using N8N career details data');
+    console.log('[CareerDetails] Using N8N career details data');
     const apiOutput = careerDetails.output;
     
     // Transform modules array to learningPath format

@@ -57,12 +57,7 @@ export default function YouTubeVideoPlayer({
       
       console.log('🔍 YouTubeVideoPlayer: Fetching data for uniqueid:', uniqueid);
       
-      // First test MongoDB connection
-      const testResponse = await fetch(`/api/test-mongodb-connection?uniqueid=${encodeURIComponent(uniqueid)}`);
-      const testResult = await testResponse.json();
-      console.log('🔧 MongoDB connection test:', testResult);
-      
-      // Then fetch YouTube data
+      // Fetch YouTube data
       const response = await fetch(`/api/youtube-data`, {
         method: 'GET',
         headers: {

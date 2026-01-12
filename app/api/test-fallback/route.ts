@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FallbackModuleService } from '@/lib/FallbackModuleService';
 
 export async function GET(request: NextRequest) {
+  // Block in production for security
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Not available in production' },
+      { status: 403 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const testType = searchParams.get('type') || 'modules';

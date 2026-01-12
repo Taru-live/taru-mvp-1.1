@@ -12,7 +12,15 @@ import {
   Bot,
   Sparkles,
   Star,
-  Heart
+  Heart,
+  Brain,
+  MessageCircle,
+  Loader2,
+  CheckCircle,
+  X,
+  Trophy,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 
 interface Chapter {
@@ -44,6 +52,14 @@ interface Message {
   timestamp: Date;
 }
 
+interface MCQQuestion {
+  Q: string;
+  level: string;
+  question: string;
+  options: string[];
+  answer: string;
+}
+
 export default function ChapterPage() {
   const router = useRouter();
   const params = useParams();
@@ -64,6 +80,21 @@ export default function ChapterPage() {
   const [studentName, setStudentName] = useState<string>('Student');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Quiz state
+  const [mcqQuestions, setMcqQuestions] = useState<MCQQuestion[]>([]);
+  const [mcqLoading, setMcqLoading] = useState(false);
+  const [mcqAnswers, setMcqAnswers] = useState<Record<string, string>>({});
+  const [mcqSubmitted, setMcqSubmitted] = useState(false);
+  const [mcqScore, setMcqScore] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'chat' | 'quiz'>('chat'); // Tab state
+
+  // Progress state
+  const [chapterProgress, setChapterProgress] = useState<number>(0);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [videoWatchTime, setVideoWatchTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const videoWatchIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -71,8 +102,18 @@ export default function ChapterPage() {
   useEffect(() => {
     if (uniqueId) {
       fetchChapterData();
+      fetchChapterProgress();
     }
   }, [moduleId, chapterId, uniqueId]);
+
+  useEffect(() => {
+    // Cleanup video watch time interval on unmount
+    return () => {
+      if (videoWatchIntervalRef.current) {
+        clearInterval(videoWatchIntervalRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (chapter && studentUniqueId) {
@@ -333,6 +374,201 @@ export default function ChapterPage() {
     }
   };
 
+  // Fetch chapter progress
+  const fetchChapterProgress = async () => {
+    if (!studentUniqueId || !chapterId) return;
+
+    try {
+      const response = await fetch(`/api/modules/progress?studentId=${studentUniqueId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.progress) {
+          const chapterProgressData = data.progress.find(
+            (p: any) => p.moduleId === chapterId
+          );
+          if (chapterProgressData) {
+            setChapterProgress(chapterProgressData.quizScore || 0);
+            setIsCompleted(chapterProgressData.quizScore >= 75 || !!chapterProgressData.completedAt);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching chapter progress:', error);
+    }
+  };
+
+  // Generate MCQ quiz
+  const generateMCQ = async () => {
+    if (!chapterId) return;
+
+    // If questions already exist, just switch to quiz tab
+    if (mcqQuestions.length > 0) {
+      setActiveTab('quiz');
+      return;
+    }
+
+    setMcqLoading(true);
+    setMcqAnswers({});
+    setMcqSubmitted(false);
+    setMcqScore(null);
+    setActiveTab('quiz');
+
+    try {
+      const response = await fetch('/api/webhook/generate-mcq', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ chapterId: chapterId }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setMcqQuestions(result.questions || []);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to generate MCQ:', errorData);
+      }
+    } catch (error) {
+      console.error('Error generating MCQ:', error);
+    } finally {
+      setMcqLoading(false);
+    }
+  };
+
+  // Handle MCQ answer selection
+  const handleMCQAnswer = (questionId: string, answer: string) => {
+    setMcqAnswers(prev => ({
+      ...prev,
+      [questionId]: answer
+    }));
+  };
+
+  // Submit MCQ quiz
+  const submitMCQ = async () => {
+    if (!chapterId || !studentUniqueId || mcqQuestions.length === 0) return;
+
+    let correctAnswers = 0;
+    mcqQuestions.forEach(question => {
+      if (mcqAnswers[question.Q] === question.answer) {
+        correctAnswers++;
+      }
+    });
+
+    const score = Math.round((correctAnswers / mcqQuestions.length) * 100);
+    setMcqScore(score);
+    setMcqSubmitted(true);
+
+    // Save quiz score and sync progress
+    try {
+      const response = await fetch(`/api/modules/quiz-score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chapterId: chapterId,
+          studentId: studentUniqueId,
+          score: score,
+          totalQuestions: mcqQuestions.length,
+          correctAnswers: correctAnswers,
+          quizAttempts: mcqQuestions.map((question, index) => {
+            const selectedAnswer = mcqAnswers[question.Q] || '';
+            const answerIndex = question.options.findIndex(opt => opt === selectedAnswer);
+            return {
+              questionIndex: index,
+              selectedAnswer: answerIndex >= 0 ? answerIndex : 0,
+              isCorrect: selectedAnswer === question.answer,
+              timeSpent: 0,
+              difficulty: 'medium',
+              skillTags: []
+            };
+          })
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Quiz score saved:', result);
+        
+        // Update local progress
+        setChapterProgress(score);
+        if (score >= 75) {
+          setIsCompleted(true);
+        }
+
+        // Refresh progress from server
+        fetchChapterProgress();
+      }
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+    }
+  };
+
+  // Track video watch time
+  const startVideoTracking = () => {
+    if (videoWatchIntervalRef.current) {
+      clearInterval(videoWatchIntervalRef.current);
+    }
+
+    // Track every 10 seconds
+    videoWatchIntervalRef.current = setInterval(() => {
+      setVideoWatchTime(prev => {
+        const newTime = prev + 10;
+        // Sync video progress if significant time has passed
+        if (newTime % 30 === 0) {
+          syncVideoProgress(newTime);
+        }
+        return newTime;
+      });
+    }, 10000);
+  };
+
+  const stopVideoTracking = () => {
+    if (videoWatchIntervalRef.current) {
+      clearInterval(videoWatchIntervalRef.current);
+      videoWatchIntervalRef.current = null;
+    }
+    // Final sync when stopping
+    if (videoWatchTime > 0) {
+      syncVideoProgress(videoWatchTime);
+    }
+  };
+
+  // Sync video progress to backend
+  const syncVideoProgress = async (watchTime: number) => {
+    if (!chapterId || !studentUniqueId) return;
+
+    try {
+      // Update progress via quiz-score API (it handles video progress too)
+      await fetch(`/api/modules/quiz-score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chapterId: chapterId,
+          studentId: studentUniqueId,
+          score: chapterProgress, // Keep existing quiz score
+          totalQuestions: 0,
+          correctAnswers: 0,
+          quizAttempts: [],
+          videoWatchTime: watchTime,
+          videoDuration: videoDuration
+        })
+      });
+    } catch (error) {
+      console.error('Error syncing video progress:', error);
+    }
+  };
+
+  // Reset MCQ
+  const resetMCQ = () => {
+    setMcqAnswers({});
+    setMcqSubmitted(false);
+    setMcqScore(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
@@ -383,7 +619,7 @@ export default function ChapterPage() {
             <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
               <Play className="w-6 h-6 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {chapter.chapterTitle}
               </h1>
@@ -398,7 +634,53 @@ export default function ChapterPage() {
                     <span>{chapter.duration}</span>
                   </div>
                 )}
+                {isCompleted && (
+                  <div className="flex items-center gap-1 text-green-600">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Completed</span>
+                  </div>
+                )}
               </div>
+              
+              {/* Progress Bar */}
+              {chapterProgress > 0 && (
+                <div className="mt-3 max-w-md">
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                    <span>Chapter Progress</span>
+                    <span>{chapterProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        isCompleted 
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                          : chapterProgress >= 75 
+                            ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
+                            : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                      }`}
+                      style={{ width: `${chapterProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div className="flex gap-2">
+              <motion.button
+                onClick={generateMCQ}
+                disabled={mcqLoading}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg"
+              >
+                {mcqLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Brain className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">Start Quiz</span>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -417,13 +699,21 @@ export default function ChapterPage() {
             </div>
             <div className="flex-1 p-4 flex items-center justify-center bg-gray-900">
               {videoId ? (
-                <div className="w-full aspect-video rounded-lg overflow-hidden shadow-2xl">
+                <div 
+                  className="w-full aspect-video rounded-lg overflow-hidden shadow-2xl"
+                  onMouseEnter={startVideoTracking}
+                  onMouseLeave={stopVideoTracking}
+                >
                   <iframe
                     src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
                     title={chapter.chapterTitle}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="w-full h-full"
+                    onLoad={() => {
+                      // Start tracking when video loads
+                      startVideoTracking();
+                    }}
                   />
                 </div>
               ) : (
@@ -437,37 +727,245 @@ export default function ChapterPage() {
             </div>
           </div>
 
-          {/* Right Section - AI Chatbot */}
+          {/* Right Section - AI Chatbot or Quiz */}
           <div className="bg-white rounded-2xl shadow-xl border-2 border-pink-200 overflow-hidden flex flex-col">
-            {/* Chat Header */}
-            <div className="p-4 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
-              <div className="flex items-center gap-3">
-                <motion.div
-                  animate={{ 
-                    rotate: [0, 10, -10, 0],
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity,
-                    repeatDelay: 3
-                  }}
-                  className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg"
-                >
-                  <Bot className="w-7 h-7 text-purple-600" />
-                </motion.div>
-                <div>
-                  <h2 className="text-white font-bold text-lg flex items-center gap-2">
-                    AI Learning Buddy
-                    <Sparkles className="w-5 h-5 text-yellow-300" />
-                  </h2>
-                  <p className="text-white/90 text-xs">Ask me anything about this lesson!</p>
-                </div>
-              </div>
+            {/* Tab Switcher */}
+            <div className="flex border-b border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium transition-all ${
+                  activeTab === 'chat'
+                    ? 'bg-white text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Chat</span>
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('quiz');
+                  if (mcqQuestions.length === 0) {
+                    generateMCQ();
+                  }
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium transition-all ${
+                  activeTab === 'quiz'
+                    ? 'bg-white text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Brain className="w-5 h-5" />
+                <span>Quiz</span>
+                {mcqQuestions.length > 0 && (
+                  <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">
+                    {mcqQuestions.length}
+                  </span>
+                )}
+              </button>
             </div>
 
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-purple-50/50 to-pink-50/50 space-y-4">
+            {activeTab === 'quiz' ? (
+              /* Quiz Section */
+              <>
+                <div className="p-4 bg-gradient-to-r from-purple-600 to-blue-600">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+                      <Brain className="w-7 h-7 text-purple-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-white font-bold text-lg">Chapter Quiz</h2>
+                      <p className="text-white/90 text-xs">Test your knowledge!</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {mcqLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                    </div>
+                  ) : mcqQuestions.length > 0 ? (
+                    <>
+                      {mcqQuestions.map((question, index) => (
+                        <div key={index} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-200">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">
+                              Q{question.Q}
+                            </span>
+                            <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                              question.level === 'Basic' ? 'bg-green-100 text-green-800' :
+                              question.level === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {question.level}
+                            </span>
+                          </div>
+                          
+                          <h4 className="text-base font-semibold text-gray-900 mb-3">
+                            {question.question}
+                          </h4>
+                          
+                          <div className="space-y-2">
+                            {question.options.map((option, optionIndex) => {
+                              const isSelected = mcqAnswers[question.Q] === option;
+                              const isCorrect = option === question.answer;
+                              const isSubmitted = mcqSubmitted;
+                              
+                              return (
+                                <label
+                                  key={optionIndex}
+                                  className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                    isSelected
+                                      ? 'border-purple-500 bg-purple-50'
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  } ${
+                                    isSubmitted && isCorrect
+                                      ? 'border-green-500 bg-green-50'
+                                      : isSubmitted && isSelected && !isCorrect
+                                      ? 'border-red-500 bg-red-50'
+                                      : ''
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`question-${question.Q}`}
+                                    value={option}
+                                    checked={isSelected}
+                                    onChange={() => handleMCQAnswer(question.Q, option)}
+                                    disabled={isSubmitted}
+                                    className="mr-3"
+                                  />
+                                  <span className={`flex-1 ${
+                                    isSubmitted && isCorrect
+                                      ? 'text-green-800 font-semibold'
+                                      : isSubmitted && isSelected && !isCorrect
+                                      ? 'text-red-800 font-semibold'
+                                      : 'text-gray-700'
+                                  }`}>
+                                    {option}
+                                  </span>
+                                  {isSubmitted && isCorrect && (
+                                    <CheckCircle className="w-5 h-5 text-green-600" />
+                                  )}
+                                  {isSubmitted && isSelected && !isCorrect && (
+                                    <X className="w-5 h-5 text-red-600" />
+                                  )}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {!mcqSubmitted && (
+                        <div className="flex justify-center pt-4">
+                          <button
+                            onClick={submitMCQ}
+                            disabled={Object.keys(mcqAnswers).length !== mcqQuestions.length}
+                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 font-semibold"
+                          >
+                            Submit Quiz ({Object.keys(mcqAnswers).length}/{mcqQuestions.length})
+                          </button>
+                        </div>
+                      )}
+                      
+                      {mcqSubmitted && mcqScore !== null && (
+                        <div className={`rounded-xl p-6 border-2 ${
+                          mcqScore >= 75 
+                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300' 
+                            : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-300'
+                        }`}>
+                          <div className="text-center">
+                            <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${
+                              mcqScore >= 75 
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                                : 'bg-gradient-to-r from-orange-500 to-yellow-500'
+                            }`}>
+                              {mcqScore >= 75 ? (
+                                <Trophy className="w-8 h-8 text-white" />
+                              ) : (
+                                <Target className="w-8 h-8 text-white" />
+                              )}
+                            </div>
+                            
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                              {mcqScore >= 75 ? '🎉 Chapter Completed!' : 'Quiz Completed!'}
+                            </h3>
+                            
+                            <div className={`text-4xl font-bold mb-2 ${
+                              mcqScore >= 75 ? 'text-green-600' : 'text-orange-600'
+                            }`}>
+                              {mcqScore}%
+                            </div>
+                            
+                            <p className="text-gray-600 mb-4">
+                              {mcqScore >= 75 
+                                ? `Excellent! You scored ${mcqScore}% and completed this chapter!`
+                                : `You scored ${mcqScore}%. Keep practicing to reach 75% for completion!`
+                              }
+                            </p>
+                            
+                            <div className="flex gap-3 justify-center">
+                              <button
+                                onClick={resetMCQ}
+                                className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 border border-gray-300"
+                              >
+                                Retake Quiz
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setActiveTab('chat');
+                                  fetchChapterProgress();
+                                }}
+                                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700"
+                              >
+                                Back to Chat
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No quiz questions available. Click Quiz to generate!</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* Chat Section */
+              <>
+                <div className="p-4 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      animate={{ 
+                        rotate: [0, 10, -10, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity,
+                        repeatDelay: 3
+                      }}
+                      className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg"
+                    >
+                      <Bot className="w-7 h-7 text-purple-600" />
+                    </motion.div>
+                    <div>
+                      <h2 className="text-white font-bold text-lg flex items-center gap-2">
+                        AI Learning Buddy
+                        <Sparkles className="w-5 h-5 text-yellow-300" />
+                      </h2>
+                      <p className="text-white/90 text-xs">Ask me anything about this lesson!</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages Area */}
+                <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-purple-50/50 to-pink-50/50 space-y-4">
               <AnimatePresence>
                 {messages.map((message) => (
                   <motion.div
@@ -563,6 +1061,8 @@ export default function ChapterPage() {
                 💡 Tip: Ask me to explain concepts, solve problems, or help with homework!
               </p>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>

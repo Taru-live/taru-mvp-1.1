@@ -70,27 +70,6 @@ export default function StudentVideoViewer({
               <Search className="w-5 h-5" />
               Load Videos
             </button>
-            {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={async () => {
-                  const testId = inputUniqueId.trim() || 'STUMFHU8PF92';
-                  console.log('🔧 Testing MongoDB connection for:', testId);
-                  try {
-                    const response = await fetch(`/api/test-mongodb-connection?uniqueid=${encodeURIComponent(testId)}`);
-                    const result = await response.json();
-                    console.log('🔧 MongoDB test result:', result);
-                    alert(`MongoDB Test Result:\n\nSuccess: ${result.success}\nDocuments found: ${result.data?.totalDocuments || 0}\n\nCheck console for details.`);
-                  } catch (error) {
-                    console.error('❌ MongoDB test failed:', error);
-                    alert('MongoDB test failed - check console for details');
-                  }
-                }}
-                className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-lg hover:shadow-xl text-sm"
-                title="Test MongoDB Connection"
-              >
-                Test DB
-              </button>
-            )}
           </div>
         </div>
 

@@ -303,9 +303,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Test N8N webhook connectivity
+    // Monitor N8N webhook connectivity for production monitoring
     try {
-      console.log('🔍 Testing N8N webhook connectivity...');
+      console.log('[Assessment] Testing N8N webhook connectivity...');
       const testPayload = {
         uniqueId: 'test',
         submittedAt: new Date().toISOString()
@@ -318,22 +318,22 @@ export async function GET(request: NextRequest) {
         body: JSON.stringify(testPayload)
       });
       
-      console.log('🔍 N8N test response status:', testResponse.status);
-      console.log('🔍 N8N test response headers:', Object.fromEntries(testResponse.headers.entries()));
+      console.log('[Assessment] N8N webhook response status:', testResponse.status);
+      console.log('[Assessment] N8N webhook response headers:', Object.fromEntries(testResponse.headers.entries()));
       
       if (testResponse.ok) {
         const testText = await testResponse.text();
-        console.log('🔍 N8N test response text:', testText);
+        console.log('[Assessment] N8N webhook response text:', testText);
         
         try {
           const testJson = JSON.parse(testText);
-          console.log('🔍 N8N test response JSON:', testJson);
+          console.log('[Assessment] N8N webhook response JSON:', testJson);
         } catch (parseError) {
-          console.log('🔍 N8N test response is not valid JSON');
+          console.log('[Assessment] N8N webhook response is not valid JSON');
         }
       }
     } catch (testError) {
-      console.error('🔍 N8N webhook test failed:', testError);
+      console.error('[Assessment] N8N webhook test failed:', testError);
     }
 
     // Get assessment response

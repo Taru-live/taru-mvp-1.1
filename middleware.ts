@@ -152,7 +152,11 @@ async function authenticateUser(request: NextRequest): Promise<{
     const decoded = payload as DecodedToken;
     return { decoded };
   } catch (error) {
-    console.error('Invalid token in middleware:', error);
+    // Log errors for monitoring (both dev and prod)
+    console.error('[Middleware] Authentication failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      pathname: request.nextUrl.pathname,
+    });
     return { redirect: NextResponse.redirect(new URL('/login', request.url)) };
   }
 }

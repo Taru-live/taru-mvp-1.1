@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionProvider from "./components/SessionProvider";
 import PerformanceMonitor from "./components/PerformanceMonitor";
 import DataRecoveryUI from "./components/DataRecoveryUI";
+import InactivityMonitor from "./components/InactivityMonitor";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -75,10 +76,11 @@ export default function RootLayout({
       >
         <SessionProvider>
           {children}
+          <InactivityMonitor />
           <DataRecoveryUI />
           <PerformanceMonitor 
-            enabled={true}
-            showInDevelopment={true}
+            enabled={process.env.NODE_ENV === 'development'}
+            showInDevelopment={process.env.NODE_ENV === 'development'}
           />
           <Toaster position="top-right" richColors />
         </SessionProvider>

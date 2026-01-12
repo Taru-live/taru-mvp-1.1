@@ -46,13 +46,15 @@ interface SettingsTabProps {
 }
 
 export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabProps) {
-  // Debug: Log the profile data to see what's being passed
-  console.log('🔍 SettingsTab received profile data:', profile);
-  console.log('🔍 Profile name:', profile.name);
-  console.log('🔍 Profile grade:', profile.grade);
-  console.log('🔍 Profile school:', profile.school);
-  console.log('🔍 Profile language:', profile.language);
-  console.log('🔍 Profile studentKey:', profile.studentKey);
+  // Monitoring: Log profile data for debugging and monitoring
+  console.log('[SettingsTab] Profile data received:', {
+    name: profile.name,
+    email: profile.email,
+    grade: profile.grade,
+    school: profile.school,
+    language: profile.language,
+    studentKey: profile.studentKey,
+  });
   
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<ProfileData>({

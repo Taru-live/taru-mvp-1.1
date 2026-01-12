@@ -3,6 +3,14 @@ import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
 
 export async function GET(request: NextRequest) {
+  // Block in production for security
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Not available in production' },
+      { status: 403 }
+    );
+  }
+
   try {
     await connectDB();
     

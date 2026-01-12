@@ -111,6 +111,7 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [selectedModule, setSelectedModule] = useState<number | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const [expandedSubmodules, setExpandedSubmodules] = useState<Set<string>>(new Set());
   const [mcqQuestions, setMcqQuestions] = useState<MCQQuestion[]>([]);
@@ -123,6 +124,7 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
   const [chatLoading, setChatLoading] = useState(false);
   const [showMcq, setShowMcq] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [isModuleQuiz, setIsModuleQuiz] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -978,6 +980,8 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
     const score = Math.round((correctAnswers / mcqQuestions.length) * 100);
     console.log('🎯 Quiz submission:', {
       selectedChapter,
+      selectedModule,
+      isModuleQuiz,
       userUniqueId: user?.uniqueId,
       score,
       correctAnswers,
@@ -987,7 +991,80 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
     setMcqScore(score);
     setMcqSubmitted(true);
 
-    // Save quiz score to backend and update progress
+    // Handle module-level quiz submission
+    if (isModuleQuiz && selectedModule && user?.uniqueId) {
+      console.log('📤 Calling module assessment API with:', {
+        moduleId: selectedModule,
+        studentId: user.uniqueId,
+        score,
+        totalQuestions: mcqQuestions.length,
+        correctAnswers
+      });
+      try {
+        // Prepare answers in the format expected by the assessment API
+        const answers: Record<string, string> = {};
+        mcqQuestions.forEach((question, index) => {
+          answers[`question_${index + 1}`] = mcqAnswers[question.Q] || '';
+        });
+
+        const response = await fetch(`/api/modules/assessment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            moduleId: selectedModule.toString(),
+            answers: answers,
+            attemptNumber: 1
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Module assessment API response:', result);
+          
+          if (result.assessment) {
+            const finalScore = result.assessment.percentage || score;
+            setMcqScore(finalScore);
+            
+            // Update local progress state
+            setProgress(prev => ({
+              ...prev,
+              [`module-${selectedModule}`]: finalScore
+            }));
+
+            // Refresh dashboard data
+            if (onProgressUpdate) {
+              setTimeout(() => {
+                onProgressUpdate();
+              }, 500);
+            }
+            
+            fetchProgressData();
+
+            if (finalScore >= 75) {
+              setSuccess(`🎉 Congratulations! You scored ${finalScore}% and passed this module!`);
+            } else {
+              setSuccess(`You scored ${finalScore}%. Keep practicing to reach 75% for completion!`);
+            }
+
+            setTimeout(() => {
+              setSuccess(null);
+            }, 5000);
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('❌ Module assessment API error:', response.status, errorData);
+          setError(errorData.error || 'Failed to save module quiz score. Please try again.');
+        }
+      } catch (error) {
+        console.error('❌ Module assessment API network error:', error);
+        setError('Network error. Please check your connection and try again.');
+      }
+      return;
+    }
+
+    // Handle chapter-level quiz submission (existing logic)
     if (selectedChapter && user?.uniqueId) {
       console.log('📤 Calling quiz-score API with:', {
         chapterId: selectedChapter,
@@ -1083,8 +1160,11 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
     } else {
       console.error('❌ Quiz submission conditions not met:', {
         selectedChapter,
+        selectedModule,
+        isModuleQuiz,
         userUniqueId: user?.uniqueId,
         hasSelectedChapter: !!selectedChapter,
+        hasSelectedModule: !!selectedModule,
         hasUserUniqueId: !!user?.uniqueId
       });
       setError('Missing required data for quiz submission. Please try again.');
@@ -1095,6 +1175,8 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
     setMcqAnswers({});
     setMcqSubmitted(false);
     setMcqScore(null);
+    // Note: Don't reset selectedModule/selectedChapter or isModuleQuiz here
+    // as we want to keep the context for retaking the quiz
   };
 
   const handleChatQuery = async (chapterKey: string) => {
@@ -1139,6 +1221,104 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
       }
     } catch (error) {
       console.error('Error processing chat query:', error);
+      setError('Failed to process chat query. Please try again.');
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  // Module-level quiz handler
+  const generateModuleMCQ = async (moduleId: number, moduleUniqueId: string) => {
+    setMcqLoading(true);
+    setError(null);
+    setMcqAnswers({});
+    setMcqSubmitted(false);
+    setMcqScore(null);
+    setSelectedModule(moduleId);
+    setIsModuleQuiz(true);
+    
+    try {
+      const response = await fetch('/api/modules/generate-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          type: 'mcq',
+          uniqueId: moduleUniqueId || user?.uniqueId || ''
+        }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.content && Array.isArray(result.content)) {
+          // Transform content to MCQQuestion format
+          const transformedQuestions: MCQQuestion[] = result.content.map((item: any, index: number) => ({
+            Q: item.Q || item.id || (index + 1).toString(),
+            level: item.level || item.difficulty || 'Basic',
+            question: item.question || item.Q || '',
+            options: item.options || [],
+            answer: item.answer || item.options?.[0] || ''
+          }));
+          setMcqQuestions(transformedQuestions);
+          setShowMcq(true);
+          setShowChat(false);
+        } else {
+          setError('No quiz questions generated. Please try again.');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to generate module quiz questions');
+      }
+    } catch (error) {
+      console.error('Error generating module MCQ:', error);
+      setError('Failed to generate module quiz questions. Please try again.');
+    } finally {
+      setMcqLoading(false);
+    }
+  };
+
+  // Module-level chat handler
+  const handleModuleChat = async (moduleId: number, moduleTitle: string) => {
+    if (!chatQuery.trim()) return;
+    
+    setChatLoading(true);
+    setError(null);
+    setSelectedModule(moduleId);
+    setIsModuleQuiz(false);
+    
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          query: chatQuery.trim(),
+          studentData: {
+            name: user?.fullName || 'Student',
+            email: '',
+            grade: user?.classGrade || '',
+            school: '',
+            uniqueId: user?.uniqueId || ''
+          },
+          studentUniqueId: user?.uniqueId || '',
+          sessionId: `module-${moduleId}`
+        }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        const responseContent = result.response || result.n8nOutput?.aiResponse || 'No response received';
+        setChatResponse(responseContent);
+        setShowChat(true);
+        setShowMcq(false);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to process chat query');
+      }
+    } catch (error) {
+      console.error('Error processing module chat query:', error);
       setError('Failed to process chat query. Please try again.');
     } finally {
       setChatLoading(false);
@@ -1885,13 +2065,10 @@ When any threat is found, these tools give details so you can quickly fix the pr
                     return (
                       <motion.div
                         key={module.moduleId}
-                        className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-xl transition-shadow"
+                        className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ y: -5 }}
-                        onClick={() => {
-                          router.push(`/modules/youtube/${module.moduleId}`);
-                        }}
                       >
                         <div className="p-6">
                           <div className="flex items-center justify-center mb-4">
@@ -1899,7 +2076,12 @@ When any threat is found, these tools give details so you can quickly fix the pr
                               <BookOpen className="w-8 h-8 text-white" />
                             </div>
                           </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+                          <h3 
+                            className="text-xl font-bold text-gray-900 mb-2 text-center cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() => {
+                              router.push(`/modules/youtube/${module.moduleId}`);
+                            }}
+                          >
                             {module.moduleTitle}
                           </h3>
                           <p className="text-gray-600 text-sm mb-4 text-center line-clamp-3">
@@ -1924,12 +2106,12 @@ When any threat is found, these tools give details so you can quickly fix the pr
                     return (
                       <div key={module.moduleId} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
                       {/* Module Header */}
-                      <div 
-                        className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-                        onClick={() => toggleModuleExpansion(module.moduleId)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div 
+                            className="flex items-center gap-4 flex-1 cursor-pointer hover:bg-gray-50 -m-2 p-2 rounded-lg transition-colors"
+                            onClick={() => toggleModuleExpansion(module.moduleId)}
+                          >
                             <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
                               <BookOpen className="w-6 h-6 text-white" />
                             </div>
@@ -1944,10 +2126,10 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                 <span>{module.submodules.reduce((sum, sub) => sum + sub.chapters.length, 0)} chapters</span>
                               </div>
                             </div>
+                            <ChevronRight 
+                              className={`w-6 h-6 text-gray-400 transition-transform ${isModuleExpanded ? 'rotate-90' : ''}`}
+                            />
                           </div>
-                          <ChevronRight 
-                            className={`w-6 h-6 text-gray-400 transition-transform ${isModuleExpanded ? 'rotate-90' : ''}`}
-                          />
                         </div>
                       </div>
                       
@@ -2755,7 +2937,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
       </div>
 
       {/* MCQ Modal */}
-      {showMcq && selectedChapter && (
+      {showMcq && (selectedChapter || selectedModule) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden">
           <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
             {/* Header */}
@@ -2768,7 +2950,11 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold mb-1">MCQ Quiz</h3>
-                    <p className="text-purple-100">Chapter {selectedChapter} - Test your knowledge</p>
+                    <p className="text-purple-100">
+                      {isModuleQuiz && selectedModule 
+                        ? `Module ${selectedModule} - Test your knowledge`
+                        : `Chapter ${selectedChapter} - Test your knowledge`}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -2921,7 +3107,9 @@ When any threat is found, these tools give details so you can quickly fix the pr
                         </div>
                         
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                          {mcqScore >= 75 ? '🎉 Chapter Completed!' : 'Quiz Completed!'}
+                          {mcqScore >= 75 
+                            ? (isModuleQuiz ? '🎉 Module Completed!' : '🎉 Chapter Completed!')
+                            : 'Quiz Completed!'}
                         </h3>
                         
                         <div className={`text-4xl font-bold mb-2 ${
@@ -2932,7 +3120,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                         
                         <p className="text-gray-600 mb-4">
                           {mcqScore >= 75 
-                            ? `Excellent! You scored ${mcqScore}% and completed this chapter!`
+                            ? `Excellent! You scored ${mcqScore}% and completed this ${isModuleQuiz ? 'module' : 'chapter'}!`
                             : `You scored ${mcqScore}%. Keep practicing to reach 75% for completion!`
                           }
                         </p>
@@ -2940,7 +3128,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                         {/* Progress indicator */}
                         <div className="mb-6">
                           <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-                            <span>Chapter Progress</span>
+                            <span>{isModuleQuiz ? 'Module' : 'Chapter'} Progress</span>
                             <span>{mcqScore >= 75 ? '100%' : `${mcqScore}%`}</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3">
@@ -3001,7 +3189,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
         )}
 
       {/* Chat Modal */}
-      {showChat && selectedChapter && (
+      {showChat && (selectedChapter || selectedModule) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl max-w-6xl w-full max-h-[95vh] flex flex-col shadow-2xl">
             {/* Header */}
@@ -3014,11 +3202,18 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold mb-1">AI Learning Assistant</h3>
-                    <p className="text-emerald-100">Chapter {selectedChapter} - Ask anything about this topic</p>
+                    <p className="text-emerald-100">
+                      {selectedModule && !isModuleQuiz
+                        ? `Module ${selectedModule} - Ask anything about this topic`
+                        : `Chapter ${selectedChapter} - Ask anything about this topic`}
+                    </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowChat(false)}
+                  onClick={() => {
+                    setShowChat(false);
+                    setSelectedModule(null);
+                  }}
                   className="p-2 hover:bg-white/20 rounded-xl transition-colors"
                 >
                   <X className="w-6 h-6" />
@@ -3033,7 +3228,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   {/* Chat Input */}
                   <div className="bg-gradient-to-r from-gray-50 to-emerald-50 rounded-2xl p-6 border border-gray-200">
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Ask a question about this chapter:
+                      Ask a question about this {selectedModule && !isModuleQuiz ? 'module' : 'chapter'}:
                     </label>
                     <div className="flex gap-3">
                       <div className="flex-1 relative">
@@ -3041,13 +3236,35 @@ When any threat is found, these tools give details so you can quickly fix the pr
                           type="text"
                           value={chatQuery}
                           onChange={(e) => setChatQuery(e.target.value)}
-                          placeholder="e.g., What is the main concept of this chapter? How does this work?"
+                          placeholder={selectedModule && !isModuleQuiz
+                            ? "e.g., What is this module about? How does this module work?"
+                            : "e.g., What is the main concept of this chapter? How does this work?"}
                           className="w-full pl-4 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 bg-white text-lg"
-                          onKeyPress={(e) => e.key === 'Enter' && selectedChapter !== null && handleChatQuery(selectedChapter.toString())}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              if (selectedModule && !isModuleQuiz) {
+                                const module = youtubeData?.modules?.find(m => m.moduleId === selectedModule);
+                                if (module) {
+                                  handleModuleChat(selectedModule, module.moduleTitle);
+                                }
+                              } else if (selectedChapter !== null) {
+                                handleChatQuery(selectedChapter.toString());
+                              }
+                            }
+                          }}
                         />
                       </div>
                       <button
-                        onClick={() => selectedChapter !== null && handleChatQuery(selectedChapter.toString())}
+                        onClick={() => {
+                          if (selectedModule && !isModuleQuiz) {
+                            const module = youtubeData?.modules?.find(m => m.moduleId === selectedModule);
+                            if (module) {
+                              handleModuleChat(selectedModule, module.moduleTitle);
+                            }
+                          } else if (selectedChapter !== null) {
+                            handleChatQuery(selectedChapter.toString());
+                          }
+                        }}
                         disabled={chatLoading || !chatQuery.trim()}
                         className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl"
                       >
@@ -3077,7 +3294,13 @@ When any threat is found, these tools give details so you can quickly fix the pr
                               {chatResponse ? parseHtmlResponse(chatResponse).header || 'AI Response' : 'AI Response'}
                             </h4>
                             <p className="text-sm text-gray-500 truncate">
-                              {chatResponse ? `Generated for Chapter ${selectedChapter}` : `Ready for Chapter ${selectedChapter}`}
+                              {chatResponse 
+                                ? (selectedModule && !isModuleQuiz 
+                                    ? `Generated for Module ${selectedModule}` 
+                                    : `Generated for Chapter ${selectedChapter}`)
+                                : (selectedModule && !isModuleQuiz 
+                                    ? `Ready for Module ${selectedModule}` 
+                                    : `Ready for Chapter ${selectedChapter}`)}
                             </p>
                           </div>
                         </div>
