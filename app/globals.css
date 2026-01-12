@@ -1569,3 +1569,4 @@ input[type="checkbox"]:focus, input[type="radio"]:focus {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Safari and Chrome */
 }
+

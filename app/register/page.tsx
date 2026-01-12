@@ -254,6 +254,7 @@ export default function Register() {
   return (
     <motion.main 
       className="h-screen flex flex-col items-center justify-start overflow-x-hidden overflow-y-hidden bg-[#6D18CE] relative w-full"
+      style={{ zIndex: 1, position: 'relative' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
