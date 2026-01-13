@@ -13,6 +13,8 @@ export interface IUser extends mongoose.Document {
   firstTimeLogin: boolean;
   organizationId?: string; // For users associated with organizations
   isIndependent: boolean; // For users not associated with any organization
+  googleId?: string; // For Google OAuth users
+  authProvider?: 'local' | 'google'; // Track authentication provider
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -58,8 +60,32 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters long']
+    required: function(this: IUser) {
+      // Password is required only for local auth (not Google OAuth)
+      return !this.googleId;
+    },
+    validate: {
+      validator: function(this: IUser, value: string) {
+        // If user has googleId or password is empty/undefined, validation passes
+        // (OAuth users don't need passwords)
+        if (this.googleId || !value || value === '') {
+          return true;
+        }
+        // For local auth, password must be at least 6 characters
+        return value.length >= 6;
+      },
+      message: 'Password must be at least 6 characters long'
+    }
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows multiple null values
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local',
   },
   role: {
     type: String,
@@ -92,9 +118,13 @@ const userSchema = new mongoose.Schema<IUser>({
   timestamps: true
 });
 
-// Hash password before saving
+// Hash password before saving (only for local auth)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  // Skip password hashing if user is using Google OAuth or password is not modified
+  if (!this.isModified('password') || this.googleId) return next();
+  
+  // Skip if password is empty (for Google OAuth users)
+  if (!this.password) return next();
   
   try {
     const salt = await bcrypt.genSalt(12);
@@ -107,6 +137,10 @@ userSchema.pre('save', async function(next) {
 
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  // OAuth users don't have passwords, so password comparison always fails
+  if (!this.password || this.googleId) {
+    return false;
+  }
   return bcrypt.compare(candidatePassword, this.password);
 };
 

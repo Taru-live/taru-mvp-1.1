@@ -27,21 +27,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password, role, profile } = await request.json();
+    const { name, email, password, role, profile, oauthData } = await request.json();
+    const isOAuthUser = !!oauthData;
 
     // Validate input
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !role) {
       return NextResponse.json(
-        { error: 'Name, email, password, and role are required' },
+        { error: 'Name, email, and role are required' },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
-        { status: 400 }
-      );
+    // Password validation (skip for OAuth users)
+    if (!isOAuthUser) {
+      if (!password) {
+        return NextResponse.json(
+          { error: 'Password is required' },
+          { status: 400 }
+        );
+      }
+      if (password.length < 6) {
+        return NextResponse.json(
+          { error: 'Password must be at least 6 characters long' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // For OAuth users, verify OAuth data from cookie
+    let verifiedOAuthData = null;
+    if (isOAuthUser) {
+      const oauthDataCookie = request.cookies.get('google-oauth-data')?.value;
+      if (!oauthDataCookie) {
+        return NextResponse.json(
+          { error: 'OAuth session expired. Please try signing in again.' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const cookieOAuthData = JSON.parse(oauthDataCookie);
+        // Verify OAuth data matches
+        if (cookieOAuthData.googleId !== oauthData.googleId || 
+            cookieOAuthData.email?.toLowerCase() !== email.toLowerCase()) {
+          return NextResponse.json(
+            { error: 'OAuth verification failed' },
+            { status: 400 }
+          );
+        }
+        verifiedOAuthData = cookieOAuthData;
+      } catch (err) {
+        return NextResponse.json(
+          { error: 'Invalid OAuth data' },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if user already exists
@@ -148,13 +188,25 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    const userData: UserData = {
+    // Prepare user data
+    const userData: any = {
       name,
       email: email.toLowerCase(),
-      password,
       role,
       profile: userProfile
     };
+
+    // Add password only for non-OAuth users
+    if (!isOAuthUser) {
+      userData.password = password;
+    } else {
+      // Add OAuth fields for OAuth users
+      userData.googleId = verifiedOAuthData.googleId;
+      userData.authProvider = 'google';
+      if (verifiedOAuthData.picture) {
+        userData.avatar = verifiedOAuthData.picture;
+      }
+    }
 
     const user = new User(userData);
 
@@ -164,7 +216,8 @@ export async function POST(request: NextRequest) {
     const userResponse = user.toJSON();
 
     // Generate JWT token with onboarding requirement
-    const requiresOnboarding = (role === 'student' || role === 'parent');
+    // Students, parents, and organizations require onboarding
+    const requiresOnboarding = (role === 'student' || role === 'parent' || role === 'organization');
     const token = jwt.sign(
       {
         userId: user._id,
@@ -186,6 +239,8 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
+    
+    // Set auth token cookie
     response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -193,6 +248,12 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/'
     });
+
+    // Clear OAuth data cookie after successful registration
+    if (isOAuthUser) {
+      response.cookies.delete('google-oauth-data');
+    }
+    
     return response;
 
   } catch (error: unknown) {

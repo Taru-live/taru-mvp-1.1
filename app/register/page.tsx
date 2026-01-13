@@ -26,6 +26,8 @@ export default function Register() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [language, setLanguage] = useState('English (USA)')
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false)
+  const [isOAuthUser, setIsOAuthUser] = useState(false)
+  const [oauthData, setOauthData] = useState<{email?: string, name?: string, picture?: string, googleId?: string} | null>(null)
 
   useEffect(() => {
     // Track mouse position for interactive effects
@@ -40,7 +42,59 @@ export default function Register() {
   useEffect(() => {
     const savedLang = localStorage.getItem('lang')
     if (savedLang) setLanguage(savedLang)
-  }, [])
+
+    // Check for OAuth parameter in URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const oauthParam = urlParams.get('oauth')
+    
+    if (oauthParam === 'google') {
+      setIsOAuthUser(true)
+      // Fetch OAuth data from API
+      fetch('/api/auth/oauth-data')
+        .then(res => res.json())
+        .then(data => {
+          if (data.oauthData) {
+            setOauthData(data.oauthData)
+            // Pre-fill form with OAuth data
+            setFormData(prev => ({
+              ...prev,
+              fullName: data.oauthData.name || '',
+              email: data.oauthData.email || '',
+            }))
+          } else {
+            // OAuth data expired or not found, redirect to login
+            setError('OAuth session expired. Please try signing in again.')
+            setTimeout(() => {
+              router.push('/login')
+            }, 3000)
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching OAuth data:', err)
+          setError('Failed to load OAuth data. Please try again.')
+        })
+      
+      // Clean up URL
+      window.history.replaceState({}, '', '/register')
+    }
+
+    // Check for OAuth errors in URL
+    const oauthError = urlParams.get('error')
+    if (oauthError) {
+      const errorMessages: Record<string, string> = {
+        'oauth_failed': 'Google authentication failed. Please try again.',
+        'invalid_state': 'Security verification failed. Please try again.',
+        'no_code': 'Authentication was cancelled.',
+        'config_error': 'Authentication service is not configured properly.',
+        'invalid_token': 'Invalid authentication token. Please try again.',
+        'no_email': 'No email address found in your Google account.',
+        'oauth_callback_failed': 'Authentication callback failed. Please try again.',
+      }
+      setError(errorMessages[oauthError] || 'Authentication failed. Please try again.')
+      // Clean up URL
+      window.history.replaceState({}, '', '/register')
+    }
+  }, [router])
 
   useEffect(() => {
     // Close language dropdown when clicking outside
@@ -93,15 +147,18 @@ export default function Register() {
     setIsLoading(true)
     setError('')
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setIsLoading(false)
-      return
+    // Skip password validation for OAuth users
+    if (!isOAuthUser) {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match')
+        setIsLoading(false)
+        return
+      }
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long')
+        setIsLoading(false)
+        return
+      }
     }
 
     // Validate student ID format for parent registration
@@ -172,18 +229,31 @@ export default function Register() {
     }
 
     try {
+      // Prepare registration payload
+      const registrationPayload: any = {
+        name: formData.fullName,
+        email: formData.email,
+        role: selectedRole,
+        profile: profileData,
+      };
+
+      // Include password only for non-OAuth users
+      if (!isOAuthUser) {
+        registrationPayload.password = formData.password;
+      } else if (oauthData) {
+        // Include OAuth data for OAuth users
+        registrationPayload.oauthData = {
+          googleId: oauthData.googleId,
+          picture: oauthData.picture,
+        };
+      }
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          role: selectedRole,
-          profile: profileData,
-        }),
+        body: JSON.stringify(registrationPayload),
       })
 
       const data = await response.json()
@@ -191,42 +261,41 @@ export default function Register() {
         throw new Error(data.error || 'Registration failed')
       }
 
-      // Show success message and auto-login
-      try {
-        const loginResponse = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: formData.email, password: formData.password }),
-        });
+      // For OAuth users, the registration API will handle authentication
+      // For regular users, auto-login
+      if (!isOAuthUser) {
+        try {
+          const loginResponse = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: formData.email, password: formData.password }),
+          });
 
-        const loginData = await loginResponse.json();
-        if (!loginResponse.ok) {
-          throw new Error(loginData.error || 'Auto-login failed');
-        }
-        
-        // Redirect based on role after a short delay
-        setTimeout(() => {
-          if (selectedRole === 'student') {
-            router.push('/student-onboarding');
-          } else if (selectedRole === 'parent') {
-            router.push('/parent-onboarding');
-          } else if (selectedRole === 'organization') {
-            router.push('/dashboard/admin');
-          } else if (selectedRole === 'teacher') {
-            router.push('/dashboard/teacher');
-          } else {
-            router.push('/login');
+          const loginData = await loginResponse.json();
+          if (!loginResponse.ok) {
+            throw new Error(loginData.error || 'Auto-login failed');
           }
-        }, 2000);
-      } catch (loginError) {
-        console.error('Auto-login failed:', loginError);
-        // If auto-login fails, redirect to login page
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+        } catch (loginError) {
+          console.error('Auto-login failed:', loginError);
+        }
       }
+      
+      // Redirect based on role after a short delay
+      setTimeout(() => {
+        if (selectedRole === 'student') {
+          router.push('/student-onboarding');
+        } else if (selectedRole === 'parent') {
+          router.push('/parent-onboarding');
+        } else if (selectedRole === 'organization') {
+          router.push('/organization-onboarding');
+        } else if (selectedRole === 'teacher') {
+          router.push('/dashboard/teacher');
+        } else {
+          router.push('/login');
+        }
+      }, 2000);
 
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.')
@@ -796,36 +865,50 @@ export default function Register() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                    readOnly={isOAuthUser}
+                    className={`w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation ${isOAuthUser ? 'cursor-not-allowed opacity-70' : ''}`}
                     required
                   />
                 </div>
 
-                {/* Password */}
-                <div className="relative">
-                  <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
-                    required
-                  />
-                </div>
+                {/* OAuth User Message */}
+                {isOAuthUser && (
+                  <div className="relative mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs sm:text-sm text-blue-800">
+                      <span className="font-semibold">Signing up with Google:</span> You're using your Google account. No password needed!
+                    </p>
+                  </div>
+                )}
 
-                {/* Confirm Password */}
-                <div className="relative">
-                  <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
-                    required
-                  />
-                </div>
+                {/* Password - Hidden for OAuth users */}
+                {!isOAuthUser && (
+                  <div className="relative">
+                    <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Confirm Password - Hidden for OAuth users */}
+                {!isOAuthUser && (
+                  <div className="relative">
+                    <label className="block text-xs sm:text-sm md:text-[16.0016px] font-medium leading-tight sm:leading-[19px] text-[#C2C2C2] mb-0.5 sm:mb-1">Confirm Password</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className="w-full border-b-[0.5px] border-[#C2C2C2] pb-0.5 sm:pb-1 text-xs sm:text-sm md:text-black bg-transparent focus:outline-none focus:border-[#6D18CE] transition-colors touch-manipulation"
+                      required
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Error Message */}
@@ -845,6 +928,55 @@ export default function Register() {
 
               {/* Bottom Section */}
               <div className="mt-1 sm:mt-2 md:mt-6 lg:mt-8 space-y-1.5 sm:space-y-2 md:space-y-4 flex-shrink-0">
+                {/* Divider */}
+                <motion.div 
+                  className="w-full lg:w-[514px] mx-auto flex items-center gap-3 sm:gap-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.85, duration: 0.4 }}
+                >
+                  <div className="flex-1 h-[0.5px] bg-[#C2C2C2]"></div>
+                  <span className="text-xs sm:text-[13px] text-[#454545] font-medium">OR</span>
+                  <div className="flex-1 h-[0.5px] bg-[#C2C2C2]"></div>
+                </motion.div>
+
+                {/* Google Sign In Button */}
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = '/api/auth/google'
+                  }}
+                  className="w-full lg:w-[514px] mx-auto h-10 sm:h-12 md:h-14 lg:h-16 bg-white border-[0.5px] border-[#C2C2C2] rounded-full sm:rounded-[90px] font-semibold text-xs sm:text-sm md:text-[16.0016px] flex items-center justify-center gap-3 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 touch-manipulation"
+                  whileHover={{ 
+                    scale: 1.02,
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 1.9, duration: 0.4 }}
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </svg>
+                  <span className="text-[#454545]">Continue with Google</span>
+                </motion.button>
+
                 {/* Register Button */}
                 <motion.button
                   type="submit"
