@@ -14,9 +14,10 @@ const TermsAndConditions = () => {
                 <p>Welcome to Taru. These Terms and Conditions govern your access to and use of Taru's website, applications, and services. By accessing or using Taru, you agree to be bound by these Terms. If you do not agree, please do not use the platform.<br />‍</p>
                 <h2 className="heading-11">2. About Taru</h2>
                 <p>Taru is an AI-driven learning and career guidance platform designed to support students, parents, educators, and institutions through structured learning journeys, skill assessments, and ethical guidance.</p>
-                <p>Taru provides guidance and insights, not professional certification, guaranteed outcomes, or formal academic qualifications.<br />‍</p>
+                <p>Taru provides guidance and insights, not professional certification, no guaranteed outcomes, or not a formal academic qualifications.                <br />‍</p>
                 <h2 className="heading-11">3. Eligibility and Use</h2>
-                <p>Taru is intended for use by students, parents, educators, and institutions. Users under the age of 18 should access the platform with parental awareness or consent, where applicable.</p>
+                <p>Taru is intended for use by students, parents, educators, and institutions. Users above the the age of 5 should access the platform with parental awareness or consent, where applicable.
+                </p>
                 <p>You agree to use Taru responsibly and only for lawful, educational purposes.<br />‍</p>
                 <h2 className="heading-11">4. User Accounts and Responsibilities</h2>
                 <p>When creating an account, you are responsible for providing accurate and current information. You are responsible for maintaining the confidentiality of your account credentials and all activities under your account.</p>
