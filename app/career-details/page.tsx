@@ -4,10 +4,12 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import { useNavigationWithState } from '@/lib/hooks/useNavigationWithState';
 import { useCareerState } from '@/lib/hooks/useCareerState';
 import { useEnhancedSession } from '@/lib/hooks/useEnhancedSession';
 import ConsistentLoadingPage from '../components/ConsistentLoadingPage';
+import RazorpayPaymentModal from '@/components/RazorpayPaymentModal';
 
 interface Chapter {
   title: string;
@@ -65,6 +67,8 @@ function CareerDetailsContent() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [savedPathId, setSavedPathId] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [requiresPayment, setRequiresPayment] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const careerPath = searchParams?.get('careerPath') || null;
@@ -180,7 +184,17 @@ function CareerDetailsContent() {
         
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setSaveError(errorData.error || 'Failed to save learning path');
+        const errorMessage = errorData.error || 'Failed to save learning path';
+        const paymentRequired = errorData.requiresPayment || false;
+        
+        if (paymentRequired) {
+          setRequiresPayment(true);
+          setSaveError('You have reached the limit for saving learning paths. Please make a payment to save additional paths.');
+          setShowPaymentModal(true);
+        } else {
+          setRequiresPayment(false);
+          setSaveError(errorMessage);
+        }
       }
     } catch (err) {
       console.error('Error saving learning path:', err);
@@ -468,14 +482,27 @@ function CareerDetailsContent() {
         }
       } else {
         let errorMessage = 'Failed to load career details';
+        let requiresPayment = false;
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
+          requiresPayment = errorData.requiresPayment || false;
         } catch {
           // If we can't parse the error response, use the status text
           errorMessage = `Server error: ${response.status} ${response.statusText}`;
         }
         console.error('Failed to fetch career details:', response.status, errorMessage);
+        
+        if (requiresPayment) {
+          // Redirect to career exploration page with payment prompt
+          setError('Payment required to access career details. Please complete payment first.');
+          // Optionally redirect after showing error
+          setTimeout(() => {
+            router.push('/career-exploration?payment_required=true');
+          }, 2000);
+          return;
+        }
+        
         setError(errorMessage);
       }
     } catch (err) {
@@ -1408,15 +1435,63 @@ function CareerDetailsContent() {
               </button>
             </div>
             {saveError && (
-              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                <p className="text-sm">❌ {saveError}</p>
-                <button
-                  onClick={() => setSaveError(null)}
-                  className="text-xs underline hover:no-underline mt-1"
-                >
-                  Dismiss
-                </button>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mt-4 p-4 rounded-xl border-2 ${
+                  requiresPayment
+                    ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-300'
+                    : 'bg-red-100 border-red-400'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                    requiresPayment ? 'bg-orange-100' : 'bg-red-100'
+                  }`}>
+                    {requiresPayment ? (
+                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <X className="w-5 h-5 text-red-600" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-sm font-medium ${
+                      requiresPayment ? 'text-orange-800' : 'text-red-700'
+                    }`}>
+                      {saveError}
+                    </p>
+                    {requiresPayment && (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={() => setShowPaymentModal(true)}
+                          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium text-sm"
+                        >
+                          Make Payment
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSaveError(null);
+                            setRequiresPayment(false);
+                          }}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                    {!requiresPayment && (
+                      <button
+                        onClick={() => setSaveError(null)}
+                        className="text-xs underline hover:no-underline mt-2 text-red-600"
+                      >
+                        Dismiss
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
             )}
           </div>
         </section>
@@ -1458,6 +1533,29 @@ function CareerDetailsContent() {
       )}
 
       </motion.div>
+
+      {/* Payment Modal for Learning Path Save */}
+      <RazorpayPaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setRequiresPayment(false);
+        }}
+        onSuccess={async () => {
+          setShowPaymentModal(false);
+          setRequiresPayment(false);
+          setSaveError(null);
+          // Retry saving the learning path after successful payment
+          if (careerDetails?.output && userInfo?.id) {
+            await saveLearningPath();
+          }
+          // Stay on the career details page to show the learning path
+          // User can navigate to dashboard manually if needed
+        }}
+        planType="basic"
+        paymentFor="learning_path_save"
+        amount={99}
+      />
     </>
   );
 }

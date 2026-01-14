@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from './components/Sidebar';
 import ModulesTab from './components/ModulesTab';
 import ProgressTab from './components/ProgressTab';
@@ -196,10 +196,28 @@ interface ContinueLearningCourse {
 export const dynamic = 'force-dynamic';
 
 export default function StudentDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    }>
+      <StudentDashboardContent />
+    </Suspense>
+  );
+}
+
+function StudentDashboardContent() {
   const [user, setUser] = useState<StudentProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams?.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'overview');
   const [youtubeData, setYoutubeData] = useState<YouTubeData | null>(null);
   const [youtubeLoading, setYoutubeLoading] = useState(false);
   const [userAvatar, setUserAvatar] = useState<string>('/avatars/Group.svg');
@@ -210,10 +228,17 @@ export default function StudentDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const notificationRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
   const logoutTriggered = useRef(false);
   const { width: windowWidth } = useWindowSize();
   const isMobile = windowWidth < 1024;
+
+  // Update activeTab when tab query parameter changes
+  useEffect(() => {
+    const tabFromUrl = searchParams?.get('tab');
+    if (tabFromUrl && ['overview', 'learning-path', 'modules', 'enhanced-learning', 'progress', 'rewards', 'settings'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   // Function to fetch YouTube data with comprehensive error handling
   const fetchYouTubeData = async (uniqueId: string) => {

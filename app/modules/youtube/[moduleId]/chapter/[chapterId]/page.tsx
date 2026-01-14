@@ -20,7 +20,8 @@ import {
   X,
   Trophy,
   Target,
-  TrendingUp
+  TrendingUp,
+  Lock
 } from 'lucide-react';
 
 interface Chapter {
@@ -70,6 +71,13 @@ export default function ChapterPage() {
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const [uniqueId, setUniqueId] = useState<string | null>(null);
+  const [learningPathId, setLearningPathId] = useState<string | null>(null);
+  const [moduleAccess, setModuleAccess] = useState<{
+    hasAccess: boolean;
+    isLocked: boolean;
+    unlockedModulesCount: number;
+    reason?: string;
+  } | null>(null);
   
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -87,6 +95,8 @@ export default function ChapterPage() {
   const [mcqSubmitted, setMcqSubmitted] = useState(false);
   const [mcqScore, setMcqScore] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'chat' | 'quiz'>('chat'); // Tab state
+  const [showQuizConfirmModal, setShowQuizConfirmModal] = useState(false);
+  const [mcqError, setMcqError] = useState<string | null>(null);
 
   // Progress state
   const [chapterProgress, setChapterProgress] = useState<number>(0);
@@ -95,9 +105,113 @@ export default function ChapterPage() {
   const [videoDuration, setVideoDuration] = useState(0);
   const videoWatchIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Subscription and usage state (per-chapter)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{
+    hasSubscription: boolean;
+    subscription?: {
+      planType: string;
+      planAmount: number;
+      dailyChatLimit: number;
+      monthlyMcqLimit: number;
+    };
+    usage?: {
+      dailyChatsRemaining: number;
+      monthlyMcqsRemaining: number;
+      dailyChatsUsed: number;
+      monthlyMcqsUsed: number;
+    };
+  } | null>(null);
+
   useEffect(() => {
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    if (chapterId && learningPathId) {
+      fetchSubscriptionStatus();
+      checkModuleAccess();
+    }
+  }, [chapterId, learningPathId, moduleId]);
+
+  // Check module/chapter access
+  const checkModuleAccess = async () => {
+    if (!learningPathId || !moduleId) return;
+    
+    try {
+      const moduleIndex = parseInt(moduleId) - 1; // Convert to 0-based index
+      const response = await fetch(
+        `/api/modules/check-access?learningPathId=${learningPathId}&moduleIndex=${moduleIndex}&chapterId=${chapterId}`,
+        { credentials: 'include' }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setModuleAccess(data.moduleAccess);
+          
+          // If module is locked, prevent access
+          if (data.moduleAccess.isLocked) {
+            setLoading(false);
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking module access:', error);
+    }
+  };
+
+  // Fetch subscription status and per-chapter usage
+  const fetchSubscriptionStatus = async () => {
+    if (!chapterId || !learningPathId) return;
+    
+    try {
+      // Fetch per-chapter usage status with learningPathId
+      const usageResponse = await fetch(
+        `/api/usage/chapter-status?chapterId=${chapterId}&learningPathId=${learningPathId}`,
+        { credentials: 'include' }
+      );
+      
+      if (usageResponse.ok) {
+        const usageData = await usageResponse.json();
+        if (usageData.success && usageData.usage) {
+          setSubscriptionStatus({
+            hasSubscription: usageData.usage.hasSubscription,
+            subscription: usageData.usage.hasSubscription ? {
+              planType: usageData.usage.planType || 'basic',
+              planAmount: 0, // Will be filled from subscription-status if needed
+              dailyChatLimit: usageData.usage.chatUsage.limit,
+              monthlyMcqLimit: usageData.usage.mcqUsage.limit
+            } : undefined,
+            usage: {
+              dailyChatsRemaining: usageData.usage.chatUsage.remaining,
+              monthlyMcqsRemaining: usageData.usage.mcqUsage.remaining,
+              dailyChatsUsed: usageData.usage.chatUsage.used,
+              monthlyMcqsUsed: usageData.usage.mcqUsage.used
+            }
+          });
+          return;
+        }
+      }
+      
+      // Fallback to learning-path-specific subscription status
+      const response = await fetch(
+        `/api/payments/subscription-status?learningPathId=${learningPathId}`,
+        { credentials: 'include' }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data);
+      } else {
+        // No subscription or error
+        setSubscriptionStatus({ hasSubscription: false });
+      }
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
+      setSubscriptionStatus({ hasSubscription: false });
+    }
+  };
 
   useEffect(() => {
     if (uniqueId) {
@@ -243,6 +357,11 @@ export default function ChapterPage() {
         const result = await response.json();
         
         if (result.data) {
+          // Extract learning path ID from response
+          if (result.data._id) {
+            setLearningPathId(result.data._id.toString());
+          }
+          
           const transformedData = transformToHierarchicalFormat(result.data);
           
           if (transformedData && transformedData.modules && transformedData.modules.length > 0) {
@@ -321,6 +440,8 @@ export default function ChapterPage() {
           query: currentMessage,
           studentUniqueId: studentUniqueId,
           sessionId: sessionId,
+          chapterId: chapterId, // Include chapterId for per-chapter usage tracking
+          learningPathId: learningPathId, // Include learningPathId to scope subscription check
           studentData: {
             name: studentName,
             uniqueId: studentUniqueId,
@@ -344,6 +465,8 @@ export default function ChapterPage() {
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiResponse]);
+        // Refresh subscription status after using chat
+        fetchSubscriptionStatus();
       } else {
         const errorResponse: Message = {
           id: (Date.now() + 1).toString(),
@@ -397,21 +520,19 @@ export default function ChapterPage() {
     }
   };
 
-  // Generate MCQ quiz
+  // Generate MCQ quiz (always generates fresh, no caching)
   const generateMCQ = async () => {
     if (!chapterId) return;
 
-    // If questions already exist, just switch to quiz tab
-    if (mcqQuestions.length > 0) {
-      setActiveTab('quiz');
-      return;
-    }
-
-    setMcqLoading(true);
+    // Clear existing questions and reset state for fresh generation
+    setMcqQuestions([]);
     setMcqAnswers({});
     setMcqSubmitted(false);
     setMcqScore(null);
+    setMcqError(null);
+    setMcqLoading(true);
     setActiveTab('quiz');
+    setShowQuizConfirmModal(false);
 
     try {
       const response = await fetch('/api/webhook/generate-mcq', {
@@ -419,21 +540,46 @@ export default function ChapterPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chapterId: chapterId }),
+        credentials: 'include',
+        body: JSON.stringify({ 
+          chapterId: chapterId,
+          learningPathId: learningPathId // Include learningPathId to scope subscription check
+        }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        setMcqQuestions(result.questions || []);
+        if (result.success && result.questions && Array.isArray(result.questions) && result.questions.length > 0) {
+          setMcqQuestions(result.questions);
+          // Refresh subscription status after generating MCQ
+          fetchSubscriptionStatus();
+        } else {
+          setMcqError('No quiz questions were generated. Please try again.');
+        }
       } else {
         const errorData = await response.json();
-        console.error('Failed to generate MCQ:', errorData);
+        const errorMessage = errorData.message || errorData.error || 'Failed to generate quiz. Please try again.';
+        setMcqError(errorMessage);
+        
+        // If it's a limit reached error, show specific message
+        if (errorData.limitReached) {
+          setMcqError(errorData.message || `You have used all ${errorData.limit} MCQ generations for this chapter this month. You can still generate MCQs for other chapters.`);
+        }
       }
     } catch (error) {
       console.error('Error generating MCQ:', error);
+      setMcqError('Network error. Please check your connection and try again.');
     } finally {
       setMcqLoading(false);
     }
+  };
+
+  // Handle quiz tab click - show confirmation modal
+  const handleQuizTabClick = () => {
+    setActiveTab('quiz');
+    setMcqError(null);
+    // Always show confirmation modal, even if questions exist
+    setShowQuizConfirmModal(true);
   };
 
   // Handle MCQ answer selection
@@ -623,7 +769,7 @@ export default function ChapterPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {chapter.chapterTitle}
               </h1>
-              <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+              <div className="flex items-center gap-4 text-sm text-gray-500 mt-1 flex-wrap">
                 <div className="flex items-center gap-1">
                   <BookOpen className="w-4 h-4" />
                   <span>{module.moduleTitle}</span>
@@ -638,6 +784,39 @@ export default function ChapterPage() {
                   <div className="flex items-center gap-1 text-green-600">
                     <CheckCircle className="w-4 h-4" />
                     <span>Completed</span>
+                  </div>
+                )}
+                {/* Subscription Credits Display */}
+                {subscriptionStatus?.hasSubscription && subscriptionStatus.usage ? (
+                  <>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                      subscriptionStatus.usage.dailyChatsRemaining === 0 
+                        ? 'text-red-600 bg-red-50' 
+                        : subscriptionStatus.usage.dailyChatsRemaining <= 1
+                        ? 'text-orange-600 bg-orange-50'
+                        : 'text-blue-600 bg-blue-50'
+                    }`}>
+                      <MessageCircle className="w-3 h-3" />
+                      <span className="text-xs font-medium" title="Daily chat credits for this chapter">
+                        {subscriptionStatus.usage.dailyChatsRemaining}/{subscriptionStatus.subscription?.dailyChatLimit || 0} chats/day
+                      </span>
+                    </div>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                      subscriptionStatus.usage.monthlyMcqsRemaining === 0 
+                        ? 'text-red-600 bg-red-50' 
+                        : subscriptionStatus.usage.monthlyMcqsRemaining <= 1
+                        ? 'text-orange-600 bg-orange-50'
+                        : 'text-purple-600 bg-purple-50'
+                    }`}>
+                      <Brain className="w-3 h-3" />
+                      <span className="text-xs font-medium" title="Monthly MCQ credits for this chapter">
+                        {subscriptionStatus.usage.monthlyMcqsRemaining}/{subscriptionStatus.subscription?.monthlyMcqLimit || 0} MCQs/month
+                      </span>
+                    </div>
+                  </>
+                ) : subscriptionStatus?.hasSubscription === false && (
+                  <div className="flex items-center gap-1 text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
+                    <span className="text-xs">No active subscription</span>
                   </div>
                 )}
               </div>
@@ -668,17 +847,16 @@ export default function ChapterPage() {
             {/* Quick Action Buttons */}
             <div className="flex gap-2">
               <motion.button
-                onClick={generateMCQ}
+                onClick={() => {
+                  setShowQuizConfirmModal(true);
+                  setActiveTab('quiz');
+                }}
                 disabled={mcqLoading}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg"
               >
-                {mcqLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Brain className="w-4 h-4" />
-                )}
+                <Brain className="w-4 h-4" />
                 <span className="hidden sm:inline">Start Quiz</span>
               </motion.button>
             </div>
@@ -686,46 +864,82 @@ export default function ChapterPage() {
         </div>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-180px)]">
-          {/* Left Section - Video Player */}
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-purple-200 overflow-hidden flex flex-col">
-            <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-600">
-              <h2 className="text-white font-bold text-lg flex items-center gap-2">
-                <Play className="w-5 h-5" />
-                Video Lesson
-              </h2>
-            </div>
-            <div className="flex-1 p-4 flex items-center justify-center bg-gray-900">
-              {videoId ? (
-                <div 
-                  className="w-full aspect-video rounded-lg overflow-hidden shadow-2xl"
-                  onMouseEnter={startVideoTracking}
-                  onMouseLeave={stopVideoTracking}
+      {/* Module Locked Warning */}
+      {moduleAccess && moduleAccess.isLocked && (
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-2xl p-6 shadow-xl"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <Lock className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-orange-900 mb-2">Module Locked</h3>
+                <p className="text-orange-800 mb-4">{moduleAccess.reason}</p>
+                <div className="bg-white/80 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-gray-700">
+                    <strong>Unlocked Modules:</strong> {moduleAccess.unlockedModulesCount} of {module?.moduleId || '?'}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Complete the unlocked modules and renew your subscription to access more content.
+                  </p>
+                </div>
+                <button
+                  onClick={() => router.push('/dashboard/student')}
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium"
                 >
-                  <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                    title={chapter.chapterTitle}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                    onLoad={() => {
-                      // Start tracking when video loads
-                      startVideoTracking();
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="aspect-video w-full rounded-lg bg-gray-800 flex items-center justify-center">
-                  <p className="text-gray-400">Invalid YouTube URL</p>
-                </div>
-              )}
+                  Go to Dashboard
+                </button>
+              </div>
             </div>
-            <div className="p-4 bg-gray-50 border-t border-gray-200">
-              <p className="text-sm text-gray-600">{chapter.chapterDescription}</p>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Two Column Layout - Only show if module is unlocked */}
+      {(!moduleAccess || moduleAccess.hasAccess) && (
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-180px)]">
+            {/* Left Section - Video Player */}
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-purple-200 overflow-hidden flex flex-col">
+              <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-600">
+                <h2 className="text-white font-bold text-lg flex items-center gap-2">
+                  <Play className="w-5 h-5" />
+                  Video Lesson
+                </h2>
+              </div>
+              <div className="flex-1 p-4 flex items-center justify-center bg-gray-900">
+                {videoId ? (
+                  <div 
+                    className="w-full aspect-video rounded-lg overflow-hidden shadow-2xl"
+                    onMouseEnter={startVideoTracking}
+                    onMouseLeave={stopVideoTracking}
+                  >
+                    <iframe
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                      title={chapter.chapterTitle}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                      onLoad={() => {
+                        // Start tracking when video loads
+                        startVideoTracking();
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-video w-full rounded-lg bg-gray-800 flex items-center justify-center">
+                    <p className="text-gray-400">Invalid YouTube URL</p>
+                  </div>
+                )}
+              </div>
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <p className="text-sm text-gray-600">{chapter.chapterDescription}</p>
+              </div>
             </div>
-          </div>
 
           {/* Right Section - AI Chatbot or Quiz */}
           <div className="bg-white rounded-2xl shadow-xl border-2 border-pink-200 overflow-hidden flex flex-col">
@@ -743,12 +957,7 @@ export default function ChapterPage() {
                 <span>Chat</span>
               </button>
               <button
-                onClick={() => {
-                  setActiveTab('quiz');
-                  if (mcqQuestions.length === 0) {
-                    generateMCQ();
-                  }
-                }}
+                onClick={handleQuizTabClick}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium transition-all ${
                   activeTab === 'quiz'
                     ? 'bg-white text-purple-600 border-b-2 border-purple-600'
@@ -769,21 +978,67 @@ export default function ChapterPage() {
               /* Quiz Section */
               <>
                 <div className="p-4 bg-gradient-to-r from-purple-600 to-blue-600">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
-                      <Brain className="w-7 h-7 text-purple-600" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+                        <Brain className="w-7 h-7 text-purple-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-white font-bold text-lg">Chapter Quiz</h2>
+                        <p className="text-white/90 text-xs">Test your knowledge!</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-white font-bold text-lg">Chapter Quiz</h2>
-                      <p className="text-white/90 text-xs">Test your knowledge!</p>
-                    </div>
+                    {/* MCQ Credits Display */}
+                    {subscriptionStatus?.hasSubscription && subscriptionStatus.usage && (
+                      <div className={`backdrop-blur-sm rounded-lg px-3 py-2 border ${
+                        subscriptionStatus.usage.monthlyMcqsRemaining === 0
+                          ? 'bg-red-500/30 border-red-300/50'
+                          : subscriptionStatus.usage.monthlyMcqsRemaining <= 1
+                          ? 'bg-orange-500/30 border-orange-300/50'
+                          : 'bg-white/20 border-white/30'
+                      }`}>
+                        <div className="flex items-center gap-2 text-white text-xs">
+                          <Brain className="w-4 h-4" />
+                          <span className="font-semibold">
+                            {subscriptionStatus.usage.monthlyMcqsRemaining}/{subscriptionStatus.subscription?.monthlyMcqLimit || 0}
+                          </span>
+                          <span className="text-white/80">MCQs</span>
+                          {subscriptionStatus.usage.monthlyMcqsRemaining === 0 && (
+                            <span className="text-red-200 text-[10px]">Limit reached</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {/* Error Message */}
+                  {mcqError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3"
+                    >
+                      <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-red-800 font-medium mb-1">Quiz Generation Error</p>
+                        <p className="text-red-700 text-sm">{mcqError}</p>
+                        <button
+                          onClick={() => setMcqError(null)}
+                          className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {mcqLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                    <div className="flex flex-col items-center justify-center h-full gap-4">
+                      <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+                      <p className="text-gray-600 font-medium">Generating quiz questions...</p>
+                      <p className="text-sm text-gray-500">This may take a few moments</p>
                     </div>
                   ) : mcqQuestions.length > 0 ? (
                     <>
@@ -930,7 +1185,13 @@ export default function ChapterPage() {
                   ) : (
                     <div className="text-center py-12">
                       <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">No quiz questions available. Click Quiz to generate!</p>
+                      <p className="text-gray-600 mb-4">No quiz questions available yet.</p>
+                      <button
+                        onClick={() => setShowQuizConfirmModal(true)}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all font-medium shadow-lg"
+                      >
+                        Generate Quiz
+                      </button>
                     </div>
                   )}
                 </div>
@@ -939,28 +1200,51 @@ export default function ChapterPage() {
               /* Chat Section */
               <>
                 <div className="p-4 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
-                  <div className="flex items-center gap-3">
-                    <motion.div
-                      animate={{ 
-                        rotate: [0, 10, -10, 0],
-                        scale: [1, 1.1, 1]
-                      }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: Infinity,
-                        repeatDelay: 3
-                      }}
-                      className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg"
-                    >
-                      <Bot className="w-7 h-7 text-purple-600" />
-                    </motion.div>
-                    <div>
-                      <h2 className="text-white font-bold text-lg flex items-center gap-2">
-                        AI Learning Buddy
-                        <Sparkles className="w-5 h-5 text-yellow-300" />
-                      </h2>
-                      <p className="text-white/90 text-xs">Ask me anything about this lesson!</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity,
+                          repeatDelay: 3
+                        }}
+                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg"
+                      >
+                        <Bot className="w-7 h-7 text-purple-600" />
+                      </motion.div>
+                      <div>
+                        <h2 className="text-white font-bold text-lg flex items-center gap-2">
+                          AI Learning Buddy
+                          <Sparkles className="w-5 h-5 text-yellow-300" />
+                        </h2>
+                        <p className="text-white/90 text-xs">Ask me anything about this lesson!</p>
+                      </div>
                     </div>
+                    {/* Chat Credits Display */}
+                    {subscriptionStatus?.hasSubscription && subscriptionStatus.usage && (
+                      <div className={`backdrop-blur-sm rounded-lg px-3 py-2 border ${
+                        subscriptionStatus.usage.dailyChatsRemaining === 0
+                          ? 'bg-red-500/30 border-red-300/50'
+                          : subscriptionStatus.usage.dailyChatsRemaining <= 1
+                          ? 'bg-orange-500/30 border-orange-300/50'
+                          : 'bg-white/20 border-white/30'
+                      }`}>
+                        <div className="flex items-center gap-2 text-white text-xs">
+                          <MessageCircle className="w-4 h-4" />
+                          <span className="font-semibold">
+                            {subscriptionStatus.usage.dailyChatsRemaining}/{subscriptionStatus.subscription?.dailyChatLimit || 0}
+                          </span>
+                          <span className="text-white/80">chats</span>
+                          {subscriptionStatus.usage.dailyChatsRemaining === 0 && (
+                            <span className="text-red-200 text-[10px]">Limit reached</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1034,7 +1318,7 @@ export default function ChapterPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
+              {/* Input Area */}
             <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 border-t-2 border-purple-200">
               <div className="flex gap-2">
                 <input
@@ -1044,11 +1328,11 @@ export default function ChapterPage() {
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about this lesson... 😊"
                   className="flex-1 px-4 py-3 rounded-xl border-2 border-purple-300 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 bg-white text-gray-800 placeholder-gray-400"
-                  disabled={isLoading}
+                  disabled={isLoading || (subscriptionStatus?.hasSubscription && subscriptionStatus.usage && subscriptionStatus.usage.dailyChatsRemaining === 0)}
                 />
                 <motion.button
                   onClick={handleSendMessage}
-                  disabled={isLoading || !inputMessage.trim()}
+                  disabled={isLoading || !inputMessage.trim() || (subscriptionStatus?.hasSubscription && subscriptionStatus.usage && subscriptionStatus.usage.dailyChatsRemaining === 0)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
@@ -1057,15 +1341,115 @@ export default function ChapterPage() {
                   <span className="hidden sm:inline">Send</span>
                 </motion.button>
               </div>
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                💡 Tip: Ask me to explain concepts, solve problems, or help with homework!
-              </p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs text-gray-500 text-center flex-1">
+                  💡 Tip: Ask me to explain concepts, solve problems, or help with homework!
+                </p>
+                {subscriptionStatus?.hasSubscription && subscriptionStatus.usage && (
+                  <div className="text-xs text-gray-600 ml-2">
+                    {subscriptionStatus.usage.dailyChatsRemaining === 0 ? (
+                      <span className="text-red-600 font-medium">Daily chat limit reached for this chapter</span>
+                    ) : (
+                      <span className="text-gray-600">
+                        {subscriptionStatus.usage.dailyChatsRemaining} chat{subscriptionStatus.usage.dailyChatsRemaining !== 1 ? 's' : ''} remaining for this chapter today
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
               </>
             )}
           </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Quiz Confirmation Modal */}
+      <AnimatePresence>
+        {showQuizConfirmModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowQuizConfirmModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <Brain className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Generate Quiz</h3>
+                    <p className="text-white/90 text-sm">Create a new quiz for this chapter</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <p className="text-gray-700 mb-6">
+                  Do you want to generate a new quiz for this chapter?
+                </p>
+                <p className="text-sm text-gray-500 mb-6">
+                  A fresh quiz will be generated with new questions. Any previous quiz data will be replaced.
+                </p>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowQuizConfirmModal(false)}
+                    disabled={mcqLoading}
+                    className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={generateMCQ}
+                    disabled={mcqLoading || (subscriptionStatus?.hasSubscription && subscriptionStatus.usage && subscriptionStatus.usage.monthlyMcqsRemaining === 0)}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {mcqLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : subscriptionStatus?.hasSubscription && subscriptionStatus.usage && subscriptionStatus.usage.monthlyMcqsRemaining === 0 ? (
+                      <>
+                        <X className="w-4 h-4" />
+                        Limit Reached
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="w-4 h-4" />
+                        Generate Quiz
+                      </>
+                    )}
+                  </button>
+                  {subscriptionStatus?.hasSubscription && subscriptionStatus.usage && (
+                    <p className="text-xs text-gray-500 text-center mt-2">
+                      {subscriptionStatus.usage.monthlyMcqsRemaining === 0 ? (
+                        <span className="text-red-600">Monthly MCQ limit reached for this chapter. You can still generate MCQs for other chapters.</span>
+                      ) : (
+                        <span>{subscriptionStatus.usage.monthlyMcqsRemaining} MCQ{subscriptionStatus.usage.monthlyMcqsRemaining !== 1 ? 's' : ''} remaining for this chapter this month</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

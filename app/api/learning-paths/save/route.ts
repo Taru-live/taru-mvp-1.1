@@ -4,7 +4,9 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import LearningPath from '@/models/LearningPath';
 import LearningPathResponse from '@/models/LearningPathResponse';
+import Student from '@/models/Student';
 import { normalizeCareerDetailsData, validateCareerDetailsData } from '@/lib/utils/learningPathUtils';
+import { canSaveLearningPath, recordLearningPathSave } from '@/lib/utils/paymentUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -58,6 +60,33 @@ export async function POST(request: NextRequest) {
       focusAreas 
     } = body;
 
+    // Get student's uniqueId - prefer from body, fallback to user.id or fetch from Student model
+    // We need to get the uniqueId for payment checks
+    let studentUniqueId = studentId;
+    
+    // If studentId is not provided or doesn't look like a uniqueId, fetch from Student model
+    if (!studentUniqueId || !studentUniqueId.startsWith('STU')) {
+      const student = await Student.findOne({ userId: decoded.userId });
+      if (student) {
+        studentUniqueId = student.uniqueId;
+      } else {
+        studentUniqueId = user.id; // Fallback
+      }
+    }
+
+    // Check if student can save learning path (has active subscription and hasn't exceeded limit)
+    const canSave = await canSaveLearningPath(studentUniqueId);
+    if (!canSave) {
+      return NextResponse.json(
+        { 
+          error: 'Cannot save learning path',
+          requiresPayment: true,
+          message: 'You have reached the limit for saving learning paths. Please make a payment to save additional paths.'
+        },
+        { status: 403 }
+      );
+    }
+
     // Validate required fields
     if (!careerPath || !description || !learningModules || !Array.isArray(learningModules)) {
       return NextResponse.json(
@@ -100,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     // Create a normalized career details structure for validation
     const careerDetailsForValidation = {
-      uniqueid: studentId || user.uniqueId,
+      uniqueid: studentUniqueId,
       output: {
         greeting: `Hi Student! Welcome to your ${careerPath} learning journey!`,
         overview: Array.isArray(description) ? description : description.split('. ').filter((s: string) => s.trim()),
@@ -112,7 +141,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Normalize and validate the data
-    const normalizedCareerDetails = normalizeCareerDetailsData(careerDetailsForValidation, studentId || user.uniqueId);
+    const normalizedCareerDetails = normalizeCareerDetailsData(careerDetailsForValidation, studentUniqueId);
     
     if (!normalizedCareerDetails) {
       return NextResponse.json(
@@ -212,6 +241,60 @@ export async function POST(request: NextRequest) {
       savedLearningPath = newLearningPathResponse;
       console.log(`✅ Created new learning path for "${careerPath}"${!existingActivePath ? ' (set as active)' : ''}`);
     }
+
+    // CRITICAL: Link temporary subscription (if exists) to this learning path
+    // This handles the case where user paid from career exploration page before learning path was created
+    try {
+      const Subscription = (await import('@/models/Subscription')).default;
+      const Payment = (await import('@/models/Payment')).default;
+      
+      // Find temporary subscription (learningPathId: null) for this student
+      const temporarySubscription = await Subscription.findOne({
+        uniqueId: normalizedCareerDetails.uniqueid,
+        learningPathId: null,
+        isActive: true
+      }).sort({ createdAt: -1 });
+      
+      if (temporarySubscription) {
+        console.log(`🔗 Linking temporary subscription to learning path "${savedLearningPath._id}"`);
+        
+        // Check if there's already a subscription for this learning path
+        const existingSubscription = await Subscription.findOne({
+          uniqueId: normalizedCareerDetails.uniqueid,
+          learningPathId: savedLearningPath._id.toString()
+        });
+        
+        if (!existingSubscription) {
+          // Link temporary subscription to this learning path
+          temporarySubscription.learningPathId = savedLearningPath._id.toString();
+          await temporarySubscription.save();
+          
+          // Also update the payment record to link it to this learning path
+          if (temporarySubscription.paymentId) {
+            const payment = await Payment.findById(temporarySubscription.paymentId);
+            if (payment && !payment.learningPathId) {
+              payment.learningPathId = savedLearningPath._id.toString();
+              if (payment.metadata) {
+                payment.metadata.learningPathId = savedLearningPath._id.toString();
+              }
+              await payment.save();
+              console.log(`✅ Linked payment ${payment._id} to learning path ${savedLearningPath._id}`);
+            }
+          }
+          
+          console.log(`✅ Successfully linked temporary subscription to learning path`);
+        } else {
+          console.log(`⚠️ Subscription already exists for this learning path, keeping temporary subscription separate`);
+        }
+      }
+    } catch (linkError) {
+      console.error('Error linking temporary subscription to learning path:', linkError);
+      // Don't fail the save operation if linking fails
+    }
+
+    // Record learning path save in usage tracking
+    // Pass learningPathId to ensure we increment the counter on the correct subscription
+    await recordLearningPathSave(normalizedCareerDetails.uniqueid, savedLearningPath._id.toString());
 
     return NextResponse.json({
       message: duplicatePaths.length > 0 

@@ -48,12 +48,20 @@ const outputSchema = new mongoose.Schema({
     type: String,
     required: true
   }],
-  learningPath: [learningPathModuleSchema],
+  // Support both 'modules' (new format) and 'learningPath' (old format)
+  modules: {
+    type: [mongoose.Schema.Types.Mixed],
+    required: false
+  },
+  learningPath: {
+    type: [learningPathModuleSchema],
+    required: false
+  },
   finalTip: {
     type: String,
     required: true
   }
-}, { _id: false });
+}, { _id: false, strict: false }); // Use strict: false to allow both formats
 
 const learningPathResponseSchema = new mongoose.Schema({
   output: {
@@ -86,11 +94,16 @@ learningPathResponseSchema.pre('save', function(next) {
   }
   
   // Ensure all required output fields are present
-  const requiredOutputFields = ['greeting', 'overview', 'timeRequired', 'focusAreas', 'learningPath', 'finalTip'] as const;
+  const requiredOutputFields = ['greeting', 'overview', 'timeRequired', 'focusAreas', 'finalTip'] as const;
   for (const field of requiredOutputFields) {
     if (!(this.output as any)[field]) {
       return next(new Error(`Missing required output field: ${field}`));
     }
+  }
+  
+  // Ensure either 'modules' or 'learningPath' is present
+  if (!(this.output as any).modules && !(this.output as any).learningPath) {
+    return next(new Error('Missing required output field: modules or learningPath'));
   }
   
   next();

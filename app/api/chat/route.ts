@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
+import connectDB from '@/lib/mongodb';
+import Student from '@/models/Student';
+import { canUseAIBuddy, recordAIBuddyUsage } from '@/lib/utils/paymentUtils';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export async function POST(request: NextRequest) {
   return handleRequest('POST', request);
@@ -10,21 +16,76 @@ export async function GET(request: NextRequest) {
 
 async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
   try {
+    // Check authentication and subscription for POST requests
+    let studentUniqueId = '';
+    let chapterId = '';
+    let requestBody: any = null;
+    
+    if (method === 'POST') {
+      // Parse request body once
+      requestBody = await request.json();
+      console.log('Received POST body:', JSON.stringify(requestBody, null, 2));
+      
+      // Get token from HTTP-only cookie
+      const token = request.cookies.get('auth-token')?.value;
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+          
+          await connectDB();
+          const student = await Student.findOne({ 
+            userId: decoded.userId,
+            onboardingCompleted: true 
+          });
+
+          if (student) {
+            studentUniqueId = student.uniqueId;
+            chapterId = requestBody.chapterId || '';
+            const learningPathId = requestBody.learningPathId || null;
+            
+            // Check usage limits - require chapterId for authenticated users
+            if (chapterId) {
+              // Pass learningPathId to scope subscription check to specific learning path
+              const usageCheck = await canUseAIBuddy(student.uniqueId, chapterId, learningPathId);
+              if (!usageCheck.allowed) {
+                return NextResponse.json({
+                  success: false,
+                  error: 'Daily chat limit reached for this chapter',
+                  message: `You have used all ${usageCheck.limit} AI Buddy chats for this chapter today. You can still chat in other chapters if you have credits available.`,
+                  limitReached: true,
+                  remaining: usageCheck.remaining,
+                  limit: usageCheck.limit,
+                  chapterId: chapterId
+                }, { status: 403 });
+              }
+            } else {
+              // Require chapterId for authenticated users
+              return NextResponse.json({
+                success: false,
+                error: 'Chapter ID required',
+                message: 'Chapter ID is required to use AI Buddy chat.'
+              }, { status: 400 });
+            }
+          }
+        } catch (err) {
+          console.error('Auth/subscription check error:', err);
+          // Continue without blocking if auth fails (for backward compatibility)
+        }
+      }
+    }
+
     let webhookUrl = process.env.N8N_WEBHOOK_URL || 'https://nclbtaru.app.n8n.cloud/webhook/MCQ';
     let query = '';
     let studentData: Record<string, unknown> = {};
-    let studentUniqueId = '';
     let sessionId = '';
 
     if (method === 'POST') {
-      const body = await request.json();
-      console.log('Received POST body:', JSON.stringify(body, null, 2));
-
-      query = body.query || body.message;
-      studentData = body.studentData || {};
-      studentUniqueId = body.studentUniqueId || '';
-      sessionId = body.sessionId || '';
-      if (body.webhookUrl) webhookUrl = body.webhookUrl;
+      query = requestBody.query || requestBody.message;
+      studentData = requestBody.studentData || {};
+      studentUniqueId = studentUniqueId || requestBody.studentUniqueId || '';
+      sessionId = requestBody.sessionId || '';
+      chapterId = chapterId || requestBody.chapterId || '';
+      if (requestBody.webhookUrl) webhookUrl = requestBody.webhookUrl;
     } else {
       const { searchParams } = new URL(request.url);
       query = searchParams.get('query') || searchParams.get('message') || '';
@@ -165,6 +226,24 @@ async function handleRequest(method: 'GET' | 'POST', request: NextRequest) {
     const { responseText, aiInput, aiResponse, n8nOutput } = extractN8nResponse(rawResponse);
 
     if (webhookResponse.ok) {
+      // Record usage if authenticated and chapterId is available
+      // Pass learningPathId to scope usage tracking to specific learning path subscription
+      if (studentUniqueId && chapterId && method === 'POST') {
+        try {
+          const learningPathId = requestBody.learningPathId || null;
+          await recordAIBuddyUsage(studentUniqueId, chapterId, learningPathId);
+        } catch (err) {
+          console.error('Error recording AI Buddy usage:', err);
+          // Don't fail the request if usage recording fails
+        }
+      } else if (method === 'POST' && studentUniqueId && !chapterId) {
+        // Log warning if chapterId is missing for authenticated users
+        console.warn('AI Buddy usage not recorded: chapterId missing for authenticated user', {
+          studentUniqueId,
+          method
+        });
+      }
+
       return NextResponse.json({
         success: true,
         response: responseText,

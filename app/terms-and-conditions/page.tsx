@@ -33,19 +33,24 @@ const TermsAndConditions = () => {
                 <h2 className="heading-11">8. Payments and Pricing</h2>
                 <p>Where applicable, pricing and subscription details will be clearly communicated on the platform. All payments are subject to the terms presented at the time of purchase.</p>
                 <p>Taru reserves the right to update pricing or offerings with prior notice.<br />‍</p>
-                <h2 className="heading-11">9. Third-Party Services</h2>
+                <h2 className="heading-11">9. Cancellations and Refunds</h2>
+                <p>Taru believes in transparency and fairness in all transactions. Subscription plans, if applicable, are clearly described at the time of purchase.</p>
+                <p>Cancellations may be requested according to the plan terms communicated during onboarding or purchase. Access to paid features may continue until the end of the current billing period unless stated otherwise.</p>
+                <p>Refunds, where applicable, are evaluated on a case-by-case basis and may be provided only if required by applicable laws or explicitly mentioned in the purchase terms. Taru does not guarantee refunds for partial usage, completed assessments, or accessed learning content.</p>
+                <p>For cancellation or refund-related requests, users should contact Taru through official support channels with relevant account details.<br />‍</p>
+                <h2 className="heading-11">10. Third-Party Services</h2>
                 <p>Taru may integrate third-party tools or services to support platform functionality. Taru is not responsible for the content or practices of external services, and use of such services is subject to their respective terms.<br />‍</p>
-                <h2 className="heading-11">10. Account Suspension and Termination</h2>
+                <h2 className="heading-11">11. Account Suspension and Termination</h2>
                 <p>Taru reserves the right to suspend or terminate access to the platform if users violate these Terms, misuse the platform, or engage in harmful behavior.</p>
                 <p>Users may request account termination at any time through official support channels.<br />‍</p>
-                <h2 className="heading-11">11. Limitation of Liability</h2>
+                <h2 className="heading-11">12. Limitation of Liability</h2>
                 <p>Taru is provided on an "as is" and "as available" basis. While we strive for accuracy and reliability, Taru does not guarantee uninterrupted access or specific outcomes.</p>
                 <p>Taru shall not be liable for any indirect, incidental, or consequential damages arising from use of the platform.<br />‍</p>
-                <h2 className="heading-11">12. Changes to These Terms</h2>
+                <h2 className="heading-11">13. Changes to These Terms</h2>
                 <p>Taru may update these Terms and Conditions periodically. Continued use of the platform after updates indicates acceptance of the revised Terms.<br />‍</p>
-                <h2 className="heading-11">13. Governing Law</h2>
+                <h2 className="heading-11">14. Governing Law</h2>
                 <p>These Terms shall be governed by and interpreted in accordance with the laws applicable in India, without regard to conflict of law principles.<br />‍</p>
-                <h2 className="heading-11">14. Contact Information</h2>
+                <h2 className="heading-11">15. Contact Information</h2>
                 <p>If you have questions about these Terms and Conditions, please contact Taru through official communication channels.</p>
                 <p>We are committed to transparency, fairness, and responsible platform use.</p>
               </div>

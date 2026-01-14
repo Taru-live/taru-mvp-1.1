@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import ConsistentLoadingPage from '../components/ConsistentLoadingPage';
+import RazorpayPaymentModal from '@/components/RazorpayPaymentModal';
 
 interface CareerOption {
   ID: string;
@@ -83,6 +84,17 @@ export default function CareerExploration() {
   const [touchEndX, setTouchEndX] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedCareer, setSelectedCareer] = useState<{career: string; description: string} | null>(null);
+  const [hasSubscription, setHasSubscription] = useState<boolean | null>(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
+
+  // Check subscription status on mount
+  useEffect(() => {
+    checkSubscriptionStatus();
+  }, []);
 
   // Load preserved career options from localStorage on mount
   useEffect(() => {
@@ -104,6 +116,30 @@ export default function CareerExploration() {
     // Only fetch if no preserved options exist
     fetchCareerOptions();
   }, []);
+
+  const checkSubscriptionStatus = async () => {
+    try {
+      setCheckingSubscription(true);
+      // For career exploration page, check for temporary subscription (initial access)
+      // learningPathId is null because learning path hasn't been created yet
+      const response = await fetch('/api/payments/subscription-status?learningPathId=', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Check for temporary subscription (initial access) or any active subscription
+        setHasSubscription(data.hasSubscription || false);
+      } else {
+        setHasSubscription(false);
+      }
+    } catch (err) {
+      console.error('Error checking subscription:', err);
+      setHasSubscription(false);
+    } finally {
+      setCheckingSubscription(false);
+    }
+  };
 
   // Update scroll state when career options change
   useEffect(() => {
@@ -245,16 +281,54 @@ export default function CareerExploration() {
     }
     
     console.log('🔍 Learn More clicked for career:', { career, description });
-    setIsNavigating(true);
     
-    // Navigate to detailed career page with career path and description parameters
+    // Check if user has active subscription
+    if (hasSubscription === false) {
+      // Show payment modal
+      setSelectedCareer({ career, description });
+      setShowPaymentModal(true);
+      return;
+    }
+    
+    // If subscription check is still pending, wait a bit
+    if (hasSubscription === null) {
+      setTimeout(() => {
+        handleLearnMore(career, description);
+      }, 500);
+      return;
+    }
+    
+    // User has subscription, proceed to career details
+    setIsNavigating(true);
     router.push(`/career-details?careerPath=${encodeURIComponent(career)}&description=${encodeURIComponent(description)}`);
     
     // Reset navigation state after a short delay
     setTimeout(() => {
       setIsNavigating(false);
     }, 1000);
-  }, [isNavigating, router]);
+  }, [isNavigating, router, hasSubscription]);
+
+  const handlePaymentSuccess = () => {
+    setHasSubscription(true);
+    setShowPaymentModal(false);
+    
+    // If a career was selected before payment, redirect to career details page
+    if (selectedCareer) {
+      setIsNavigating(true);
+      router.push(`/career-details?careerPath=${encodeURIComponent(selectedCareer.career)}&description=${encodeURIComponent(selectedCareer.description)}`);
+      setTimeout(() => {
+        setIsNavigating(false);
+        setSelectedCareer(null);
+      }, 1000);
+    } else {
+      // If no career was selected, redirect to dashboard
+      setIsNavigating(true);
+      router.push('/dashboard/student?tab=learning-path');
+      setTimeout(() => {
+        setIsNavigating(false);
+      }, 1000);
+    }
+  };
 
   if (loading) {
     return (
@@ -644,6 +718,19 @@ export default function CareerExploration() {
           </motion.div>
         </main>
       </div>
+
+      {/* Payment Modal */}
+      <RazorpayPaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setSelectedCareer(null);
+        }}
+        onSuccess={handlePaymentSuccess}
+        planType="basic"
+        paymentFor="career_access"
+        amount={99}
+      />
     </div>
   );
 }

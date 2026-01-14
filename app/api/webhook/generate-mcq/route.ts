@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
+import { canGenerateMCQ, recordMCQUsage } from '@/lib/utils/paymentUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const MCQ_WEBHOOK_URL = 'https://nclbtaru.app.n8n.cloud/webhook/MCQ/Flash/questions';
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const { chapterId } = await request.json();
+    const { chapterId, learningPathId } = await request.json();
     
     if (!chapterId) {
       return NextResponse.json(
@@ -61,9 +62,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if student can generate MCQ for this specific chapter
+    // Pass learningPathId to scope subscription check to specific learning path
+    const usageCheck = await canGenerateMCQ(student.uniqueId, chapterId, learningPathId || null);
+    
+    console.log('🧠 MCQ usage check result:', {
+      allowed: usageCheck.allowed,
+      remaining: usageCheck.remaining,
+      limit: usageCheck.limit,
+      chapterId: chapterId
+    });
+    
+    if (!usageCheck.allowed) {
+      // Provide more helpful error messages
+      let errorMessage = 'Unable to generate MCQ questions';
+      if (usageCheck.limit === 0) {
+        errorMessage = 'No active subscription found. Please subscribe to generate MCQ questions.';
+      } else if (usageCheck.remaining === 0) {
+        errorMessage = `You have used all ${usageCheck.limit} MCQ generations for this chapter this month. You can still generate MCQs for other chapters.`;
+      } else {
+        errorMessage = `Monthly MCQ limit reached for this chapter. You have ${usageCheck.remaining} remaining for other chapters.`;
+      }
+      
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Monthly MCQ limit reached for this chapter',
+          message: errorMessage,
+          limitReached: true,
+          remaining: usageCheck.remaining,
+          limit: usageCheck.limit,
+          chapterId: chapterId,
+          hasSubscription: usageCheck.limit > 0
+        },
+        { status: 403 }
+      );
+    }
+
     console.log('🧠 Generating MCQ for:', {
       uniqueId: student.uniqueId,
-      chapterId: chapterId
+      chapterId: chapterId,
+      remaining: usageCheck.remaining
     });
 
     // Prepare data for N8N webhook
@@ -158,12 +197,20 @@ export async function POST(request: NextRequest) {
         );
       }
       
+      // Record MCQ usage for this specific chapter
+      // Pass learningPathId to scope usage tracking to specific learning path subscription
+      await recordMCQUsage(student.uniqueId, chapterId, learningPathId || null);
+
       return NextResponse.json({
         success: true,
         message: 'MCQ questions generated successfully',
         questions: questions,
         chapterId: chapterId,
-        uniqueId: student.uniqueId
+        uniqueId: student.uniqueId,
+        usage: {
+          remaining: usageCheck.remaining - 1,
+          limit: usageCheck.limit
+        }
       });
       } else {
         console.error('🧠 Failed to generate MCQ:', webhookResponse.status, webhookResponse.statusText);

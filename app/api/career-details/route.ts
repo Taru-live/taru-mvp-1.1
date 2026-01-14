@@ -5,6 +5,7 @@ import Student from '@/models/Student';
 import LearningPath from '@/models/LearningPath';
 import CareerSession from '@/models/CareerSession';
 import { processLearningPathData, saveLearningPathToDatabase, getLearningPathByCareer, saveN8NLearningPathResponse } from '@/lib/utils/learningPathUtils';
+import { hasActiveSubscription } from '@/lib/utils/paymentUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const N8N_CAREER_DETAILS_WEBHOOK_URL = 'https://nclbtaru.app.n8n.cloud/webhook/detail-career-path';
@@ -416,6 +417,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if student has active subscription
+    const hasSubscription = await hasActiveSubscription(student.uniqueId);
+    if (!hasSubscription) {
+      return NextResponse.json(
+        { 
+          error: 'Active subscription required',
+          requiresPayment: true,
+          message: 'Please complete payment to access career details'
+        },
+        { status: 403 }
+      );
+    }
+
     // Get request body for career path details
     const { careerPath, description } = await request.json();
 
@@ -598,6 +612,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Student not found' },
         { status: 404 }
+      );
+    }
+
+    // Check if student has active subscription
+    const hasSubscription = await hasActiveSubscription(student.uniqueId);
+    if (!hasSubscription) {
+      return NextResponse.json(
+        { 
+          error: 'Active subscription required',
+          requiresPayment: true,
+          message: 'Please complete payment to access career details'
+        },
+        { status: 403 }
       );
     }
 

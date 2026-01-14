@@ -28,9 +28,13 @@ import {
   Globe,
   Lock,
   Unlock,
-  ChevronRight
+  ChevronRight,
+  MessageCircle,
+  Brain,
+  Sparkles
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import RazorpayPaymentModal from '@/components/RazorpayPaymentModal';
 
 interface LearningPath {
   _id: string;
@@ -45,6 +49,7 @@ interface LearningPath {
       description: string;
       chapters?: Array<{
         title: string;
+        description?: string; // Optional description for chapters
       }>;
     }>;
   }>;
@@ -53,6 +58,7 @@ interface LearningPath {
   createdAt: string;
   updatedAt: string;
   isActive?: boolean;
+  rawOutput?: any; // Include raw output for detailed view
 }
 
 interface LearningPathTabProps {
@@ -79,6 +85,12 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
   const [selectedPathDetails, setSelectedPathDetails] = useState<LearningPath | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const router = useRouter();
+  
+  // Subscription and payment state
+  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentForLearningPath, setPaymentForLearningPath] = useState(false);
+  const [upgradeForPath, setUpgradeForPath] = useState<LearningPath | null>(null);
 
   // Helper function to normalize career path title for comparison
   const normalizeCareerPath = (careerPath: string): string => {
@@ -99,6 +111,39 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Invalid date';
+    }
+  };
+
+  // Fetch subscription status for a specific learning path
+  // Note: The API automatically corrects subscription plan based on most recent completed payment
+  // This ensures the UI always displays the correct plan (₹99=Basic, ₹199=Premium) derived from actual payment amount
+  const fetchSubscriptionStatus = async (pathId?: string) => {
+    try {
+      const learningPathId = pathId || currentPath?._id || null;
+      const url = learningPathId 
+        ? `/api/payments/subscription-status?learningPathId=${encodeURIComponent(learningPathId)}`
+        : '/api/payments/subscription-status';
+      
+      console.log('📡 Fetching subscription status from:', url);
+      
+      const response = await fetch(url, {
+        credentials: 'include',
+        cache: 'no-store' // Ensure we always get fresh data
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📥 Subscription status response:', data);
+        
+        // The API has already auto-corrected the subscription based on payment amount
+        // So we can trust the planType and planAmount values
+        setSubscriptionStatus(data);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Error fetching subscription status:', response.status, errorData);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching subscription status:', err);
     }
   };
 
@@ -125,10 +170,31 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
       
       if (response.ok) {
         const data = await response.json();
-        console.log('🔍 Learning paths data received:', data);
+        console.log('🔍 Learning paths API response:', {
+          status: response.status,
+          data: data,
+          learningPathsCount: data.learningPaths?.length || 0,
+          hasLearningPaths: !!data.learningPaths,
+          dataKeys: Object.keys(data)
+        });
         
         // Remove duplicates - keep only the most recent one for each career path title
         const allPaths = data.learningPaths || [];
+        
+        if (allPaths.length === 0) {
+          console.log('⚠️ No learning paths found in response. User may need to create a learning path first.');
+        }
+        
+        // Log first path structure for debugging
+        if (allPaths.length > 0) {
+          console.log('🔍 First learning path structure:', {
+            careerPath: allPaths[0].careerPath,
+            modulesCount: allPaths[0].learningModules?.length || 0,
+            firstModule: allPaths[0].learningModules?.[0],
+            hasSubmodules: allPaths[0].learningModules?.[0]?.submodules?.length > 0,
+            firstSubmodule: allPaths[0].learningModules?.[0]?.submodules?.[0]
+          });
+        }
         const uniquePathsMap = new Map<string, LearningPath>();
         
         allPaths.forEach((path: LearningPath) => {
@@ -226,7 +292,15 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
         setTimeout(() => setSuccess(null), 3000);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to save learning path');
+        const requiresPayment = errorData.requiresPayment || false;
+        
+        if (requiresPayment) {
+          setError('You have reached the limit for saving learning paths. Please make a payment to save additional paths.');
+          setPaymentForLearningPath(true);
+          setShowPaymentModal(true);
+        } else {
+          setError(errorData.error || 'Failed to save learning path');
+        }
       }
     } catch (err) {
       console.error('Error saving learning path:', err);
@@ -325,6 +399,9 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
           }))
         );
         
+        // Fetch subscription status for this learning path
+        fetchSubscriptionStatus(path._id);
+        
         setSuccess('Learning path activated successfully!');
         setTimeout(() => setSuccess(null), 3000);
       } else {
@@ -346,6 +423,36 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
       setLoading(false);
     }
   }, [user?.uniqueId]);
+
+  // Fetch subscription status when current path changes
+  useEffect(() => {
+    if (currentPath?._id) {
+      console.log('🔄 Fetching subscription status for learning path:', currentPath._id);
+      fetchSubscriptionStatus(currentPath._id);
+    } else if (learningPaths.length > 0) {
+      // If no current path but we have learning paths, fetch for the first one
+      console.log('🔄 No current path, fetching subscription status for first learning path:', learningPaths[0]._id);
+      fetchSubscriptionStatus(learningPaths[0]._id);
+    } else {
+      console.log('🔄 Fetching global subscription status');
+      fetchSubscriptionStatus();
+    }
+  }, [currentPath?._id, learningPaths.length]);
+
+  const handlePaymentSuccess = async () => {
+    setShowPaymentModal(false);
+    setPaymentForLearningPath(false);
+    const pathId = upgradeForPath?._id || currentPath?._id;
+    await fetchSubscriptionStatus(pathId);
+    setUpgradeForPath(null);
+    if (paymentForLearningPath) {
+      // Retry saving the learning path after payment
+      setSuccess('Payment successful! You can now save your learning path.');
+    } else {
+      // Payment was for subscription, show success message
+      setSuccess('Payment successful! Your subscription is now active.');
+    }
+  };
 
   if (loading) {
     return (
@@ -417,6 +524,29 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
                   AI-Powered
                 </div>
+                {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription && (
+                  <>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-green-600 bg-green-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
+                      {subscriptionStatus.subscription.planType === 'basic' ? 'Basic Plan' : 'Premium Plan'}
+                      <span className="text-gray-600">(₹{subscriptionStatus.subscription.planAmount}/month)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-purple-600 bg-purple-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                      <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>{subscriptionStatus.subscription.dailyChatLimit} chats/day/chapter</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-blue-600 bg-blue-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                      <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>{subscriptionStatus.subscription.monthlyMcqLimit} MCQs/month/chapter</span>
+                    </div>
+                  </>
+                )}
+                {(!subscriptionStatus?.hasSubscription) && (
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-orange-600 bg-orange-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                    <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span>No active subscription</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -564,6 +694,34 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                   </motion.div>
                 )}
 
+                {/* Current Plan Badge */}
+                {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription && (
+                  <motion.div 
+                    className={`absolute top-4 ${currentPath?._id === path._id ? 'right-24 sm:right-32 md:right-40' : 'right-4'} sm:top-6 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1 sm:gap-2 shadow-xl z-20 ${
+                      subscriptionStatus.subscription.planType === 'premium'
+                        ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                    }`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                  >
+                    {subscriptionStatus.subscription.planType === 'premium' ? (
+                      <>
+                        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                        <span className="hidden sm:inline">Premium Plan</span>
+                        <span className="sm:hidden">Premium</span>
+                      </>
+                    ) : (
+                      <>
+                        <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                        <span className="hidden sm:inline">Basic Plan</span>
+                        <span className="sm:hidden">Basic</span>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+
                 {/* Path Header */}
                 <div className="relative z-10">
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-4 sm:mb-6 gap-4">
@@ -672,6 +830,119 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                       )}
                     </div>
                   </div>
+
+                  {/* Plan Status and Upgrade Button */}
+                  {!isParentView && (
+                    <>
+                      {/* Show current plan info with benefits */}
+                      {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription && (
+                        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl border border-purple-200">
+                          <div className="flex items-start justify-between gap-3 sm:gap-4 mb-3">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              {subscriptionStatus.subscription.planType === 'premium' ? (
+                                <>
+                                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs sm:text-sm text-gray-600 font-medium">Current Plan</p>
+                                    <p className="text-sm sm:text-base font-bold text-gray-900">
+                                      Premium Plan (₹{subscriptionStatus.subscription.planAmount || 199}/month)
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                      {subscriptionStatus.subscription.planBenefits?.description || 'Maximum benefits unlocked'}
+                                    </p>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs sm:text-sm text-gray-600 font-medium">Current Plan</p>
+                                    <p className="text-sm sm:text-base font-bold text-gray-900">
+                                      Basic Plan (₹{subscriptionStatus.subscription.planAmount || 99}/month)
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                      {subscriptionStatus.subscription.planBenefits?.description || 'Essential features included'}
+                                    </p>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs sm:text-sm text-gray-600 font-medium">Usage Limits</p>
+                              <p className="text-xs sm:text-sm font-semibold text-gray-900">
+                                {subscriptionStatus.subscription.dailyChatLimit || 0} chats/day/chapter
+                              </p>
+                              <p className="text-xs sm:text-sm font-semibold text-gray-900">
+                                {subscriptionStatus.subscription.monthlyMcqLimit || 0} MCQs/month/chapter
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Plan Benefits List */}
+                          {subscriptionStatus.subscription.planBenefits?.features && (
+                            <div className="mt-3 pt-3 border-t border-purple-200">
+                              <p className="text-xs font-semibold text-gray-700 mb-2">Plan Benefits:</p>
+                              <ul className="space-y-1">
+                                {subscriptionStatus.subscription.planBenefits.features.map((feature: string, idx: number) => (
+                                  <li key={idx} className="flex items-center gap-2 text-xs text-gray-600">
+                                    <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Upgrade Button - Show for Basic plan or when no subscription */}
+                      {/* CRITICAL: Always show upgrade option if plan is Basic (not Premium) */}
+                      {(!subscriptionStatus?.hasSubscription || 
+                        subscriptionStatus?.subscription?.planType !== 'premium') && (
+                        <motion.button
+                          onClick={() => {
+                            setUpgradeForPath(path);
+                            setShowPaymentModal(true);
+                          }}
+                          className="group w-full py-2.5 sm:py-3 md:py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 text-white rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl mb-3 sm:mb-4"
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform duration-300" />
+                          <span className="hidden sm:inline">
+                            {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription?.planType === 'basic' 
+                              ? 'Upgrade to Premium (₹199/month)' 
+                              : 'Subscribe to Premium (₹199/month)'}
+                          </span>
+                          <span className="sm:hidden">
+                            {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription?.planType === 'basic' 
+                              ? 'Upgrade ₹199' 
+                              : 'Subscribe ₹199'}
+                          </span>
+                          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                        </motion.button>
+                      )}
+
+                      {/* Premium Plan Badge - Show if already premium */}
+                      {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription?.planType === 'premium' && (
+                        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 rounded-xl sm:rounded-2xl border-2 border-yellow-300">
+                          <div className="flex items-center justify-center gap-2 sm:gap-3">
+                            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+                            <div className="text-center">
+                              <p className="text-sm sm:text-base font-bold text-gray-900">You're on Premium Plan!</p>
+                              <p className="text-xs sm:text-sm text-gray-600">
+                                ₹{subscriptionStatus.subscription?.planAmount || 199}/month • Enjoy maximum benefits
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
 
                   {/* Enhanced View Details Button */}
                   <motion.button
@@ -919,16 +1190,24 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                                       
                                       {/* Chapters */}
                                       {submodule.chapters && submodule.chapters.length > 0 && (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
-                                          {submodule.chapters.map((chapter, chapterIndex) => (
-                                            <div
-                                              key={chapterIndex}
-                                              className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700"
-                                            >
-                                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                                              <span className="truncate">{chapter.title}</span>
-                                            </div>
-                                          ))}
+                                        <div className="space-y-2 sm:space-y-2.5">
+                                          <h6 className="text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Chapters:</h6>
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                                            {submodule.chapters.map((chapter, chapterIndex) => (
+                                              <div
+                                                key={chapterIndex}
+                                                className="flex items-start gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700 bg-gray-50 p-2 rounded-lg"
+                                              >
+                                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></div>
+                                                <div className="flex-1 min-w-0">
+                                                  <span className="font-medium truncate block">{chapter.title}</span>
+                                                  {chapter.description && (
+                                                    <span className="text-gray-500 text-xs mt-0.5 block line-clamp-1">{chapter.description}</span>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
                                         </div>
                                       )}
                                     </div>
@@ -940,6 +1219,210 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                         );
                       })}
                     </div>
+                  </div>
+                )}
+
+                {/* Subscription Status */}
+                {subscriptionStatus && (
+                  <div className="pt-4 sm:pt-5 md:pt-6 border-t border-gray-200">
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
+                      Subscription & Limits
+                    </h3>
+                    {subscriptionStatus.hasSubscription && subscriptionStatus.subscription ? (
+                      <>
+                        {/* Current Plan Display */}
+                        <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg sm:rounded-xl border-2 border-green-300">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 sm:gap-4">
+                              {subscriptionStatus.subscription.planType === 'premium' ? (
+                                <>
+                                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                                    <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Current Plan</p>
+                                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Premium Plan</p>
+                                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                      ₹{subscriptionStatus.subscription.planAmount || 199}/month • Maximum benefits unlocked
+                                    </p>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                                    <Star className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Current Plan</p>
+                                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Basic Plan</p>
+                                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                      ₹{subscriptionStatus.subscription.planAmount || 99}/month • Upgrade available
+                                    </p>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Limits Display */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                          <div className="p-3 sm:p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg sm:rounded-xl border border-purple-200">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                              <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 flex-shrink-0" />
+                              <div>
+                                <p className="text-xs sm:text-sm text-gray-600 font-medium">AI Buddy Chats</p>
+                                <p className="text-base sm:text-lg font-bold text-gray-900">
+                                  {subscriptionStatus.subscription?.dailyChatLimit || 0} per day per chapter
+                                </p>
+                                {subscriptionStatus.usage && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {subscriptionStatus.usage.dailyChatsRemaining || 0} remaining today
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl border border-blue-200">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+                              <div>
+                                <p className="text-xs sm:text-sm text-gray-600 font-medium">MCQ Generations</p>
+                                <p className="text-base sm:text-lg font-bold text-gray-900">
+                                  {subscriptionStatus.subscription?.monthlyMcqLimit || 0} per month per chapter
+                                </p>
+                                {subscriptionStatus.usage && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {subscriptionStatus.usage.monthlyMcqsRemaining || 0} remaining this month
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Plan Benefits */}
+                        {subscriptionStatus.subscription?.planBenefits?.features && (
+                          <div className="mb-4 p-4 bg-white rounded-lg sm:rounded-xl border border-gray-200">
+                            <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-purple-600" />
+                              Plan Benefits
+                            </p>
+                            <ul className="space-y-2">
+                              {subscriptionStatus.subscription.planBenefits.features.map((feature: string, idx: number) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* No Subscription Message */}
+                        {!subscriptionStatus.hasSubscription && !isParentView && (
+                          <div className="mb-4 p-4 sm:p-5 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg sm:rounded-xl border-2 border-gray-300">
+                            <div className="flex items-center gap-3 mb-3">
+                              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 flex-shrink-0" />
+                              <div>
+                                <p className="text-sm sm:text-base font-semibold text-gray-900">No Active Subscription</p>
+                                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                  Subscribe to unlock features for this learning path
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Upgrade Option - Show for Basic plan or when no subscription */}
+                        {/* CRITICAL: Always show upgrade option if plan is Basic */}
+                        {((subscriptionStatus.hasSubscription && subscriptionStatus.subscription?.planType === 'basic') || 
+                          !subscriptionStatus.hasSubscription) && !isParentView && (
+                          <div className="p-4 sm:p-5 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg sm:rounded-xl border-2 border-yellow-300">
+                            <div className="flex items-center justify-between gap-4 mb-3">
+                              <div className="flex items-center gap-3">
+                                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0" />
+                                <div>
+                                  <p className="text-sm sm:text-base font-semibold text-gray-900">
+                                    {subscriptionStatus.subscription?.planType === 'basic' 
+                                      ? 'Upgrade to Premium' 
+                                      : subscriptionStatus.hasSubscription && subscriptionStatus.subscription?.planType === 'premium'
+                                      ? 'You\'re on Premium Plan'
+                                      : 'Subscribe to Premium Plan'}
+                                  </p>
+                                  <p className="text-xs sm:text-sm text-gray-600">
+                                    {subscriptionStatus.subscription?.planType === 'basic' 
+                                      ? 'Get 5 chats/day and 5 MCQs/month per chapter - ₹199/month'
+                                      : subscriptionStatus.hasSubscription && subscriptionStatus.subscription?.planType === 'premium'
+                                      ? 'Enjoy maximum benefits with Premium features'
+                                      : 'Get 5 chats/day and 5 MCQs/month per chapter - ₹199/month'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            {subscriptionStatus.subscription?.planType !== 'premium' && (
+                              <motion.button
+                                onClick={() => {
+                                  setUpgradeForPath(selectedPathDetails);
+                                  setShowPaymentModal(true);
+                                  setShowDetailsModal(false);
+                                }}
+                                className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                                {subscriptionStatus.subscription?.planType === 'basic' 
+                                  ? 'Upgrade to Premium (₹199/month)' 
+                                  : 'Subscribe to Premium (₹199/month)'}
+                                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </motion.button>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Premium Badge - Show if already premium */}
+                        {subscriptionStatus.subscription?.planType === 'premium' && (
+                          <div className="p-4 sm:p-5 bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 rounded-lg sm:rounded-xl border-2 border-yellow-300">
+                            <div className="flex items-center justify-center gap-3 sm:gap-4">
+                              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
+                              <div className="text-center">
+                                <p className="text-base sm:text-lg font-bold text-gray-900">You're on Premium Plan!</p>
+                                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                  ₹{subscriptionStatus.subscription?.planAmount || 199}/month • Enjoy maximum benefits with {subscriptionStatus.subscription?.dailyChatLimit || 5} chats/day and {subscriptionStatus.subscription?.monthlyMcqLimit || 5} MCQs/month per chapter
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="p-4 sm:p-5 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg sm:rounded-xl border border-orange-200">
+                        <div className="flex items-center gap-3 sm:gap-4 mb-3">
+                          <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm sm:text-base font-semibold text-gray-900">No Active Subscription</p>
+                            <p className="text-xs sm:text-sm text-gray-600">Subscribe to access AI Buddy chats and MCQ generation</p>
+                          </div>
+                        </div>
+                        {!isParentView && (
+                          <motion.button
+                            onClick={() => {
+                              setUpgradeForPath(selectedPathDetails);
+                              setShowPaymentModal(true);
+                              setShowDetailsModal(false);
+                            }}
+                            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Subscribe to Basic Plan (₹99/month)
+                          </motion.button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1033,6 +1516,36 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Payment Modal */}
+      <RazorpayPaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPaymentForLearningPath(false);
+          setUpgradeForPath(null);
+        }}
+        onSuccess={handlePaymentSuccess}
+        planType={
+          // If user has Basic plan, upgrade to Premium
+          // If user has Premium plan or no subscription, default to Premium (but this shouldn't happen due to button logic)
+          subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription?.planType === 'basic' 
+            ? 'premium' 
+            : 'premium' // Always show Premium option for upgrades/new subscriptions
+        }
+        paymentFor={paymentForLearningPath ? "learning_path_save" : upgradeForPath ? "career_access" : "career_access"}
+        learningPathId={
+          paymentForLearningPath 
+            ? undefined // learning_path_save doesn't require learningPathId
+            : (upgradeForPath?._id || currentPath?._id || undefined) // career_access requires learningPathId
+        }
+        amount={
+          // Always charge ₹199 for Premium plan (upgrade from Basic or new Premium subscription)
+          subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription?.planType === 'basic' 
+            ? 199  // Premium upgrade from Basic
+            : 199  // Premium subscription (default)
+        }
+      />
     </div>
   );
 }

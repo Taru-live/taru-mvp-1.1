@@ -144,9 +144,12 @@ export async function GET(request: NextRequest) {
 
     if (effectiveStudentId) {
       // Get learning paths for specific student from learning-path-responses collection
+      console.log(`🔍 Fetching learning paths for student: ${effectiveStudentId}`);
       const learningPathResponses = await LearningPathResponse.find({ 
         uniqueid: effectiveStudentId 
       }).sort({ updatedAt: -1 });
+      
+      console.log(`📊 Found ${learningPathResponses.length} learning path response(s) in database for student ${effectiveStudentId}`);
 
       // Helper function to extract and normalize career path from greeting
       const extractCareerPath = (greeting: string): string => {
@@ -247,19 +250,57 @@ export async function GET(request: NextRequest) {
       }
       
       // Transform the kept paths to match the expected format
+      // Handle both 'modules' and 'learningPath' structures from the collection
       const learningPaths = pathsToKeep
-        .map(response => ({
-          _id: response._id.toString(),
-          studentId: response.uniqueid,
-          careerPath: extractCareerPath(response.output.greeting || '') || 'Career Path',
-          description: response.output.overview?.join(' ') || 'Learning path description',
-          learningModules: response.output.learningPath || [],
-          timeRequired: response.output.timeRequired || 'Not specified',
-          focusAreas: response.output.focusAreas || [],
-          createdAt: response.createdAt ? (response.createdAt instanceof Date ? response.createdAt.toISOString() : response.createdAt) : new Date().toISOString(),
-          updatedAt: response.updatedAt ? (response.updatedAt instanceof Date ? response.updatedAt.toISOString() : response.updatedAt) : new Date().toISOString(),
-          isActive: response.isActive || false
-        }))
+        .map(response => {
+          const output = response.output as any;
+          
+          // Check if data uses 'modules' structure (new format) or 'learningPath' structure (old format)
+          const modulesData = output.modules || output.learningPath || [];
+          
+          // Transform modules structure to learningPath format if needed
+          let learningModules: any[] = [];
+          
+          if (modulesData.length > 0) {
+            // Check if it's the new format (has moduleId/moduleTitle) or old format
+            const firstModule = modulesData[0];
+            const isNewFormat = firstModule.moduleId !== undefined || firstModule.moduleTitle !== undefined;
+            
+            if (isNewFormat) {
+              // New format with moduleId, moduleTitle, moduleDescription
+              learningModules = modulesData.map((module: any) => ({
+                module: module.moduleTitle || module.module || '',
+                description: module.moduleDescription || module.description || '',
+                submodules: (module.submodules || []).map((submodule: any) => ({
+                  title: submodule.submoduleTitle || submodule.title || '',
+                  description: submodule.submoduleDescription || submodule.description || '',
+                  chapters: (submodule.chapters || []).map((chapter: any) => ({
+                    title: chapter.chapterTitle || chapter.title || '',
+                    description: chapter.chapterDescription || chapter.description || undefined
+                  }))
+                }))
+              }));
+            } else {
+              // Old format already in learningPath structure
+              learningModules = modulesData;
+            }
+          }
+          
+          return {
+            _id: response._id.toString(),
+            studentId: response.uniqueid,
+            careerPath: extractCareerPath(output.greeting || '') || 'Career Path',
+            description: Array.isArray(output.overview) ? output.overview.join(' ') : (output.overview || 'Learning path description'),
+            learningModules: learningModules,
+            timeRequired: output.timeRequired || 'Not specified',
+            focusAreas: Array.isArray(output.focusAreas) ? output.focusAreas : [],
+            createdAt: response.createdAt ? (response.createdAt instanceof Date ? response.createdAt.toISOString() : response.createdAt) : new Date().toISOString(),
+            updatedAt: response.updatedAt ? (response.updatedAt instanceof Date ? response.updatedAt.toISOString() : response.updatedAt) : new Date().toISOString(),
+            isActive: response.isActive || false,
+            // Include raw output for detailed view
+            rawOutput: output
+          };
+        })
         .sort((a, b) => {
           // Sort by isActive first (active paths first), then by updatedAt
           if (a.isActive !== b.isActive) {
@@ -273,6 +314,35 @@ export async function GET(request: NextRequest) {
       const duplicateCount = learningPathResponses.length - learningPaths.length;
       if (duplicateCount > 0) {
         console.log(`✅ Cleaned up ${duplicateCount} duplicate learning path(s) from database for student ${effectiveStudentId}`);
+      }
+
+      // Log transformation results for debugging
+      console.log('📋 Learning paths transformation complete:', {
+        originalCount: learningPathResponses.length,
+        transformedCount: learningPaths.length,
+        studentId: effectiveStudentId
+      });
+      
+      if (learningPaths.length > 0) {
+        console.log('📋 Transformed learning paths:', {
+          count: learningPaths.length,
+          firstPath: {
+            careerPath: learningPaths[0].careerPath,
+            modulesCount: learningPaths[0].learningModules?.length || 0,
+            firstModuleStructure: learningPaths[0].learningModules?.[0]
+          }
+        });
+      } else {
+        console.log('⚠️ No learning paths found after transformation. Original responses:', {
+          count: learningPathResponses.length,
+          responses: learningPathResponses.map(r => ({
+            id: r._id,
+            hasOutput: !!r.output,
+            hasGreeting: !!r.output?.greeting,
+            uniqueid: r.uniqueid,
+            isActive: r.isActive
+          }))
+        });
       }
 
       return NextResponse.json({
