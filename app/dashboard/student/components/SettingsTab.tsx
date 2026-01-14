@@ -36,6 +36,10 @@ interface ProfileData {
   interestsOutsideClass?: string[];
   preferredCareerDomains?: string[];
   avatar?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  guardianName?: string;
+  location?: string;
 }
 
 interface SettingsTabProps {
@@ -64,6 +68,10 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
     school: profile.school || '',
     language: profile.language || 'English',
     studentKey: profile.studentKey || '',
+    dateOfBirth: profile.dateOfBirth || '',
+    gender: profile.gender || '',
+    guardianName: profile.guardianName || '',
+    location: profile.location || '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,15 +103,36 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
           grade: editedProfile.grade,
           school: editedProfile.school,
           language: editedProfile.language,
+          dateOfBirth: editedProfile.dateOfBirth,
+          gender: editedProfile.gender,
+          guardianName: editedProfile.guardianName,
+          location: editedProfile.location,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || 'Failed to update profile' };
+        }
         throw new Error(errorData.error || 'Failed to update profile');
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      if (!responseText) {
+        throw new Error('Empty response from server');
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Response text:', responseText);
+        throw new Error('Invalid response from server');
+      }
       
       // Update the profile data using the response data
       if (onProfileUpdate && data.profile) {
@@ -112,6 +141,10 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
           grade: data.profile.grade,
           school: data.profile.school,
           language: data.profile.language,
+          dateOfBirth: data.profile.dateOfBirth,
+          gender: data.profile.gender,
+          guardianName: data.profile.guardianName,
+          location: data.profile.location,
         });
       }
 
@@ -121,6 +154,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
+      console.error('Profile update error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -135,6 +169,10 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
       school: profile.school,
       language: profile.language,
       studentKey: profile.studentKey,
+      dateOfBirth: profile.dateOfBirth,
+      gender: profile.gender,
+      guardianName: profile.guardianName,
+      location: profile.location,
     });
     setIsEditing(false);
     setError(null);
@@ -338,8 +376,9 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                   <div className="relative">
                     <input
                       type="date"
+                      value={editedProfile.dateOfBirth ? new Date(editedProfile.dateOfBirth).toISOString().split('T')[0] : ''}
+                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                       className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
-                      placeholder="dd/mm/yyyy"
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                       <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -349,7 +388,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                   </div>
                 ) : (
                   <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
-                    dd/mm/yyyy
+                    {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Not provided'}
                   </div>
                 )}
               </div>
@@ -361,7 +400,11 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                 </label>
                 {isEditing ? (
                   <div className="relative">
-                    <select className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none">
+                    <select
+                      value={editedProfile.location || ''}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none"
+                    >
                       <option value="">Select City</option>
                       <option value="Mumbai">Mumbai</option>
                       <option value="Delhi">Delhi</option>
@@ -380,7 +423,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                   </div>
                 ) : (
                   <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
-                    Select City
+                    {profile.location || 'Not provided'}
                   </div>
                 )}
               </div>
@@ -396,12 +439,14 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                 {isEditing ? (
                   <input
                     type="text"
+                    value={editedProfile.guardianName || ''}
+                    onChange={(e) => handleInputChange('guardianName', e.target.value)}
                     className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                     placeholder="Enter guardian name"
                   />
                 ) : (
                   <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
-                    Enter guardian name
+                    {profile.guardianName || 'Not provided'}
                   </div>
                 )}
               </div>
@@ -413,7 +458,11 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                 </label>
                 {isEditing ? (
                   <div className="relative">
-                    <select className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none">
+                    <select
+                      value={editedProfile.gender || ''}
+                      onChange={(e) => handleInputChange('gender', e.target.value)}
+                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white appearance-none"
+                    >
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -427,7 +476,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                   </div>
                 ) : (
                   <div className="px-3 py-2 text-sm sm:text-base bg-gray-50 border border-gray-200 rounded-md text-gray-900">
-                    Select Gender
+                    {profile.gender || 'Not provided'}
                   </div>
                 )}
               </div>

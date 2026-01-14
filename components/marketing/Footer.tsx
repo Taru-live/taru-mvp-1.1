@@ -75,7 +75,7 @@ const Footer = () => {
             <div className="padding-vertical padding-medium">
               <div className="footer-bottom">
                 <div className="footer-credit-text">
-                  © 2024 Taru - <Link href="/terms-and-conditions" className="link">Terms & Conditions </Link>
+                  © 2026 Taru - <Link href="/terms-and-conditions" className="link">Terms & Conditions </Link>
                 </div>
                 <a href="https://www.utcons.com" className="w-inline-block" target="_blank" rel="noopener noreferrer">
                   <div className="footer-credit-text">Powered by <span className="text-span-9">UTCONS</span></div>

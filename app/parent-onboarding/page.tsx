@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RegistrationDataManager } from '@/lib/utils';
 import ConsistentLoadingPage from '../components/ConsistentLoadingPage';
-import { FloatingParticles, MorphingBlob } from '../components/FloatingElements';
 import { ScrollProgress } from '../components/ScrollAnimations';
 
 interface ParentOnboardingData {
@@ -86,6 +85,10 @@ export default function ParentOnboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableStudents, setAvailableStudents] = useState<Array<{id: string; uniqueId: string; name: string; email: string; grade: string}>>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [hasReadTerms, setHasReadTerms] = useState(false);
+  const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
   const router = useRouter();
 
   // Fetch available students for linking and pre-fill form data
@@ -299,22 +302,7 @@ export default function ParentOnboarding() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        {/* Enhanced Floating Background Elements */}
-        <FloatingParticles 
-          count={20} 
-          colors={['#6D18CE', '#8B5CF6', '#A855F7', '#C084FC', '#EC4899', '#F59E0B']}
-          className="z-0"
-        />
-        <MorphingBlob 
-          className="top-20 right-10 z-0" 
-          color="#8B5CF6" 
-          size={300} 
-        />
-        <MorphingBlob 
-          className="bottom-20 left-10 z-0" 
-          color="#A855F7" 
-          size={200} 
-        />
+        
         
         {/* Scroll Progress Indicator */}
         <ScrollProgress 
@@ -799,58 +787,70 @@ export default function ParentOnboarding() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <motion.div 
-        className="bg-purple-50 border border-purple-200 rounded-xl p-6 shadow-sm"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <h3 className="text-lg font-semibold text-purple-800 mb-3">Data Access Consent</h3>
-        <p className="text-sm text-purple-700 mb-4">
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold text-purple-800">Data Access Consent</h3>
+          <button
+            type="button"
+            onClick={() => setShowPrivacyModal(true)}
+            className="text-sm text-purple-600 hover:text-purple-800 underline font-medium"
+          >
+            Read Privacy Policy
+          </button>
+        </div>
+        <p className="text-sm text-purple-700 mb-3">
           By accepting this consent, you agree to access your child&apos;s learning data 
           to monitor their progress and provide support in their educational journey.
         </p>
-        <label className="flex items-center space-x-3">
+        <label className="flex items-center space-x-2">
           <input
             type="checkbox"
             checked={formData.consentToAccessChildData}
             onChange={(e) => handleInputChange('consentToAccessChildData', e.target.checked)}
-            className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            disabled={!hasReadPrivacy}
+            className={`rounded border-gray-300 text-purple-600 focus:ring-purple-500 ${
+              !hasReadPrivacy ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           />
-          <span className="text-sm font-medium text-purple-700">I consent to access my child&apos;s learning data *</span>
+          <span className={`text-sm text-purple-700 ${!hasReadPrivacy ? 'opacity-50' : ''}`}>
+            I consent to access my child&apos;s learning data *
+            {!hasReadPrivacy && <span className="block text-xs text-purple-600 mt-1">(Please read the Privacy Policy first)</span>}
+          </span>
         </label>
-        {errors.consentToAccessChildData && <motion.p 
-          className="text-red-500 text-sm mt-2 font-medium"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >{errors.consentToAccessChildData}</motion.p>}
-      </motion.div>
+        {errors.consentToAccessChildData && <p className="text-red-500 text-sm mt-1">{errors.consentToAccessChildData}</p>}
+      </div>
 
-      <motion.div 
-        className="bg-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Terms and Conditions</h3>
-        <p className="text-sm text-gray-700 mb-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold text-gray-800">Terms and Conditions</h3>
+          <button
+            type="button"
+            onClick={() => setShowTermsModal(true)}
+            className="text-sm text-purple-600 hover:text-purple-800 underline font-medium"
+          >
+            Read Terms & Conditions
+          </button>
+        </div>
+        <p className="text-sm text-gray-700 mb-3">
           Please read and accept our terms and conditions to continue using the platform.
         </p>
-        <label className="flex items-center space-x-3">
+        <label className="flex items-center space-x-2">
           <input
             type="checkbox"
             checked={formData.agreeToTerms}
             onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)}
-            className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            disabled={!hasReadTerms}
+            className={`rounded border-gray-300 text-purple-600 focus:ring-purple-500 ${
+              !hasReadTerms ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           />
-          <span className="text-sm font-medium text-gray-700">I agree to platform terms &amp; policies *</span>
+          <span className={`text-sm text-gray-800 ${!hasReadTerms ? 'opacity-50' : ''}`}>
+            I accept the terms and conditions *
+            {!hasReadTerms && <span className="block text-xs text-gray-600 mt-1">(Please read the Terms & Conditions first)</span>}
+          </span>
         </label>
-        {errors.agreeToTerms && <motion.p 
-          className="text-red-500 text-sm mt-2 font-medium"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >{errors.agreeToTerms}</motion.p>}
-      </motion.div>
+        {errors.agreeToTerms && <p className="text-red-500 text-sm mt-1">{errors.agreeToTerms}</p>}
+      </div>
     </motion.div>
   );
 
@@ -871,22 +871,6 @@ export default function ParentOnboarding() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      {/* Enhanced Floating Background Elements */}
-      <FloatingParticles 
-        count={25} 
-        colors={['#6D18CE', '#8B5CF6', '#A855F7', '#C084FC', '#EC4899', '#F59E0B']}
-        className="z-0"
-      />
-      <MorphingBlob 
-        className="top-20 right-10 z-0" 
-        color="#8B5CF6" 
-        size={400} 
-      />
-      <MorphingBlob 
-        className="bottom-20 left-10 z-0" 
-        color="#A855F7" 
-        size={300} 
-      />
       
       {/* Scroll Progress Indicator */}
       <ScrollProgress 
@@ -1069,6 +1053,263 @@ export default function ParentOnboarding() {
           </motion.div>
         </motion.div>
       </motion.section>
+
+      {/* Terms and Conditions Modal */}
+      <AnimatePresence>
+        {showTermsModal && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowTermsModal(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Terms and Conditions</h2>
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                className="px-6 py-4 overflow-y-auto flex-1"
+                onScroll={(e) => {
+                  const target = e.target as HTMLElement;
+                  const scrollPercentage = (target.scrollTop + target.clientHeight) / target.scrollHeight;
+                  if (scrollPercentage >= 0.95) {
+                    setHasReadTerms(true);
+                  }
+                }}
+              >
+                <div className="prose max-w-none">
+                  <h3 className="text-xl font-semibold mb-4">1. Acceptance of Terms</h3>
+                  <p className="text-gray-700 mb-4">
+                    By accessing and using Taru Learning platform, you accept and agree to be bound by the terms and provision of this agreement.
+                  </p>
+                  
+                  <h3 className="text-xl font-semibold mb-4">2. Use License</h3>
+                  <p className="text-gray-700 mb-4">
+                    Permission is granted to temporarily access the materials on Taru Learning's platform for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Modify or copy the materials</li>
+                    <li>Use the materials for any commercial purpose or for any public display</li>
+                    <li>Attempt to reverse engineer any software contained on Taru Learning's platform</li>
+                    <li>Remove any copyright or other proprietary notations from the materials</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">3. User Account</h3>
+                  <p className="text-gray-700 mb-4">
+                    You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">4. Privacy Policy</h3>
+                  <p className="text-gray-700 mb-4">
+                    Your use of Taru Learning is also governed by our Privacy Policy. Please review our Privacy Policy to understand our practices.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">5. Educational Content</h3>
+                  <p className="text-gray-700 mb-4">
+                    All educational content provided on Taru Learning is for educational purposes only. We strive to provide accurate information but do not guarantee the completeness or accuracy of all content.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">6. Limitation of Liability</h3>
+                  <p className="text-gray-700 mb-4">
+                    In no event shall Taru Learning or its suppliers be liable for any damages arising out of the use or inability to use the materials on Taru Learning's platform.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">7. Revisions</h3>
+                  <p className="text-gray-700 mb-4">
+                    Taru Learning may revise these terms of service at any time without notice. By using this platform you are agreeing to be bound by the then current version of these terms of service.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">8. Contact Information</h3>
+                  <p className="text-gray-700 mb-4">
+                    If you have any questions about these Terms and Conditions, please contact us at support@tarulearning.com
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowTermsModal(false);
+                    if (hasReadTerms) {
+                      setHasReadTerms(true);
+                    }
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setHasReadTerms(true);
+                    setShowTermsModal(false);
+                  }}
+                  disabled={!hasReadTerms}
+                  className={`px-6 py-2 rounded-lg transition-all duration-200 ${
+                    hasReadTerms
+                      ? 'bg-gradient-to-r from-[#8B3DFF] to-[#6D18CE] text-white hover:shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  I Have Read and Understand
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Privacy and Consent Modal */}
+      <AnimatePresence>
+        {showPrivacyModal && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPrivacyModal(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Privacy Policy & Data Usage Consent</h2>
+                <button
+                  onClick={() => setShowPrivacyModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                className="px-6 py-4 overflow-y-auto flex-1"
+                onScroll={(e) => {
+                  const target = e.target as HTMLElement;
+                  const scrollPercentage = (target.scrollTop + target.clientHeight) / target.scrollHeight;
+                  if (scrollPercentage >= 0.95) {
+                    setHasReadPrivacy(true);
+                  }
+                }}
+              >
+                <div className="prose max-w-none">
+                  <h3 className="text-xl font-semibold mb-4">1. Information We Collect</h3>
+                  <p className="text-gray-700 mb-4">
+                    Taru Learning collects information that you provide directly to us, including:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Personal information (name, date of birth, contact information)</li>
+                    <li>Educational information (grade, subjects, learning preferences)</li>
+                    <li>Learning progress and performance data</li>
+                    <li>Device information and usage patterns</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">2. How We Use Your Information</h3>
+                  <p className="text-gray-700 mb-4">
+                    We use the information we collect to:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Provide personalized learning experiences tailored to your needs</li>
+                    <li>Track learning progress and identify areas for improvement</li>
+                    <li>Communicate with you about your account and learning journey</li>
+                    <li>Enable parents to monitor their child&apos;s progress</li>
+                    <li>Improve our platform and develop new educational features</li>
+                    <li>Ensure platform security and prevent fraud</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">3. Data Sharing and Disclosure</h3>
+                  <p className="text-gray-700 mb-4">
+                    We do not sell your personal information. We may share your information only in the following circumstances:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>With your parent or guardian (for students under 18)</li>
+                    <li>With your school or educational institution (if applicable)</li>
+                    <li>With service providers who assist us in operating our platform</li>
+                    <li>When required by law or to protect our rights</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">4. Data Security</h3>
+                  <p className="text-gray-700 mb-4">
+                    We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">5. Your Rights</h3>
+                  <p className="text-gray-700 mb-4">
+                    You have the right to:
+                  </p>
+                  <ul className="list-disc pl-6 mb-4 text-gray-700">
+                    <li>Access your personal information</li>
+                    <li>Request correction of inaccurate information</li>
+                    <li>Request deletion of your information</li>
+                    <li>Withdraw consent at any time</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold mb-4">6. Children's Privacy</h3>
+                  <p className="text-gray-700 mb-4">
+                    Taru Learning is designed for children and complies with applicable children's privacy laws. We require parental consent for users under 13 years of age.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">7. Data Retention</h3>
+                  <p className="text-gray-700 mb-4">
+                    We retain your information for as long as your account is active or as needed to provide you services. We may retain certain information for legitimate business purposes or as required by law.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">8. Changes to This Policy</h3>
+                  <p className="text-gray-700 mb-4">
+                    We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">9. Contact Us</h3>
+                  <p className="text-gray-700 mb-4">
+                    If you have any questions about this Privacy Policy, please contact us at privacy@tarulearning.com
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowPrivacyModal(false);
+                    if (hasReadPrivacy) {
+                      setHasReadPrivacy(true);
+                    }
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setHasReadPrivacy(true);
+                    setShowPrivacyModal(false);
+                  }}
+                  disabled={!hasReadPrivacy}
+                  className={`px-6 py-2 rounded-lg transition-all duration-200 ${
+                    hasReadPrivacy
+                      ? 'bg-gradient-to-r from-[#8B3DFF] to-[#6D18CE] text-white hover:shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  I Have Read and Understand
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.main>
   );
 } 

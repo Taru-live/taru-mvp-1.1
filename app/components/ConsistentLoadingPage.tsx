@@ -355,12 +355,6 @@ const ConsistentLoadingPage: React.FC<ConsistentLoadingPageProps> = ({
                 y: [0, -8, 0],
                 rotate: [0, 3, -3, 0],
               }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              whileHover={{ scale: 1.1, rotate: 360 }}
             >
               <Image 
                 src="/icons/logo.svg" 

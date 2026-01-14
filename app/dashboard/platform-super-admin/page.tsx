@@ -13,7 +13,6 @@ import { TypewriterText, StaggeredText, GradientText, CharacterAnimation } from 
 import { TiltCard, MagneticButton } from '../../components/InteractiveElements';
 import { StaggerContainer, StaggerItem } from '../../components/PageTransitions';
 import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../../components/ScrollAnimations';
-import { FloatingParticles, MorphingBlob } from '../../components/FloatingElements';
 import VantaBackground from '../../components/VantaBackground';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
 

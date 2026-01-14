@@ -11,7 +11,6 @@ import { TypewriterText, StaggeredText, GradientText, CharacterAnimation } from 
 import { TiltCard, MagneticButton } from '../../components/InteractiveElements';
 import { StaggerContainer, StaggerItem } from '../../components/PageTransitions';
 import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../../components/ScrollAnimations';
-import { FloatingParticles, MorphingBlob } from '../../components/FloatingElements';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
 import LearningPathTab from '../student/components/LearningPathTab';
 
@@ -595,27 +594,6 @@ export default function ParentDashboard() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Enhanced Floating Background Elements */}
-      <FloatingParticles 
-        count={25} 
-        colors={['#6D18CE', '#8B5CF6', '#A855F7', '#C084FC', '#EC4899', '#F59E0B']}
-        className="z-0"
-      />
-      <MorphingBlob 
-        className="top-20 right-10 z-0" 
-        color="#8B5CF6" 
-        size={350} 
-      />
-      <MorphingBlob 
-        className="bottom-20 left-10 z-0" 
-        color="#A855F7" 
-        size={250} 
-      />
-      <MorphingBlob 
-        className="top-1/2 left-1/4 z-0" 
-        color="#EC4899" 
-        size={180} 
-      />
       
       {/* Additional Particle Effects */}
       <div className="fixed inset-0 pointer-events-none z-0">

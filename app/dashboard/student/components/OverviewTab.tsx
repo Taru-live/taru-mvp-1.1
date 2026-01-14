@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Award, Bot, CheckCircle2, ChevronRight, Computer, Calculator, FlaskConical, Palette, MessageSquare, BookOpen, GraduationCap } from 'lucide-react';
 
@@ -69,6 +71,37 @@ interface OverviewTabProps {
   };
 }
 
+// Interfaces for YouTube data
+interface Chapter {
+  chapterId: number;
+  chapterTitle: string;
+  chapterDescription: string;
+  youtubeUrl: string;
+  youtubeTitle: string;
+}
+
+interface Submodule {
+  submoduleId: number;
+  submoduleTitle: string;
+  submoduleDescription: string;
+  chapters: Chapter[];
+}
+
+interface Module {
+  moduleId: number;
+  moduleTitle: string;
+  moduleDescription: string;
+  submodules: Submodule[];
+}
+
+interface YoutubeData {
+  _id?: string;
+  uniqueid: string;
+  modules: Module[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Subject to color mapping
 const subjectColors: Record<string, string> = {
   Mathematics: '#00B396',
@@ -121,6 +154,47 @@ export default function OverviewTab({
   dashboardData, 
   user
 }: OverviewTabProps) {
+  const router = useRouter();
+  const [youtubeData, setYoutubeData] = useState<YoutubeData | null>(null);
+  const [youtubeLoading, setYoutubeLoading] = useState(false);
+
+  // Fetch YouTube data
+  useEffect(() => {
+    const fetchYouTubeData = async () => {
+      if (!user?.uniqueId) return;
+      
+      setYoutubeLoading(true);
+      try {
+        const response = await fetch(`/api/youtube-urls?uniqueid=${encodeURIComponent(user.uniqueId)}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          
+          if (result.data) {
+            // Check if data is already in hierarchical format
+            if (result.data.modules && Array.isArray(result.data.modules) && result.data.modules.length > 0) {
+              const firstModule = result.data.modules[0];
+              if (firstModule.submodules && Array.isArray(firstModule.submodules)) {
+                setYoutubeData({
+                  uniqueid: result.data.uniqueid || result.data.uniqueId || user.uniqueId || '',
+                  modules: result.data.modules,
+                  _id: result.data._id,
+                  createdAt: result.data.createdAt,
+                  updatedAt: result.data.updatedAt
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching YouTube data:', error);
+      } finally {
+        setYoutubeLoading(false);
+      }
+    };
+
+    fetchYouTubeData();
+  }, [user?.uniqueId]);
   
   // Refresh data when component mounts or when switching to this tab
   useEffect(() => {
@@ -189,8 +263,30 @@ export default function OverviewTab({
     };
   }, [dashboardData]);
 
-  // Process courses from courses prop, allChapters, or recentActivity
+  // Process courses from youtubeData modules, courses prop, allChapters, or recentActivity
   const activeCourses = useMemo(() => {
+    // Priority 1: Use modules from youtubeData if available
+    if (youtubeData?.modules && youtubeData.modules.length > 0) {
+      return youtubeData.modules.slice(0, 5).map((module, index: number) => {
+        const totalChapters = module.submodules.reduce((sum, sub) => sum + sub.chapters.length, 0);
+        const Icon = BookOpen;
+        const color = '#EFC806'; // Default color
+        
+        return {
+          id: `module-${module.moduleId}-${index}`,
+          title: module.moduleTitle,
+          lessonsCompleted: 0, // Can be enhanced with progress tracking
+          totalLessons: totalChapters,
+          duration: '20 min', // Default duration
+          xp: 50, // Default XP
+          icon: Icon,
+          color,
+          progress: 0,
+          moduleId: module.moduleId,
+        };
+      });
+    }
+
     // Use courses prop if available (already processed by parent)
     if (courses && courses.length > 0) {
       return courses.slice(0, 5).map((course: any, index: number) => {
@@ -322,40 +418,95 @@ export default function OverviewTab({
     }
 
     return [];
-  }, [courses, dashboardData]);
+  }, [youtubeData, courses, dashboardData]);
 
-  // Process continue learning modules
+  // Process continue learning modules - show in-progress chapters (started but not completed)
   const continueLearningModules = useMemo(() => {
-    if (!dashboardData?.recommendedModules || dashboardData.recommendedModules.length === 0) {
-      return [];
+    // Filter allChapters to show only in-progress chapters (started but not completed)
+    if (dashboardData?.allChapters && dashboardData.allChapters.length > 0) {
+      const inProgressChapters = dashboardData.allChapters
+        .filter((chapter: any) => chapter.status === 'in-progress')
+        .slice(0, 6); // Show up to 6 in-progress chapters
+
+      if (inProgressChapters.length > 0) {
+        return inProgressChapters.map((chapter: any, index: number) => {
+          const subject = chapter.subject || 'Mathematics';
+          const color = subjectColors[subject] || '#EFC806';
+          
+          // Parse duration
+          let duration = chapter.estimatedDuration || '20 min';
+          if (typeof duration === 'number') {
+            duration = `${duration} min`;
+          }
+
+          // Ensure unique ID
+          const uniqueId = chapter.chapterKey 
+            ? `${String(chapter.chapterKey).replace(/[^a-zA-Z0-9]/g, '-')}-${index}`
+            : `chapter-${index}-${Date.now()}`;
+
+          // Find chapterId from youtubeData by matching moduleId and videoUrl
+          let chapterId: number | null = null;
+          if (youtubeData?.modules && chapter.moduleId && chapter.videoUrl) {
+            for (const module of youtubeData.modules) {
+              if (module.moduleId.toString() === chapter.moduleId.toString()) {
+                for (const submodule of module.submodules) {
+                  const foundChapter = submodule.chapters.find((ch: any) => ch.youtubeUrl === chapter.videoUrl);
+                  if (foundChapter) {
+                    chapterId = foundChapter.chapterId;
+                    break;
+                  }
+                }
+                if (chapterId !== null) break;
+              }
+            }
+          }
+
+          return {
+            id: uniqueId,
+            title: chapter.videoTitle || chapter.name,
+            duration,
+            xp: chapter.xpPoints || 50,
+            color,
+            chapterKey: chapter.chapterKey,
+            videoUrl: chapter.videoUrl,
+            moduleId: chapter.moduleId,
+            chapterId: chapterId,
+          };
+        });
+      }
     }
 
-    return dashboardData.recommendedModules.slice(0, 3).map((module, index) => {
-      const subject = module.subject || 'Mathematics';
-      const color = subjectColors[subject] || '#EFC806';
-      
-      // Parse duration
-      let duration = '20 min';
-      if (typeof module.estimatedDuration === 'string') {
-        duration = module.estimatedDuration;
-      } else if (typeof module.estimatedDuration === 'number') {
-        duration = `${module.estimatedDuration} min`;
-      }
+    // Fallback to recommended modules if no in-progress chapters
+    if (dashboardData?.recommendedModules && dashboardData.recommendedModules.length > 0) {
+      return dashboardData.recommendedModules.slice(0, 3).map((module, index) => {
+        const subject = module.subject || 'Mathematics';
+        const color = subjectColors[subject] || '#EFC806';
+        
+        // Parse duration
+        let duration = '20 min';
+        if (typeof module.estimatedDuration === 'string') {
+          duration = module.estimatedDuration;
+        } else if (typeof module.estimatedDuration === 'number') {
+          duration = `${module.estimatedDuration} min`;
+        }
 
-      // Ensure unique ID
-      const uniqueId = module.id 
-        ? `${String(module.id).replace(/[^a-zA-Z0-9]/g, '-')}-${index}`
-        : `module-${index}-${Date.now()}`;
+        // Ensure unique ID
+        const uniqueId = module.id 
+          ? `${String(module.id).replace(/[^a-zA-Z0-9]/g, '-')}-${index}`
+          : `module-${index}-${Date.now()}`;
 
-      return {
-        id: uniqueId,
-        title: module.name,
-        duration,
-        xp: module.xpPoints || 50,
-        color,
-      };
-    });
-  }, [dashboardData]);
+        return {
+          id: uniqueId,
+          title: module.name,
+          duration,
+          xp: module.xpPoints || 50,
+          color,
+        };
+      });
+    }
+
+    return [];
+  }, [dashboardData, youtubeData]);
 
   // Generate upcoming tests from real data only (no placeholders)
   const upcomingTests = useMemo(() => {
@@ -468,8 +619,14 @@ export default function OverviewTab({
               transition={{ delay: 0.1 }}
             >
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-[18.7px] h-[18.7px] bg-[#FF8C23] rounded-[3.44px] flex items-center justify-center">
-                  <div className="w-[14.54px] h-[14.54px] bg-white rounded-sm" />
+                <div className="w-[18.7px] h-[18.7px] flex items-center justify-center">
+                  <Image 
+                    src="/images/Course.png" 
+                    alt="Course in Progress" 
+                    width={18.7} 
+                    height={18.7}
+                    className="object-contain"
+                  />
                 </div>
                 <span className="text-[14px] font-semibold text-[#878787]">Course in Progress</span>
               </div>
@@ -585,8 +742,8 @@ export default function OverviewTab({
                       transition={{ delay: 0.1 * index }}
                       onClick={() => {
                         if (moduleId) {
-                          // Navigate to module page
-                          window.location.href = `/modules/${moduleId}`;
+                          // Navigate to module page using router
+                          router.push(`/modules/youtube/${moduleId}`);
                         } else {
                           // Navigate to modules tab
                           onTabChange('modules');
@@ -676,7 +833,15 @@ export default function OverviewTab({
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 * index }}
-                      onClick={() => onTabChange('modules')}
+                      onClick={() => {
+                        // Navigate directly to chapter page if we have moduleId and chapterId
+                        if ((module as any).moduleId && (module as any).chapterId) {
+                          router.push(`/modules/youtube/${(module as any).moduleId}/chapter/${(module as any).chapterId}`);
+                        } else {
+                          // Fallback: navigate to modules tab
+                          onTabChange('modules');
+                        }
+                      }}
                     >
                       {/* Course Image */}
                       <div 

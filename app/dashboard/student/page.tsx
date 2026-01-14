@@ -21,9 +21,7 @@ import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../..
 import nextDynamic from 'next/dynamic';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
 
-// Dynamically import components that use browser-only APIs
-const FloatingParticles = nextDynamic(() => import('../../components/FloatingElements').then(mod => ({ default: mod.FloatingParticles })), { ssr: false });
-const MorphingBlob = nextDynamic(() => import('../../components/FloatingElements').then(mod => ({ default: mod.MorphingBlob })), { ssr: false });
+
 
 // Avatar utility functions
 const AVAILABLE_AVATARS = [
@@ -101,6 +99,10 @@ interface StudentProfile {
   interestsOutsideClass?: string[]; // Added for interests
   preferredCareerDomains?: string[]; // Added for career domains
   avatar?: string; // Added for avatar
+  dateOfBirth?: string | Date; // Added for date of birth
+  gender?: string; // Added for gender
+  guardian?: { name?: string; contactNumber?: string; email?: string }; // Added for guardian
+  location?: string; // Added for location
 }
 
 interface YouTubeData {
@@ -389,7 +391,11 @@ function StudentDashboardContent() {
                 nickname: studentData.nickname,
                 learningModePreference: studentData.learningModePreference,
                 interestsOutsideClass: studentData.interestsOutsideClass,
-                preferredCareerDomains: studentData.preferredCareerDomains
+                preferredCareerDomains: studentData.preferredCareerDomains,
+                dateOfBirth: studentData.dateOfBirth,
+                gender: studentData.gender,
+                guardian: studentData.guardian,
+                location: studentData.location
               };
               
               console.log('🔍 User with profile data:', userWithProfile);
@@ -750,7 +756,11 @@ function StudentDashboardContent() {
         learningModePreference: user.learningModePreference,
         interestsOutsideClass: user.interestsOutsideClass,
         preferredCareerDomains: user.preferredCareerDomains,
-        avatar: userAvatar
+        avatar: userAvatar,
+        dateOfBirth: user.dateOfBirth ? (typeof user.dateOfBirth === 'string' ? user.dateOfBirth : user.dateOfBirth.toISOString()) : undefined,
+        gender: user.gender,
+        guardianName: user.guardian?.name,
+        location: user.location
       }
     : { name: '', email: '', grade: '', school: '', language: 'English', studentKey: 'Not available' };
 
@@ -1059,27 +1069,7 @@ function StudentDashboardContent() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Enhanced Floating Background Elements */}
-      <FloatingParticles 
-        count={25} 
-        colors={['#6D18CE', '#8B5CF6', '#A855F7', '#C084FC', '#EC4899', '#F59E0B']}
-        className="z-0"
-      />
-      <MorphingBlob 
-        className="top-20 right-10 z-0" 
-        color="#8B5CF6" 
-        size={350} 
-      />
-      <MorphingBlob 
-        className="bottom-20 left-10 z-0" 
-        color="#A855F7" 
-        size={250} 
-      />
-      <MorphingBlob 
-        className="top-1/2 left-1/4 z-0" 
-        color="#EC4899" 
-        size={180} 
-      />
+    
       
       {/* Additional Particle Effects */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -1531,7 +1521,7 @@ function StudentDashboardContent() {
               )}
               {activeTab === 'enhanced-learning' && <EnhancedLearningTab />}
               {activeTab === 'progress' && (
-                <div>
+                <div className="pr-4 sm:pr-6 md:pr-8 lg:pr-12">
                   {dashboardLoading ? (
                     <div className="flex items-center justify-center h-64">
                       <div className="text-center">
@@ -1548,7 +1538,11 @@ function StudentDashboardContent() {
                   )}
                 </div>
               )}
-              {activeTab === 'rewards' && <RewardsTab badges={badgesData} onTabChange={setActiveTab} />}
+              {activeTab === 'rewards' && (
+                <div className="pr-4 sm:pr-6 md:pr-8 lg:pr-12">
+                  <RewardsTab badges={badgesData} onTabChange={setActiveTab} />
+                </div>
+              )}
               {activeTab === 'settings' && (
                 <SettingsTab 
                   profile={profileData} 

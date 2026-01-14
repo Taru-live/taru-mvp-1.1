@@ -209,7 +209,7 @@ const Home = () => {
           
           <div data-w-id="fcda501b-335b-febf-8513-71373afe0e8b" style={{opacity:0}} className="div-block-5 last">
             <div>
-              <h4 className="heading-7 white"><strong>Taru</strong> stands apart as the bridge between aspirations and achievement in the AI era.</h4>
+              <h4 className="heading-7 white pt-6"><strong>Taru</strong> stands apart as the bridge between aspirations and achievement in the AI era.</h4>
             </div>
             <div className="div-block-4">
               <img src="/images/Group-2147224522.png" loading="lazy" alt="" className="image-7 last" />

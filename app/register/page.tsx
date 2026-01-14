@@ -486,10 +486,10 @@ export default function Register() {
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.8 }}
          >
-          {/* Language Selector - Bottom Right */}
+          {/* Language Selector - Top Right */}
           <motion.div 
-            className="absolute bottom-2 sm:bottom-3 md:bottom-6 right-2 sm:right-3 md:right-6 z-10 language-selector-container"
-            initial={{ y: 20, opacity: 0 }}
+            className="absolute top-0 sm:top-3 md:top-6 right-2 sm:right-3 md:right-6 z-10 language-selector-container"
+            initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
@@ -515,11 +515,11 @@ export default function Register() {
               <AnimatePresence>
                 {isLanguageDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50"
+                    className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50"
                   >
                     {['English (USA)', 'हिन्दी', 'मराठी'].map((lang) => (
                       <button

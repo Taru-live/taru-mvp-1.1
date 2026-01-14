@@ -77,7 +77,11 @@ export async function GET(request: NextRequest) {
       onboardingCompleted: student.onboardingCompleted,
       interestAssessmentCompleted: student.interestAssessmentCompleted,
       organizationId: student.organizationId,
-      isOrganizationStudent: !!student.organizationId
+      isOrganizationStudent: !!student.organizationId,
+      dateOfBirth: student.dateOfBirth,
+      gender: student.gender,
+      guardian: student.guardian,
+      location: student.location
     });
 
   } catch (error) {

@@ -138,12 +138,19 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
         // The API has already auto-corrected the subscription based on payment amount
         // So we can trust the planType and planAmount values
         setSubscriptionStatus(data);
+      } else if (response.status === 404) {
+        // 404 is expected when user doesn't have a subscription yet
+        // Set subscription status to indicate no subscription
+        setSubscriptionStatus({ hasSubscription: false });
       } else {
+        // Only log non-404 errors as they're unexpected
         const errorData = await response.json().catch(() => ({}));
         console.error('❌ Error fetching subscription status:', response.status, errorData);
+        setSubscriptionStatus({ hasSubscription: false });
       }
     } catch (err) {
       console.error('❌ Error fetching subscription status:', err);
+      setSubscriptionStatus({ hasSubscription: false });
     }
   };
 
