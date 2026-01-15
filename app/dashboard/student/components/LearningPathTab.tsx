@@ -817,10 +817,10 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                   <div className="mb-4 sm:mb-6">
                     <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
                       <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
-                      Learning Modules
+                      Learning Modules ({path.learningModules.length})
                     </h4>
-                    <div className="space-y-2 sm:space-y-3">
-                      {path.learningModules.slice(0, 2).map((module, idx) => (
+                    <div className="space-y-2 sm:space-y-3 max-h-64 overflow-y-auto">
+                      {path.learningModules.map((module, idx) => (
                         <motion.div 
                           key={idx} 
                           className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-gray-100 hover:border-purple-200 transition-all duration-300"
@@ -830,11 +830,6 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                           <span className="text-xs sm:text-sm text-gray-700 font-medium truncate">{module.module}</span>
                         </motion.div>
                       ))}
-                      {path.learningModules.length > 2 && (
-                        <div className="text-xs sm:text-sm text-gray-500 bg-gray-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-center">
-                          +{path.learningModules.length - 2} more modules available
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -1140,6 +1135,19 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                         const isExpanded = expandedModules.has(index);
                         const hasSubmodules = module.submodules && module.submodules.length > 0;
                         
+                        // Color array for module badges - cycles through colors
+                        const moduleColors = [
+                          'from-purple-500 to-blue-500',
+                          'from-green-500 to-emerald-500',
+                          'from-orange-500 to-red-500',
+                          'from-pink-500 to-rose-500',
+                          'from-indigo-500 to-purple-500',
+                          'from-cyan-500 to-blue-500',
+                          'from-yellow-500 to-orange-500',
+                          'from-teal-500 to-green-500'
+                        ];
+                        const moduleColor = moduleColors[index % moduleColors.length];
+                        
                         return (
                           <motion.div
                             key={index}
@@ -1151,7 +1159,7 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                             <div className="p-3 sm:p-4 md:p-6">
                               <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2 sm:gap-4">
                                 <div className="flex items-start gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
-                                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${moduleColor} rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0`}>
                                     <span className="text-white font-bold text-base sm:text-lg">{index + 1}</span>
                                   </div>
                                   <div className="flex-1 min-w-0">

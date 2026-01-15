@@ -1292,11 +1292,16 @@ function CareerDetailsContent() {
             
             <div className="space-y-8">
               {output.learningPath && output.learningPath.length > 0 ? (
-                output.learningPath.slice(0, 3).map((module, index) => {
+                output.learningPath.map((module, index) => {
                 const colors = [
                   'from-green-500 to-emerald-500',
                   'from-orange-500 to-red-500',
-                  'from-purple-500 to-pink-500'
+                  'from-purple-500 to-pink-500',
+                  'from-blue-500 to-cyan-500',
+                  'from-indigo-500 to-purple-500',
+                  'from-yellow-500 to-orange-500',
+                  'from-teal-500 to-green-500',
+                  'from-pink-500 to-rose-500'
                 ];
                 const hasSubmodules = module.submodules && Array.isArray(module.submodules);
                 
