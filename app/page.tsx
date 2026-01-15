@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import MarketingLayout from './marketing-layout';
@@ -5,6 +7,16 @@ import MarketingLayout from './marketing-layout';
 const Home = () => {
   return (
     <MarketingLayout>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .pricing-button-basic:hover {
+            transform: scale(1.05);
+          }
+          .pricing-button-premium:hover {
+            transform: scale(1.05);
+          }
+        `
+      }} />
       <header className="section-hero-header">
         <div className="padding-global bg-colors">
           <div className="container-large">
@@ -262,6 +274,83 @@ const Home = () => {
                 <Link href="/pricing" className="button-secondary w-inline-block">
                   <div className="button-text-item">View Pricing</div>
                 </Link>
+              </div>
+              
+              {/* Subscription Plans Section */}
+              <div style={{marginTop: '60px', padding: '40px 20px', background: 'linear-gradient(to bottom, rgba(139, 61, 255, 0.05), rgba(255, 255, 255, 0.05))', borderRadius: '20px', border: '1px solid rgba(139, 61, 255, 0.1)'}}>
+                <h2 style={{fontSize: '32px', fontWeight: 'bold', textAlign: 'center', marginBottom: '10px', color: '#1a1a1a'}}>Choose Your Plan</h2>
+                <p style={{textAlign: 'center', marginBottom: '40px', color: '#666', fontSize: '18px'}}>Affordable subscription plans for personalized AI-driven learning</p>
+                
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', maxWidth: '900px', margin: '0 auto'}}>
+                  {/* Basic Plan */}
+                  <div style={{background: 'white', borderRadius: '16px', padding: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '2px solid #e0e0e0', transition: 'all 0.3s ease', display: 'flex', flexDirection: 'column'}}>
+                    <div style={{marginBottom: '20px'}}>
+                      <h3 style={{fontSize: '24px', fontWeight: 'bold', marginBottom: '10px', color: '#1a1a1a'}}>Basic Plan</h3>
+                      <div style={{display: 'flex', alignItems: 'baseline', marginBottom: '10px'}}>
+                        <span style={{fontSize: '42px', fontWeight: 'bold', color: '#8B3DFF'}}>₹99</span>
+                        <span style={{fontSize: '18px', color: '#666', marginLeft: '8px'}}>/month</span>
+                      </div>
+                    </div>
+                    <ul style={{listStyle: 'none', padding: 0, margin: '20px 0', flexGrow: 1}}>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', color: '#333'}}>
+                        <span style={{color: '#8B3DFF', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>3 AI Buddy chats per day per chapter</span>
+                      </li>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', color: '#333'}}>
+                        <span style={{color: '#8B3DFF', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>3 MCQ generations per month per chapter</span>
+                      </li>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', color: '#333'}}>
+                        <span style={{color: '#8B3DFF', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>Personalized career guidance</span>
+                      </li>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', color: '#333'}}>
+                        <span style={{color: '#8B3DFF', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>Structured learning paths</span>
+                      </li>
+                    </ul>
+                    <Link href="/pricing" className="pricing-button-basic" style={{display: 'block', textAlign: 'center', padding: '14px 28px', background: 'linear-gradient(to right, #8B3DFF, #6D18CE)', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', marginTop: 'auto', transition: 'all 0.3s ease', cursor: 'pointer'}}>
+                      Get Started
+                    </Link>
+                  </div>
+                  
+                  {/* Premium Plan */}
+                  <div style={{background: 'linear-gradient(135deg, #8B3DFF 0%, #6D18CE 100%)', borderRadius: '16px', padding: '30px', boxShadow: '0 8px 30px rgba(139, 61, 255, 0.3)', border: '2px solid #8B3DFF', transition: 'all 0.3s ease', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden'}}>
+                    <div style={{position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', color: 'white'}}>POPULAR</div>
+                    <div style={{marginBottom: '20px'}}>
+                      <h3 style={{fontSize: '24px', fontWeight: 'bold', marginBottom: '10px', color: 'white'}}>Premium Plan</h3>
+                      <div style={{display: 'flex', alignItems: 'baseline', marginBottom: '10px'}}>
+                        <span style={{fontSize: '42px', fontWeight: 'bold', color: 'white'}}>₹199</span>
+                        <span style={{fontSize: '18px', color: 'rgba(255,255,255,0.9)', marginLeft: '8px'}}>/month</span>
+                      </div>
+                    </div>
+                    <ul style={{listStyle: 'none', padding: 0, margin: '20px 0', flexGrow: 1}}>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', color: 'white'}}>
+                        <span style={{color: '#FFD700', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>5 AI Buddy chats per day per chapter</span>
+                      </li>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', color: 'white'}}>
+                        <span style={{color: '#FFD700', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>5 MCQ generations per month per chapter</span>
+                      </li>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', color: 'white'}}>
+                        <span style={{color: '#FFD700', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>All Basic features included</span>
+                      </li>
+                      <li style={{padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', color: 'white'}}>
+                        <span style={{color: '#FFD700', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>Enhanced AI capabilities</span>
+                      </li>
+                      <li style={{padding: '12px 0', display: 'flex', alignItems: 'center', color: 'white'}}>
+                        <span style={{color: '#FFD700', marginRight: '10px', fontSize: '20px'}}>✓</span>
+                        <span>Priority support</span>
+                      </li>
+                    </ul>
+                    <Link href="/pricing" className="pricing-button-premium" style={{display: 'block', textAlign: 'center', padding: '14px 28px', background: 'white', color: '#8B3DFF', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', marginTop: 'auto', transition: 'all 0.3s ease', cursor: 'pointer'}}>
+                      Get Started
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

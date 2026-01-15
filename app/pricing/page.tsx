@@ -94,6 +94,7 @@ const Pricing = () => {
                   `
                 }} />
                 <div className="w-layout-grid pricing_grid pricing_grid-custom">
+                  {/* Basic Plan */}
                   <div data-w-id="1d72323c-aea2-bae8-c863-ce331e9ec13c" className="pricing_card-animation">
                     <div className="pricing_card">
                       <div data-w-id="1d72323c-aea2-bae8-c863-ce331e9ec13e" style={{opacity:0}} className="pricing_first-card">
@@ -105,7 +106,7 @@ const Pricing = () => {
                         <div className="pricing_front-content">
                           <div className="pricing_card-wrap">
                             <div className="pricing_card-text">
-                              <div className="text-size-small-2">Individual Student</div>
+                              <div className="text-size-small-2">Basic Plan</div>
                             </div>
                             <a href="#" onClick={(e) => e.preventDefault()} className="pricing_card-link w-inline-block">
                               <img loading="lazy" src="/images/plus-large-svgrepo-com-1.svg" alt="" className="pricing_plus-image" />
@@ -115,14 +116,29 @@ const Pricing = () => {
                             <div className="text-size-xlarge text-weight-bold">₹99</div>
                             <div className="text-size-small-2" style={{marginTop: '8px', opacity: 0.8}}>per month</div>
                           </div>
-                          <div className="pricing_bottom-wrap">
-                            <div className="text-size-small-2 text-weight-medium">Perfect for individual students seeking personalized AI-driven career guidance and structured learning paths.</div>
+                          <div className="pricing_bottom-wrap" style={{marginTop: '20px'}}>
+                            <div className="text-size-small-2 text-weight-medium" style={{marginBottom: '15px'}}>Perfect for individual students seeking personalized AI-driven career guidance and structured learning paths.</div>
+                            <ul style={{listStyle: 'none', padding: 0, margin: 0}}>
+                              <li style={{padding: '8px 0', display: 'flex', alignItems: 'center', color: '#333', fontSize: '14px'}}>
+                                <span style={{color: '#8B3DFF', marginRight: '8px'}}>✓</span>
+                                3 AI Buddy chats/day/chapter
+                              </li>
+                              <li style={{padding: '8px 0', display: 'flex', alignItems: 'center', color: '#333', fontSize: '14px'}}>
+                                <span style={{color: '#8B3DFF', marginRight: '8px'}}>✓</span>
+                                3 MCQ generations/month/chapter
+                              </li>
+                              <li style={{padding: '8px 0', display: 'flex', alignItems: 'center', color: '#333', fontSize: '14px'}}>
+                                <span style={{color: '#8B3DFF', marginRight: '8px'}}>✓</span>
+                                Personalized career guidance
+                              </li>
+                            </ul>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                   
+                  {/* Premium Plan */}
                   <div data-w-id="1d72323c-aea2-bae8-c863-ce331e9ec15e" className="pricing_card-animation">
                     <div className="pricing_card is-second">
                       <div data-w-id="1d72323c-aea2-bae8-c863-ce331e9ec160" style={{opacity:0}} className="pricing_first-card is-second">
@@ -134,19 +150,37 @@ const Pricing = () => {
                         <div className="pricing_front-content">
                           <div className="pricing_card-wrap">
                             <div className="pricing_card-text">
-                              <div className="text-size-small-2">Group Plan</div>
+                              <div className="text-size-small-2">Premium Plan</div>
+                              <div style={{marginTop: '4px', fontSize: '11px', color: '#FFD700', fontWeight: '600'}}>POPULAR</div>
                             </div>
                             <a href="#" onClick={(e) => e.preventDefault()} className="pricing_card-link is-second w-inline-block">
                               <img loading="lazy" src="/images/plus-large-svgrepo-com-1.svg" alt="" className="pricing_plus-image is-second" />
                             </a>
                           </div>
                           <div className="pricing_price-wrap">
-                            <div className="text-size-xlarge text-weight-bold">₹79</div>
-                            <div className="text-size-small-2" style={{marginTop: '8px', opacity: 0.8}}>per month per student</div>
-                            <div className="text-size-small-2" style={{marginTop: '4px', opacity: 0.7, fontStyle: 'italic'}}>(Minimum 5 students)</div>
+                            <div className="text-size-xlarge text-weight-bold">₹199</div>
+                            <div className="text-size-small-2" style={{marginTop: '8px', opacity: 0.8}}>per month</div>
                           </div>
-                          <div className="pricing_bottom-wrap">
-                            <div className="text-size-small-2 text-weight-medium">Ideal for groups of 5 or more students. Save more with our group discount while accessing all premium features.</div>
+                          <div className="pricing_bottom-wrap" style={{marginTop: '20px'}}>
+                            <div className="text-size-small-2 text-weight-medium" style={{marginBottom: '15px'}}>Maximum benefits with enhanced AI capabilities for serious learners.</div>
+                            <ul style={{listStyle: 'none', padding: 0, margin: 0}}>
+                              <li style={{padding: '8px 0', display: 'flex', alignItems: 'center', color: '#333', fontSize: '14px'}}>
+                                <span style={{color: '#8B3DFF', marginRight: '8px'}}>✓</span>
+                                5 AI Buddy chats/day/chapter
+                              </li>
+                              <li style={{padding: '8px 0', display: 'flex', alignItems: 'center', color: '#333', fontSize: '14px'}}>
+                                <span style={{color: '#8B3DFF', marginRight: '8px'}}>✓</span>
+                                5 MCQ generations/month/chapter
+                              </li>
+                              <li style={{padding: '8px 0', display: 'flex', alignItems: 'center', color: '#333', fontSize: '14px'}}>
+                                <span style={{color: '#8B3DFF', marginRight: '8px'}}>✓</span>
+                                All Basic features included
+                              </li>
+                              <li style={{padding: '8px 0', display: 'flex', alignItems: 'center', color: '#333', fontSize: '14px'}}>
+                                <span style={{color: '#8B3DFF', marginRight: '8px'}}>✓</span>
+                                Enhanced AI capabilities
+                              </li>
+                            </ul>
                           </div>
                         </div>
                       </div>
