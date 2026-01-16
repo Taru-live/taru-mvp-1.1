@@ -408,7 +408,7 @@ export default function CareerExploration() {
   ];
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 relative">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -451,7 +451,7 @@ export default function CareerExploration() {
       </div>
 
       {/* Main Container */}
-      <div className="relative z-10 h-screen flex flex-col overflow-hidden">
+      <div className="relative z-10 min-h-screen flex flex-col">
         {/* Enhanced Header */}
         <motion.header 
           className="bg-white/90 backdrop-blur-2xl border-b border-purple-200/50 sticky top-0 z-50 shadow-lg"
@@ -521,7 +521,7 @@ export default function CareerExploration() {
         </motion.header>
 
         {/* Main Content */}
-        <main className="flex-1 w-full max-w-7xl xl:max-w-[90rem] 2xl:max-w-[100rem] mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-1 sm:py-2 md:py-3 overflow-hidden flex flex-col min-h-0">
+        <main className="flex-1 w-full max-w-7xl xl:max-w-[90rem] 2xl:max-w-[100rem] mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-1 sm:py-2 md:py-3 flex flex-col">
           {/* Hero Section */}
           <motion.div 
             className="text-center mb-1 sm:mb-2 md:mb-3 flex-shrink-0"
@@ -538,7 +538,7 @@ export default function CareerExploration() {
             </motion.div>
             
             <motion.h1 
-              className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-0.5 sm:mb-1 px-2"
+              className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3 sm:mb-4 md:mb-3 lg:mb-8 px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
@@ -559,7 +559,7 @@ export default function CareerExploration() {
 
           {/* Career Paths Section */}
           <motion.div
-            className="flex-1 flex flex-col min-h-0 mb-3 sm:mb-4 md:mb-5 lg:mb-6"
+            className="flex flex-col mb-6 sm:mb-8 md:mb-10 lg:mb-12"
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.9, duration: 0.8 }}
@@ -601,7 +601,7 @@ export default function CareerExploration() {
             </div>
 
             {/* Career Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8 px-1 sm:px-2 flex-1 min-h-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8 px-1 sm:px-2">
               {(careerOptions.length > 0 ? careerOptions : defaultCareerPaths).map((path, index) => {
                 const isApiData = 'career' in path;
                 const title = isApiData ? path.career : path.title;
@@ -686,7 +686,7 @@ export default function CareerExploration() {
 
           {/* Done Button */}
           <motion.div 
-            className="text-center mt-4 sm:mt-5 md:mt-6 lg:mt-8 flex-shrink-0 px-2"
+            className="text-center mt-6 sm:mt-8 md:mt-10 lg:mt-12 flex-shrink-0 px-2"
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 1.5, duration: 0.8 }}

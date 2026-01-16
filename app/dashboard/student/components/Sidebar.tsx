@@ -300,7 +300,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
             className={`
               fixed top-0 left-0 bottom-0 z-[50] 
               bg-white border-r border-gray-300 
-              flex flex-col justify-between py-6 px-4
+              flex flex-col py-6 px-4 h-screen
               w-80
               ${isSidebarExpanded ? 'shadow-2xl' : ''}
             `}
@@ -309,150 +309,148 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
             animate={isOpen ? "open" : "closed"}
             style={{ touchAction: 'pan-y' }}
           >
-            <div>
-              {/* Header with Logo and Close Button */}
-              <motion.div 
-                className="flex items-center justify-between mb-10"
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-              >
-                {/* Logo on top left */}
-                <div className="flex items-center">
-                  <motion.div 
-                    className="w-12 h-12 rounded-full flex items-center justify-center mr-3"
-                    whileHover={{ scale: 1.1, rotate: 360 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Image src="/icons/logo.svg" alt="Logo" width={32} height={32} className="w-8 h-8" />
-                  </motion.div>
-                  <motion.div 
-                    className="block"
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <span className="text-lg font-bold text-gray-800">Taru</span>
-                  </motion.div>
-                </div>
-                
-                {/* Close Button - Only visible on mobile when sidebar is open */}
-                <motion.button
-                  onClick={onToggle}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </motion.button>
-              </motion.div>
-              
-              {/* Navigation */}
-              <nav className="flex flex-col gap-2">
-                {items.map((item, index) => (
-                  <motion.button
-                    key={item.id}
-                    onClick={() => handleTabChange(item.id)}
-                    className={`
-                      flex items-center gap-3 px-4 py-3 text-left transition-all duration-300 
-                      font-medium text-gray-900 relative overflow-hidden group
-                      ${isHovered ? 'rounded-lg' : 'rounded-none'}
-                      ${activeTab === item.id 
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
-                        : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 active:bg-purple-100'
-                      }
-                    `}
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
-                    whileHover={{ 
-                      scale: 1.05,
-                      x: 8,
-                      y: -2,
-                      boxShadow: activeTab === item.id 
-                        ? "0 10px 25px rgba(147, 51, 234, 0.4)"
-                        : "0 5px 15px rgba(147, 51, 234, 0.2)"
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {/* Hover Background Effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 opacity-0 group-hover:opacity-100"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: "0%" }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    />
-                    
-                    {/* Active Indicator */}
-                    {activeTab === item.id && (
-                      <motion.div
-                        className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full"
-                        initial={{ scaleY: 0 }}
-                        animate={{ scaleY: 1 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                      />
-                    )}
-                    
-                    <motion.span 
-                      className="text-lg relative z-10"
-                      animate={activeTab === item.id ? { 
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 10, -10, 0]
-                      } : {}}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <IconRenderer icon={item.icon} label={item.label} size={32} isActive={activeTab === item.id} />
-                    </motion.span>
-                    <motion.span 
-                      className="text-sm"
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {item.label}
-                    </motion.span>
-                    {activeTab === item.id && (
-                      <motion.div
-                        className="ml-auto w-2 h-2 bg-white rounded-full"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    )}
-                  </motion.button>
-                ))}
-              </nav>
-              
-              {/* Logout Button */}
-              <motion.button
-                onClick={() => handleTabChange('logout')}
-                className="flex items-center gap-3 px-4 py-3 mt-6 rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200"
-                initial={{ x: -50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.4 + items.length * 0.1, duration: 0.4 }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    y: -2,
-                    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.2)"
-                  }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.span 
-                  className="text-lg"
-                  whileHover={{ rotate: [0, -20, 20, 0] }}
+            {/* Header with Logo and Close Button */}
+            <motion.div 
+              className="flex items-center justify-between mb-6 flex-shrink-0"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+            >
+              {/* Logo on top left */}
+              <div className="flex items-center">
+                <motion.div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center mr-3"
+                  whileHover={{ scale: 1.1, rotate: 360 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                </motion.span> 
-                <motion.span 
-                  className="text-sm"
+                  <Image src="/icons/logo.svg" alt="Logo" width={32} height={32} className="w-8 h-8" />
+                </motion.div>
+                <motion.div 
+                  className="block"
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.2 }}
                 >
-                  Logout
-                </motion.span>
+                  <span className="text-lg font-bold text-gray-800">Taru</span>
+                </motion.div>
+              </div>
+              
+              {/* Close Button - Only visible on mobile when sidebar is open */}
+              <motion.button
+                onClick={onToggle}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X className="w-5 h-5 text-gray-600" />
               </motion.button>
-            </div>
+            </motion.div>
+            
+            {/* Navigation - Scrollable */}
+            <nav className="flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+              {items.map((item, index) => (
+                <motion.button
+                  key={item.id}
+                  onClick={() => handleTabChange(item.id)}
+                  className={`
+                    flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-300 
+                    font-medium text-gray-900 relative overflow-hidden group flex-shrink-0 min-h-[44px]
+                    ${isHovered ? 'rounded-lg' : 'rounded-none'}
+                    ${activeTab === item.id 
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
+                      : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 active:bg-purple-100'
+                    }
+                  `}
+                  initial={{ x: -50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    x: 8,
+                    y: -2,
+                    boxShadow: activeTab === item.id 
+                      ? "0 10px 25px rgba(147, 51, 234, 0.4)"
+                      : "0 5px 15px rgba(147, 51, 234, 0.2)"
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {/* Hover Background Effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 opacity-0 group-hover:opacity-100"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "0%" }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  />
+                  
+                  {/* Active Indicator */}
+                  {activeTab === item.id && (
+                    <motion.div
+                      className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full"
+                      initial={{ scaleY: 0 }}
+                      animate={{ scaleY: 1 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    />
+                  )}
+                  
+                  <motion.span 
+                    className="text-lg relative z-10 flex-shrink-0"
+                    animate={activeTab === item.id ? { 
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 10, -10, 0]
+                    } : {}}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <IconRenderer icon={item.icon} label={item.label} size={32} isActive={activeTab === item.id} />
+                  </motion.span>
+                  <motion.span 
+                    className="text-sm"
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                  {activeTab === item.id && (
+                    <motion.div
+                      className="ml-auto w-2 h-2 bg-white rounded-full flex-shrink-0"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  )}
+                </motion.button>
+              ))}
+            </nav>
+            
+            {/* Logout Button - Fixed at bottom */}
+            <motion.button
+              onClick={() => handleTabChange('logout')}
+              className="flex items-center gap-3 px-4 py-2.5 mt-auto rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200 flex-shrink-0 min-h-[44px]"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 + items.length * 0.1, duration: 0.4 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -2,
+                  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.2)"
+                }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <motion.span 
+                className="text-lg flex-shrink-0"
+                whileHover={{ rotate: [0, -20, 20, 0] }}
+                transition={{ duration: 0.5 }}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </motion.span> 
+              <motion.span 
+                className="text-sm"
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                Logout
+              </motion.span>
+            </motion.button>
             
           </motion.aside>
         </AnimatePresence>
@@ -462,7 +460,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
           className={`
             fixed top-0 left-0 bottom-0 z-[50] 
             bg-white border-r border-gray-300 
-            flex flex-col justify-between py-6 px-4
+            flex flex-col py-6 px-4 h-screen
             w-20
             ${isSidebarExpanded ? 'shadow-2xl' : ''}
           `}
@@ -473,141 +471,139 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
           onMouseLeave={() => setIsHovered(false)}
           style={{ touchAction: 'pan-y' }}
         >
-          <div>
-            {/* Header with Logo */}
-            <motion.div 
-              className="flex items-center justify-between mb-10"
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-            >
-              <div className="flex items-center">
-                <motion.div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center mr-3"
-                  whileHover={{ scale: 1.1, rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Image src="/icons/logo.svg" alt="Logo" width={32} height={32} className="w-10 h-10" />
-                </motion.div>
-                <motion.div 
-                className="hidden md:block"
-                animate={{ opacity: isHovered ? 1 : 0 }}
-                transition={{ 
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  duration: 0.4
-                }}
+          {/* Header with Logo */}
+          <motion.div 
+            className="flex items-center justify-between mb-6 flex-shrink-0"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            <div className="flex items-center">
+              <motion.div 
+                className="w-12 h-12 rounded-full flex items-center justify-center mr-3"
+                whileHover={{ scale: 1.1, rotate: 360 }}
+                transition={{ duration: 0.5 }}
               >
-                <span className="text-lg font-bold text-gray-800">Taru</span>
+                <Image src="/icons/logo.svg" alt="Logo" width={32} height={32} className="w-10 h-10" />
               </motion.div>
-              </div>
-            </motion.div>
-            
-            {/* Navigation */}
-            <motion.nav 
-              className="flex flex-col"
-              animate={{
-                gap: isHovered ? "2rem" : "0.5rem"
-              }}
-              transition={{
+              <motion.div 
+              className="hidden md:block"
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ 
                 type: "spring",
                 stiffness: 300,
                 damping: 30,
                 duration: 0.4
               }}
             >
-              {items.map((item, index) => (
-                <motion.button
-                  key={item.id}
-                  onClick={() => handleTabChange(item.id)}
-                  className={`
-                    flex items-center gap-3 px-4 py-3 rounded-3xl text-left transition-all duration-300 
-                    font-medium text-gray-900 relative overflow-hidden group w-full min-h-[48px]
-                    ${activeTab === item.id 
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
-                      : 'hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 active:bg-purple-200'
-                    }
-                  `}
-                  initial={{ x: -50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    x: 0,
-                    transition: { duration: 0.2 }
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <motion.span 
-                    className="text-base"
-                    animate={activeTab === item.id ? { 
-                      scale: [1, 1.2, 1],
-                      rotate: [0, 10, -10, 0]
-                    } : {}}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <IconRenderer icon={item.icon} label={item.label} size={28} isActive={activeTab === item.id} />
-                  </motion.span>
-                  <motion.span 
-                    className="text-sm"
-                    animate={{ opacity: isHovered ? 1 : 0 }}
-                    transition={{ 
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 30,
-                      duration: 0.4
-                    }}
-                  >
-                    {item.label}
-                  </motion.span>
-                  {activeTab === item.id && (
-                    <motion.div
-                      className="ml-auto w-2 h-2 bg-white rounded-full"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  )}
-                </motion.button>
-              ))}
-            </motion.nav>
-            
-            {/* Logout Button */}
-            <motion.button
-              onClick={() => handleTabChange('logout')}
-              className="flex items-center gap-3 px-4 py-2 mt-6 rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200"
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 + items.length * 0.1, duration: 0.4 }}
-              whileHover={{ 
-                scale: 1.02,
-                x: 0,
-                transition: { duration: 0.2 }
-              }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <motion.span 
-                className="text-base"
-                whileHover={{ rotate: [0, -20, 20, 0] }}
-                transition={{ duration: 0.5 }}
-              >
-                <IconRenderer icon="/icons/logout.png" label="Logout" size={28} isActive={activeTab === 'logout'} />
-              </motion.span> 
-              <motion.span 
-                className="text-sm"
-                animate={{ opacity: isHovered ? 1 : 0 }}
-                transition={{ 
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  duration: 0.4
+              <span className="text-lg font-bold text-gray-800">Taru</span>
+            </motion.div>
+            </div>
+          </motion.div>
+          
+          {/* Navigation - Scrollable */}
+          <motion.nav 
+            className="flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+            animate={{
+              gap: isHovered ? "0.75rem" : "0.5rem"
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: 0.4
+            }}
+          >
+            {items.map((item, index) => (
+              <motion.button
+                key={item.id}
+                onClick={() => handleTabChange(item.id)}
+                className={`
+                  flex items-center gap-3 pl-[0.7rem] pr-[0.3rem] py-2.5 rounded-3xl text-left transition-all duration-300 
+                  font-medium text-gray-900 relative overflow-hidden group w-full min-h-[44px] flex-shrink-0
+                  ${activeTab === item.id 
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
+                    : 'hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 active:bg-purple-200'
+                  }
+                `}
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
+                whileHover={{ 
+                  scale: 1.02,
+                  x: 0,
+                  transition: { duration: 0.2 }
                 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Logout
-              </motion.span>
-            </motion.button>
-          </div>
+                <motion.span 
+                  className="text-base flex-shrink-0"
+                  animate={activeTab === item.id ? { 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 10, -10, 0]
+                  } : {}}
+                  transition={{ duration: 0.5 }}
+                >
+                  <IconRenderer icon={item.icon} label={item.label} size={28} isActive={activeTab === item.id} />
+                </motion.span>
+                <motion.span 
+                  className="text-sm whitespace-nowrap"
+                  animate={{ opacity: isHovered ? 1 : 0 }}
+                  transition={{ 
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                    duration: 0.4
+                  }}
+                >
+                  {item.label}
+                </motion.span>
+                {activeTab === item.id && (
+                  <motion.div
+                    className="ml-auto w-2 h-2 bg-white rounded-full flex-shrink-0"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </motion.button>
+            ))}
+          </motion.nav>
+          
+          {/* Logout Button - Fixed at bottom */}
+          <motion.button
+            onClick={() => handleTabChange('logout')}
+            className="flex items-center gap-3 pl-[0.7rem] pr-[0.3rem] py-2.5 mt-auto rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200 flex-shrink-0 min-h-[44px]"
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 + items.length * 0.1, duration: 0.4 }}
+            whileHover={{ 
+              scale: 1.02,
+              x: 0,
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <motion.span 
+              className="text-base flex-shrink-0"
+              whileHover={{ rotate: [0, -20, 20, 0] }}
+              transition={{ duration: 0.5 }}
+            >
+              <IconRenderer icon="/icons/logout.png" label="Logout" size={28} isActive={activeTab === 'logout'} />
+            </motion.span> 
+            <motion.span 
+              className="text-sm whitespace-nowrap"
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                duration: 0.4
+              }}
+            >
+              Logout
+            </motion.span>
+          </motion.button>
           
         </motion.aside>
       )}

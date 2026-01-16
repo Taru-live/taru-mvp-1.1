@@ -1217,7 +1217,7 @@ function StudentDashboardContent() {
             >
               {/* Animated Background Gradient */}
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 opacity-20 blur-xl"
+                className="absolute inset-0 rounded-[999px] bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 opacity-20 blur-xl"
                 animate={{
                   opacity: [0.15, 0.25, 0.15],
                 }}
@@ -1254,7 +1254,7 @@ function StudentDashboardContent() {
                   }
                 }}
                 placeholder="Search modules, topics, or questions..."
-                className="relative w-full pl-11 pr-16 py-4 rounded-[135px] border-2 border-purple-200 bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-200/50 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:border-purple-300"
+                className="relative w-full pl-11 pr-16 py-4 rounded-[999px] border-2 border-purple-200 bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-200/50 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:border-purple-300"
               />
               
               {/* Fun Decorative Elements */}
@@ -1270,7 +1270,7 @@ function StudentDashboardContent() {
               
               {/* Animated Glow Effect */}
               <motion.div
-                className="absolute inset-0 rounded-[135px] bg-gradient-to-r from-purple-400/30 via-pink-400/30 to-purple-400/30 opacity-0 pointer-events-none blur-md"
+                className="absolute inset-0 rounded-[999px] bg-gradient-to-r from-purple-400/30 via-pink-400/30 to-purple-400/30 opacity-0 pointer-events-none blur-md"
                 animate={{
                   opacity: [0, 0.3, 0],
                 }}
@@ -1379,16 +1379,7 @@ function StudentDashboardContent() {
               </div>
                
                {/* Hover Arrow */}
-               <motion.div
-                 className="hidden sm:block ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                 animate={{ x: [0, 3, 0] }}
-                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                 onClick={() => setActiveTab('settings')}
-               >
-                 <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                 </svg>
-               </motion.div>
+              
              </motion.div>
           </div>
         </div>
@@ -1548,6 +1539,7 @@ function StudentDashboardContent() {
                   profile={profileData} 
                   onProfileUpdate={handleProfileUpdate}
                   onAvatarChange={handleAvatarSelect}
+                  onAvatarClick={() => setIsAvatarSelectorOpen(true)}
                   availableAvatars={AVAILABLE_AVATARS}
                 />
               )}

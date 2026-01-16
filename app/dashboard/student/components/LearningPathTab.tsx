@@ -704,7 +704,7 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                 {/* Current Plan Badge */}
                 {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription && (
                   <motion.div 
-                    className={`absolute top-4 ${currentPath?._id === path._id ? 'right-24 sm:right-32 md:right-40' : 'right-4'} sm:top-6 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1 sm:gap-2 shadow-xl z-20 ${
+                    className={`group absolute top-4 ${currentPath?._id === path._id ? 'right-24 sm:right-32 md:right-40' : 'right-4'} sm:top-6 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-xl z-20 ${
                       subscriptionStatus.subscription.planType === 'premium'
                         ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white'
                         : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
@@ -714,18 +714,17 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                     transition={{ delay: 0.4, type: "spring" }}
                   >
                     {subscriptionStatus.subscription.planType === 'premium' ? (
-                      <>
-                        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
-                        <span className="hidden sm:inline">Premium Plan</span>
-                        <span className="sm:hidden">Premium</span>
-                      </>
+                      <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                     ) : (
-                      <>
-                        <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
-                        <span className="hidden sm:inline">Basic Plan</span>
-                        <span className="sm:hidden">Basic</span>
-                      </>
+                      <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                     )}
+                    
+                    {/* Hover Tooltip - Plan Name */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-white text-black text-xs sm:text-sm font-semibold rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-30 border border-gray-200">
+                      {subscriptionStatus.subscription.planType === 'premium' ? 'Premium Plan' : 'Basic Plan'}
+                      {/* Tooltip Arrow */}
+                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                    </div>
                   </motion.div>
                 )}
 

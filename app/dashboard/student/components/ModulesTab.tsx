@@ -639,7 +639,7 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
 
       if (response.ok) {
         const result = await response.json();
-        setSuccess(result.message || 'YouTube scraping initiated! Please wait for modules to be processed.');
+        // Success message removed - N8N indicator will show the status instead
         
         // Clear local state if existing data was deleted
         if (deleteExisting) {
