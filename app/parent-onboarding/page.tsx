@@ -59,27 +59,56 @@ const states = [
 ];
 
 export default function ParentOnboarding() {
-  const [currentStep, setCurrentStep] = useState(1);
+  // Load form data and step from localStorage on mount
+  const getInitialFormData = (): ParentOnboardingData => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('parent_onboarding_formData');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved form data:', e);
+        }
+      }
+    }
+    return {
+      fullName: '',
+      relationshipToStudent: '',
+      contactNumber: '',
+      alternateContactNumber: '',
+      email: '',
+      occupation: '',
+      educationLevel: '',
+      preferredLanguage: '',
+      addressLine1: '',
+      addressLine2: '',
+      cityVillage: '',
+      state: '',
+      pinCode: '',
+      linkedStudentId: '',
+      studentUniqueId: '',
+      consentToAccessChildData: false,
+      agreeToTerms: false
+    };
+  };
+
+  const getInitialStep = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('parent_onboarding_currentStep');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 1;
+        } catch (e) {
+          console.error('Error parsing saved step:', e);
+        }
+      }
+    }
+    return 1;
+  };
+
+  const [currentStep, setCurrentStep] = useState(getInitialStep());
   const [isSuccess, setIsSuccess] = useState(false);
-  const [formData, setFormData] = useState<ParentOnboardingData>({
-    fullName: '',
-    relationshipToStudent: '',
-    contactNumber: '',
-    alternateContactNumber: '',
-    email: '',
-    occupation: '',
-    educationLevel: '',
-    preferredLanguage: '',
-    addressLine1: '',
-    addressLine2: '',
-    cityVillage: '',
-    state: '',
-    pinCode: '',
-    linkedStudentId: '',
-    studentUniqueId: '',
-    consentToAccessChildData: false,
-    agreeToTerms: false
-  });
+  const [formData, setFormData] = useState<ParentOnboardingData>(getInitialFormData());
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,14 +149,15 @@ export default function ParentOnboarding() {
           const registrationData = RegistrationDataManager.getRegistrationData();
           
           // Pre-fill form with existing data and registration data
+          // Only fill empty fields to preserve localStorage data
           setFormData(prev => ({
             ...prev,
-            fullName: user.name || registrationData?.fullName || '',
-            email: user.email || registrationData?.email || '',
-            preferredLanguage: user.profile?.language || registrationData?.language || '',
+            fullName: prev.fullName || user.name || registrationData?.fullName || '',
+            email: prev.email || user.email || registrationData?.email || '',
+            preferredLanguage: prev.preferredLanguage || user.profile?.language || registrationData?.language || '',
             // Try to link student if student ID was provided during registration
-            linkedStudentId: registrationData?.classGrade || '', // classGrade contains student ID for parents
-            studentUniqueId: registrationData?.classGrade || '',
+            linkedStudentId: prev.linkedStudentId || registrationData?.classGrade || '', // classGrade contains student ID for parents
+            studentUniqueId: prev.studentUniqueId || registrationData?.classGrade || '',
           }));
           
           console.log('🔍 Pre-filled parent form data:', {
@@ -199,6 +229,20 @@ export default function ParentOnboarding() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Save formData to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isSuccess) {
+      localStorage.setItem('parent_onboarding_formData', JSON.stringify(formData));
+    }
+  }, [formData, isSuccess]);
+
+  // Save currentStep to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isSuccess) {
+      localStorage.setItem('parent_onboarding_currentStep', currentStep.toString());
+    }
+  }, [currentStep, isSuccess]);
+
   const handleNext = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -269,6 +313,12 @@ export default function ParentOnboarding() {
         
         // Clear registration data after successful onboarding
         RegistrationDataManager.clearRegistrationData();
+        
+        // Clear localStorage after successful submission
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('parent_onboarding_formData');
+          localStorage.removeItem('parent_onboarding_currentStep');
+        }
         
         setTimeout(() => {
           router.push('/dashboard/parent');
@@ -1162,7 +1212,7 @@ export default function ParentOnboarding() {
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  I Have Read and Understand
+                  I Have Read and Understood
                 </button>
               </div>
             </motion.div>
@@ -1303,7 +1353,7 @@ export default function ParentOnboarding() {
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  I Have Read and Understand
+                  I Have Read and Understood
                 </button>
               </div>
             </motion.div>

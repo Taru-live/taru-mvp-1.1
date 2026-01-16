@@ -30,12 +30,63 @@ interface AssessmentResults {
 }
 
 export default function DiagnosticTestTab() {
+  // Load answers and progress from localStorage on mount
+  const getInitialAnswers = (): Record<string, string | number | string[]> => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('diagnostic_test_answers');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved answers:', e);
+        }
+      }
+    }
+    return {};
+  };
+
+  const getInitialQuestionIndex = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('diagnostic_test_currentIndex');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 0;
+        } catch (e) {
+          console.error('Error parsing saved index:', e);
+        }
+      }
+    }
+    return 0;
+  };
+
+  const getInitialTimeSpent = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('diagnostic_test_timeSpent');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 0;
+        } catch (e) {
+          console.error('Error parsing saved time:', e);
+        }
+      }
+    }
+    return 0;
+  };
+
+  const getInitialTestStarted = (): boolean => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('diagnostic_test_started');
+      return saved === 'true';
+    }
+    return false;
+  };
+
   const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string | number | string[]>>({});
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(getInitialQuestionIndex());
+  const [answers, setAnswers] = useState<Record<string, string | number | string[]>>(getInitialAnswers());
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
-  const [testStarted, setTestStarted] = useState(false);
+  const [totalTimeSpent, setTotalTimeSpent] = useState(getInitialTimeSpent());
+  const [testStarted, setTestStarted] = useState(getInitialTestStarted());
   const [testCompleted, setTestCompleted] = useState(false);
   const [results, setResults] = useState<AssessmentResults | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,6 +96,34 @@ export default function DiagnosticTestTab() {
   useEffect(() => {
     loadDiagnosticQuestions();
   }, []);
+
+  // Save answers to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !testCompleted) {
+      localStorage.setItem('diagnostic_test_answers', JSON.stringify(answers));
+    }
+  }, [answers, testCompleted]);
+
+  // Save currentQuestionIndex to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !testCompleted) {
+      localStorage.setItem('diagnostic_test_currentIndex', currentQuestionIndex.toString());
+    }
+  }, [currentQuestionIndex, testCompleted]);
+
+  // Save totalTimeSpent to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !testCompleted) {
+      localStorage.setItem('diagnostic_test_timeSpent', totalTimeSpent.toString());
+    }
+  }, [totalTimeSpent, testCompleted]);
+
+  // Save testStarted to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !testCompleted) {
+      localStorage.setItem('diagnostic_test_started', testStarted.toString());
+    }
+  }, [testStarted, testCompleted]);
 
   const completeTest = useCallback(async () => {
     try {
@@ -67,6 +146,14 @@ export default function DiagnosticTestTab() {
       setResults(data.results);
       setTestCompleted(true);
       setTestStarted(false);
+      
+      // Clear localStorage after successful completion
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('diagnostic_test_answers');
+        localStorage.removeItem('diagnostic_test_currentIndex');
+        localStorage.removeItem('diagnostic_test_timeSpent');
+        localStorage.removeItem('diagnostic_test_started');
+      }
     } catch (err) {
       setError('Failed to submit test. Please try again.');
       console.error('Submit test error:', err);
@@ -150,6 +237,14 @@ export default function DiagnosticTestTab() {
       setTimeRemaining(0);
       setTotalTimeSpent(0);
       setError('');
+      
+      // Clear localStorage when resetting
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('diagnostic_test_answers');
+        localStorage.removeItem('diagnostic_test_currentIndex');
+        localStorage.removeItem('diagnostic_test_timeSpent');
+        localStorage.removeItem('diagnostic_test_started');
+      }
       
       // Reload questions
       await loadDiagnosticQuestions();

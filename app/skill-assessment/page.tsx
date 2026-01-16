@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -115,23 +115,52 @@ type SpeechRecognition = typeof window.SpeechRecognition;
 type SpeechRecognitionEvent = typeof window.SpeechRecognitionEvent;
 
 export default function SkillAssessment() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<SkillAssessmentData>({
-    languagePreference: '',
-    enableVoiceInstructions: false,
-    preferredLearningStyle: [],
-    bestLearningEnvironment: [],
-    subjectsILike: [],
-    topicsThatExciteMe: [],
-    howISpendFreeTime: [],
-    thingsImConfidentDoing: [],
-    thingsINeedHelpWith: [],
-    dreamJobAsKid: '',
-    currentCareerInterest: [],
-    peopleIAdmire: [],
-    whatImMostProudOf: '',
-    ifICouldFixOneProblem: ''
-  });
+  // Load form data and step from localStorage on mount
+  const getInitialFormData = (): SkillAssessmentData => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('skill_assessment_formData');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved form data:', e);
+        }
+      }
+    }
+    return {
+      languagePreference: '',
+      enableVoiceInstructions: false,
+      preferredLearningStyle: [],
+      bestLearningEnvironment: [],
+      subjectsILike: [],
+      topicsThatExciteMe: [],
+      howISpendFreeTime: [],
+      thingsImConfidentDoing: [],
+      thingsINeedHelpWith: [],
+      dreamJobAsKid: '',
+      currentCareerInterest: [],
+      peopleIAdmire: [],
+      whatImMostProudOf: '',
+      ifICouldFixOneProblem: ''
+    };
+  };
+
+  const getInitialStep = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('skill_assessment_currentStep');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 1;
+        } catch (e) {
+          console.error('Error parsing saved step:', e);
+        }
+      }
+    }
+    return 1;
+  };
+
+  const [currentStep, setCurrentStep] = useState(getInitialStep());
+  const [formData, setFormData] = useState<SkillAssessmentData>(getInitialFormData());
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -195,6 +224,20 @@ export default function SkillAssessment() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Save formData to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('skill_assessment_formData', JSON.stringify(formData));
+    }
+  }, [formData]);
+
+  // Save currentStep to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('skill_assessment_currentStep', currentStep.toString());
+    }
+  }, [currentStep]);
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
@@ -279,6 +322,11 @@ export default function SkillAssessment() {
       });
 
       if (response.ok) {
+        // Clear localStorage after successful submission
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('skill_assessment_formData');
+          localStorage.removeItem('skill_assessment_currentStep');
+        }
         router.push('/diagnostic-assessment');
       } else {
         const errorData = await response.json();
