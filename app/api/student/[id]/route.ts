@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Student from '@/models/Student';
+import { canAccessStudent } from '@/lib/auth-utils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -50,24 +51,7 @@ export async function GET(
       );
     }
 
-    // Allow access if:
-    // 1. User is the student themselves
-    // 2. User is a parent linked to this student
-    // 3. User is an admin or teacher
-    const isAuthorized = 
-      decoded.userId === id || // Student accessing their own data
-      (user.role === 'parent' && user.profile?.linkedStudentId === id) || // Parent accessing linked student
-      user.role === 'admin' || // Admin access
-      user.role === 'teacher'; // Teacher access
-
-    if (!isAuthorized) {
-      return NextResponse.json(
-        { error: 'Unauthorized to access this student data' },
-        { status: 403 }
-      );
-    }
-
-    // Fetch student data
+    // Fetch student data first to get student _id
     const student = await Student.findOne({ userId: id });
     if (!student) {
       return NextResponse.json(
@@ -76,10 +60,37 @@ export async function GET(
       );
     }
 
+    // Check authorization based on role
+    let isAuthorized = false;
+
+    if (decoded.userId === id) {
+      // Student accessing their own data
+      isAuthorized = true;
+    } else if (user.role === 'parent' && user.profile?.linkedStudentId === id) {
+      // Parent accessing linked student
+      isAuthorized = true;
+    } else if (user.role === 'platform_super_admin' || user.role === 'admin') {
+      // Super admin and admin have full access
+      isAuthorized = true;
+    } else if (user.role === 'teacher') {
+      // Teacher can only access students assigned to them
+      isAuthorized = await canAccessStudent(decoded.userId, user.role, student._id.toString());
+    } else if (user.role === 'organization') {
+      // Organization can only access students created under them
+      isAuthorized = await canAccessStudent(decoded.userId, user.role, student._id.toString());
+    }
+
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized to access this student data' },
+        { status: 403 }
+      );
+    }
+
     // Return student data (excluding sensitive information for non-admin users)
     const studentData = student.toJSON();
     
-    if (user.role !== 'admin') {
+    if (user.role !== 'admin' && user.role !== 'platform_super_admin') {
       // Remove sensitive data for non-admin users
       delete studentData.deviceId;
       delete studentData.consentForDataUsage;

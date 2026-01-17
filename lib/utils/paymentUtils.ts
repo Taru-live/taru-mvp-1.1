@@ -2,6 +2,56 @@ import connectDB from '@/lib/mongodb';
 import Subscription from '@/models/Subscription';
 import UsageTracking from '@/models/UsageTracking';
 import Payment from '@/models/Payment';
+import Student from '@/models/Student';
+
+/**
+ * Check if a student is linked to a teacher or organization
+ * 
+ * FREE ACCESS RULE: Linked students bypass all subscription and payment checks.
+ * This is enforced server-side and cannot be bypassed from the frontend.
+ * 
+ * A student is considered "linked" if:
+ * - student.teacherId is set (linked to a teacher), OR
+ * - student.organizationId is set (linked to an organization), OR
+ * - student.createdBy.type is 'teacher' or 'organization', OR
+ * - student.managedBy.type is 'teacher' or 'organization'
+ * 
+ * @param uniqueId - Student unique ID (Student.uniqueId)
+ * @returns Promise<boolean> - true if student is linked to teacher or organization
+ * 
+ * SECURITY: This check is performed server-side in all subscription/usage functions.
+ * Frontend should never determine free access - always check server-side.
+ */
+export async function isStudentLinked(uniqueId: string): Promise<boolean> {
+  try {
+    await connectDB();
+    
+    const student = await Student.findOne({ uniqueId });
+    
+    if (!student) {
+      return false;
+    }
+    
+    // Check if student is linked to a teacher or organization
+    // Primary checks: teacherId and organizationId fields
+    const isLinkedToTeacher = !!(student.teacherId && student.teacherId.trim() !== '');
+    const isLinkedToOrganization = !!(student.organizationId && student.organizationId.trim() !== '');
+    
+    // Secondary checks: createdBy/managedBy fields as additional indicators
+    // These ensure students created by teachers/organizations are also considered linked
+    const isCreatedByTeacher = student.createdBy?.type === 'teacher';
+    const isCreatedByOrganization = student.createdBy?.type === 'organization';
+    const isManagedByTeacher = student.managedBy?.type === 'teacher';
+    const isManagedByOrganization = student.managedBy?.type === 'organization';
+    
+    return isLinkedToTeacher || isLinkedToOrganization || 
+           isCreatedByTeacher || isCreatedByOrganization ||
+           isManagedByTeacher || isManagedByOrganization;
+  } catch (error) {
+    console.error('Error checking if student is linked:', error);
+    return false;
+  }
+}
 
 /**
  * Map payment amount to plan type and limits
@@ -160,6 +210,7 @@ export async function correctSubscriptionFromPayment(
 
 /**
  * Check if student has active subscription
+ * Linked students (to teacher or organization) automatically have free access
  * @param uniqueId - Student unique ID
  * @param learningPathId - Optional learning path ID to scope the check
  * Note: If learningPathId is provided, only checks subscription for that specific path
@@ -170,6 +221,13 @@ export async function hasActiveSubscription(
 ): Promise<boolean> {
   try {
     await connectDB();
+    
+    // CRITICAL: Linked students get free access - bypass subscription check
+    const isLinked = await isStudentLinked(uniqueId);
+    if (isLinked) {
+      console.log(`✅ Student ${uniqueId} is linked to teacher/organization - granting free access`);
+      return true;
+    }
     
     // Build query - scope to learning path if provided
     const query: any = {
@@ -205,12 +263,20 @@ export async function hasActiveSubscription(
 
 /**
  * Check if student can save learning path
+ * Linked students (to teacher or organization) can save unlimited learning paths
  * Note: This checks for ANY active subscription (not scoped to learning path)
  * as learning path saving is a global feature
  */
 export async function canSaveLearningPath(uniqueId: string): Promise<boolean> {
   try {
     await connectDB();
+    
+    // CRITICAL: Linked students get free access - can save unlimited learning paths
+    const isLinked = await isStudentLinked(uniqueId);
+    if (isLinked) {
+      console.log(`✅ Student ${uniqueId} is linked to teacher/organization - allowing unlimited learning path saves`);
+      return true;
+    }
     
     // Find any active subscription (learning path saving is a global feature)
     const subscription = await Subscription.findOne({
@@ -241,6 +307,7 @@ export async function canSaveLearningPath(uniqueId: string): Promise<boolean> {
 
 /**
  * Check if student can use AI Buddy chat for a specific chapter
+ * Linked students (to teacher or organization) get unlimited access
  * Note: This function checks subscription and per-chapter usage limits.
  * Locked chapter validation should be done at the route level before calling this function.
  * @param learningPathId - Optional learning path ID. If provided, checks subscription for that path.
@@ -252,6 +319,14 @@ export async function canUseAIBuddy(uniqueId: string, chapterId: string, learnin
 }> {
   try {
     await connectDB();
+    
+    // CRITICAL: Linked students get free access - unlimited AI Buddy chats
+    const isLinked = await isStudentLinked(uniqueId);
+    if (isLinked) {
+      console.log(`✅ Student ${uniqueId} is linked to teacher/organization - granting unlimited AI Buddy access`);
+      // Return unlimited access (high limit to indicate unlimited)
+      return { allowed: true, remaining: 999, limit: 999 };
+    }
     
     // First try to find subscription for specific learning path, then fallback to global
     let subscription = null;
@@ -430,6 +505,7 @@ export async function recordAIBuddyUsage(uniqueId: string, chapterId: string, le
 
 /**
  * Check if student can generate MCQ for a specific chapter
+ * Linked students (to teacher or organization) get unlimited access
  * Note: This function checks subscription and per-chapter usage limits.
  * Locked chapter validation should be done at the route level before calling this function.
  * @param learningPathId - Optional learning path ID. If provided, checks subscription for that path.
@@ -441,6 +517,14 @@ export async function canGenerateMCQ(uniqueId: string, chapterId: string, learni
 }> {
   try {
     await connectDB();
+    
+    // CRITICAL: Linked students get free access - unlimited MCQ generation
+    const isLinked = await isStudentLinked(uniqueId);
+    if (isLinked) {
+      console.log(`✅ Student ${uniqueId} is linked to teacher/organization - granting unlimited MCQ generation access`);
+      // Return unlimited access (high limit to indicate unlimited)
+      return { allowed: true, remaining: 999, limit: 999 };
+    }
     
     console.log(`🔍 Checking MCQ generation access:`, {
       uniqueId,

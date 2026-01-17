@@ -5,7 +5,7 @@ import Student from '@/models/Student';
 import LearningPath from '@/models/LearningPath';
 import CareerSession from '@/models/CareerSession';
 import { processLearningPathData, saveLearningPathToDatabase, getLearningPathByCareer, saveN8NLearningPathResponse } from '@/lib/utils/learningPathUtils';
-import { hasActiveSubscription } from '@/lib/utils/paymentUtils';
+import { hasActiveSubscription, isStudentLinked } from '@/lib/utils/paymentUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const N8N_CAREER_DETAILS_WEBHOOK_URL = 'https://nclbtaru.app.n8n.cloud/webhook/detail-career-path';
@@ -417,17 +417,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if student has active subscription
-    const hasSubscription = await hasActiveSubscription(student.uniqueId);
-    if (!hasSubscription) {
-      return NextResponse.json(
-        { 
-          error: 'Active subscription required',
-          requiresPayment: true,
-          message: 'Please complete payment to access career details'
-        },
-        { status: 403 }
-      );
+    // CRITICAL: Linked students get free access - bypass subscription check
+    const isLinked = await isStudentLinked(student.uniqueId);
+    if (!isLinked) {
+      // Only check subscription for non-linked students
+      const hasSubscription = await hasActiveSubscription(student.uniqueId);
+      if (!hasSubscription) {
+        return NextResponse.json(
+          { 
+            error: 'Active subscription required',
+            requiresPayment: true,
+            message: 'Please complete payment to access career details'
+          },
+          { status: 403 }
+        );
+      }
+    } else {
+      console.log(`✅ Student ${student.uniqueId} is linked to teacher/organization - granting free access to career details`);
     }
 
     // Get request body for career path details
@@ -615,17 +621,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if student has active subscription
-    const hasSubscription = await hasActiveSubscription(student.uniqueId);
-    if (!hasSubscription) {
-      return NextResponse.json(
-        { 
-          error: 'Active subscription required',
-          requiresPayment: true,
-          message: 'Please complete payment to access career details'
-        },
-        { status: 403 }
-      );
+    // CRITICAL: Linked students get free access - bypass subscription check
+    const isLinked = await isStudentLinked(student.uniqueId);
+    if (!isLinked) {
+      // Only check subscription for non-linked students
+      const hasSubscription = await hasActiveSubscription(student.uniqueId);
+      if (!hasSubscription) {
+        return NextResponse.json(
+          { 
+            error: 'Active subscription required',
+            requiresPayment: true,
+            message: 'Please complete payment to access career details'
+          },
+          { status: 403 }
+        );
+      }
+    } else {
+      console.log(`✅ Student ${student.uniqueId} is linked to teacher/organization - granting free access to career details`);
     }
 
     // Get career path and description from query parameters

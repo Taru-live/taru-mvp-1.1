@@ -9,6 +9,7 @@ interface DecodedToken {
   email: string;
   fullName: string;
   role: string;
+  mustChangePassword?: boolean;
   requiresOnboarding?: boolean;
   requiresAssessment?: boolean;
   [key: string]: unknown;
@@ -35,6 +36,11 @@ export async function middleware(request: NextRequest) {
     if (authResult.redirect) return authResult.redirect;
 
     const decoded = authResult.decoded!;
+    
+    // Check if user must change password (highest priority - block all access)
+    if (decoded.mustChangePassword === true) {
+      return NextResponse.redirect(new URL('/change-password', request.url));
+    }
     
     // Check if user requires onboarding
     if (decoded.requiresOnboarding) {
@@ -95,6 +101,16 @@ export async function middleware(request: NextRequest) {
     if (authResult.redirect) return authResult.redirect;
 
     const decoded = authResult.decoded!;
+    
+    // Allow access to change-password page even if mustChangePassword is true
+    if (pathname.startsWith('/change-password')) {
+      return NextResponse.next();
+    }
+    
+    // Check if user must change password (block all other protected routes)
+    if (decoded.mustChangePassword === true) {
+      return NextResponse.redirect(new URL('/change-password', request.url));
+    }
     
     // Check if user is accessing the correct onboarding page for their role
     if (pathname.startsWith('/student-onboarding') && decoded.role !== 'student') {
@@ -173,6 +189,7 @@ export const config = {
     '/subject-selection',
     '/modules/:path*',
     '/invite/:path*',
-    '/super-admin-login'
+    '/super-admin-login',
+    '/change-password'
   ]
 };

@@ -14,6 +14,10 @@ import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../..
 import VantaBackground from '../../components/VantaBackground';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
 import LearningPathTab from '../student/components/LearningPathTab';
+import TestManagement from './components/TestManagement';
+import TestAssignment from './components/TestAssignment';
+import TestEvaluation from './components/TestEvaluation';
+import NotificationCenter from '../../components/NotificationCenter';
 
 // Add custom hook for responsive behavior
 function useWindowSize() {
@@ -79,6 +83,17 @@ interface StudentData {
   assessmentCompleted: boolean;
   diagnosticCompleted: boolean;
   diagnosticScore: number;
+  createdBy?: {
+    type?: 'teacher' | 'organization' | 'self';
+    id?: string;
+    name?: string;
+  } | null;
+  managedBy?: {
+    type?: 'teacher' | 'organization' | 'self';
+    id?: string;
+    name?: string;
+  } | null;
+  organizationId?: string | null;
 }
 
 interface ModuleData {
@@ -153,6 +168,8 @@ export default function TeacherDashboard() {
   const [allStudentCredentials, setAllStudentCredentials] = useState<StudentData[]>([]);
   const [selectedStudentForLearningPaths, setSelectedStudentForLearningPaths] = useState<StudentData | null>(null);
   const [showLearningPathsModal, setShowLearningPathsModal] = useState(false);
+  const [selectedTestForAssignment, setSelectedTestForAssignment] = useState<string | null>(null);
+  const [selectedTestForEvaluation, setSelectedTestForEvaluation] = useState<string | null>(null);
   
   // Additional state for real data
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -179,6 +196,7 @@ export default function TeacherDashboard() {
     { id: 'students', label: 'My Students', icon: '/icons/profile.png' },
     { id: 'modules', label: 'Learning Modules', icon: '/icons/modules.png' },
     { id: 'assignments', label: 'Assignments', icon: '/icons/report.png' },
+    { id: 'tests', label: 'Tests', icon: '/icons/report.png' },
     { id: 'analytics', label: 'Analytics', icon: '/icons/rewards.png' },
     { id: 'settings', label: 'Settings', icon: '/icons/settings.png' },
   ];
@@ -1187,6 +1205,15 @@ export default function TeacherDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </motion.button>
+
+            {/* Notification Center */}
+            {teacherProfile && (
+              <NotificationCenter
+                userId={teacherProfile._id}
+                userRole={teacherProfile.role || 'teacher'}
+                className="relative"
+              />
+            )}
            
              {/* Enhanced User Profile Section */}
              <motion.div 
@@ -1865,7 +1892,17 @@ export default function TeacherDashboard() {
             </div>
           )}
 
-          {activeTab === 'analytics' && (
+            {activeTab === 'tests' && (
+              <div className="space-y-6">
+                <TestManagement
+                  onTestSelect={(testId) => {
+                    // Could open a detail view or assignment modal
+                  }}
+                />
+              </div>
+            )}
+
+            {activeTab === 'analytics' && (
             <div className="space-y-6">
               {/* Analytics Overview Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

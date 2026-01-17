@@ -70,7 +70,7 @@ export default function OrganizationOnboarding() {
           
           // Pre-fill form with existing data and registration data
           // Only fill empty fields to preserve localStorage data
-          setFormData(prev => ({
+          setFormData((prev: any) => ({
             ...prev,
             organizationName: prev.organizationName || user.name || registrationData?.fullName || '',
             organizationType: prev.organizationType || user.profile?.organizationType || 'school',
@@ -99,7 +99,7 @@ export default function OrganizationOnboarding() {
   }, []);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       [field]: value
     }));

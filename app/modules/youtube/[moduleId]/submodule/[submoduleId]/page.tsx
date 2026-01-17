@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -414,9 +415,11 @@ export default function SubmodulePage() {
                   {/* Video Thumbnail */}
                   <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
                     {videoId ? (
-                      <img
+                      <Image
                         src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
                         alt={chapter.chapterTitle}
+                        width={1280}
+                        height={720}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
@@ -503,9 +506,11 @@ export default function SubmodulePage() {
                       {/* Video Thumbnail */}
                       <div className="relative w-full sm:w-64 h-48 sm:h-auto bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden flex-shrink-0">
                         {videoId ? (
-                          <img
+                          <Image
                             src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
                             alt={chapter.chapterTitle}
+                            width={1280}
+                            height={720}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;

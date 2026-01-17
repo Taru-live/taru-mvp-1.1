@@ -11,10 +11,15 @@ export interface IUser extends mongoose.Document {
   profile: Record<string, any>;
   avatar?: string;
   firstTimeLogin: boolean;
+  mustChangePassword: boolean; // For forcing password change on first login (organization-created users)
   organizationId?: string; // For users associated with organizations
   isIndependent: boolean; // For users not associated with any organization
   googleId?: string; // For Google OAuth users
   authProvider?: 'local' | 'google'; // Track authentication provider
+  isActive: boolean; // For enabling/disabling user access
+  resetToken?: string; // For password reset functionality
+  resetTokenExpiry?: Date; // Expiration time for reset token
+  passwordLastUpdatedAt?: Date; // Track when password was last changed
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -105,6 +110,14 @@ const userSchema = new mongoose.Schema<IUser>({
     type: Boolean,
     default: true,
   },
+  mustChangePassword: {
+    type: Boolean,
+    default: false, // Only set to true for organization-created users
+  },
+  passwordLastUpdatedAt: {
+    type: Date,
+    required: false
+  },
   organizationId: {
     type: String,
     ref: 'Organization',
@@ -113,6 +126,18 @@ const userSchema = new mongoose.Schema<IUser>({
   isIndependent: {
     type: Boolean,
     default: true // Default to independent users
+  },
+  isActive: {
+    type: Boolean,
+    default: true // Users are active by default
+  },
+  resetToken: {
+    type: String,
+    required: false
+  },
+  resetTokenExpiry: {
+    type: Date,
+    required: false
   }
 }, {
   timestamps: true

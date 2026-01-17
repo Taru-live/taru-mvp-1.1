@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { FileText, PlayCircle, Send, Loader2, Upload, ZoomIn, ZoomOut, Bot, User, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import { Button } from './ai-buddy/ui/button';
 import { Input } from './ai-buddy/ui/input';
@@ -364,7 +365,7 @@ export default function AIBuddyTab() {
                     className="border border-gray-200 rounded-lg overflow-hidden"
                     style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}
                   >
-                    <img src={pageUrl} alt={`Page ${index + 1}`} className="w-full h-auto" />
+                    <Image src={pageUrl} alt={`Page ${index + 1}`} width={800} height={1000} className="w-full h-auto" />
                   </div>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Play, ExternalLink, Loader2, AlertCircle, Youtube, Clock, Eye } from 'lucide-react';
 
 interface Chapter {
@@ -289,9 +290,11 @@ export default function YouTubeVideoList({ uniqueid, onVideoSelect }: YouTubeVid
                   {/* Video Thumbnail */}
                   <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
                     {thumbnailUrl ? (
-                      <img
+                      <Image
                         src={thumbnailUrl}
                         alt={chapter.videoTitle}
+                        width={640}
+                        height={360}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';

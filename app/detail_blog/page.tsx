@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import MarketingLayout from '../marketing-layout';
 
 const DetailBlog = () => {
@@ -25,7 +26,7 @@ const DetailBlog = () => {
                   </div>
                 </div>
                 <div className="blog-header-image-wrapper">
-                  <img src="/images/adrian-cuj-o_9YmCY0bag-unsplash-6.webp" loading="lazy" alt="" className="blog-header-image" />
+                  <Image src="/images/adrian-cuj-o_9YmCY0bag-unsplash-6.webp" width={1200} height={600} alt="" className="blog-header-image" />
                 </div>
               </div>
             </div>

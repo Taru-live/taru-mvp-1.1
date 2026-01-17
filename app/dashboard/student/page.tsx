@@ -20,6 +20,7 @@ import { StaggerContainer, StaggerItem } from '../../components/PageTransitions'
 import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../../components/ScrollAnimations';
 import nextDynamic from 'next/dynamic';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
+import NotificationCenter from '../../components/NotificationCenter';
 
 
 
@@ -237,7 +238,7 @@ function StudentDashboardContent() {
   // Update activeTab when tab query parameter changes
   useEffect(() => {
     const tabFromUrl = searchParams?.get('tab');
-    if (tabFromUrl && ['overview', 'learning-path', 'modules', 'enhanced-learning', 'progress', 'rewards', 'settings'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['overview', 'learning-path', 'modules', 'tests', 'enhanced-learning', 'progress', 'rewards', 'settings'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
@@ -395,7 +396,11 @@ function StudentDashboardContent() {
                 dateOfBirth: studentData.dateOfBirth,
                 gender: studentData.gender,
                 guardian: studentData.guardian,
-                location: studentData.location
+                location: studentData.location,
+                createdBy: studentData.createdBy,
+                managedBy: studentData.managedBy,
+                teacherId: studentData.teacherId,
+                organizationId: studentData.organizationId
               };
               
               console.log('🔍 User with profile data:', userWithProfile);
@@ -760,7 +765,9 @@ function StudentDashboardContent() {
         dateOfBirth: user.dateOfBirth ? (typeof user.dateOfBirth === 'string' ? user.dateOfBirth : user.dateOfBirth.toISOString()) : undefined,
         gender: user.gender,
         guardianName: user.guardian?.name,
-        location: user.location
+        location: user.location,
+        createdBy: (user as any).createdBy,
+        managedBy: (user as any).managedBy
       }
     : { name: '', email: '', grade: '', school: '', language: 'English', studentKey: 'Not available' };
 
@@ -1549,6 +1556,7 @@ function StudentDashboardContent() {
                 'overview',
                 'learning-path',
                 'modules',
+                'tests',
                 'enhanced-learning',
                 'progress',
                 'rewards',

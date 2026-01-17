@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Student from '@/models/Student';
 import Teacher from '@/models/Teacher';
+import { StudentKeyGenerator } from '@/lib/studentKeyGenerator';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -72,6 +73,16 @@ export async function POST(request: NextRequest) {
     const newStudent = new Student({
       userId: user._id.toString(), // Use teacher's ID as the linking field
       teacherId: user._id.toString(),
+      createdBy: {
+        type: 'teacher',
+        id: user._id.toString(),
+        name: user.name || 'Teacher'
+      },
+      managedBy: {
+        type: 'teacher',
+        id: user._id.toString(),
+        name: user.name || 'Teacher'
+      },
       fullName,
       nickname: nickname || fullName.split(' ')[0],
       dateOfBirth: new Date(dateOfBirth),
@@ -80,7 +91,7 @@ export async function POST(request: NextRequest) {
       classGrade,
       schoolName,
       schoolId: schoolId || `SCH${Date.now()}`,
-      uniqueId: `STU${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+      uniqueId: StudentKeyGenerator.generate(),
       languagePreference: languagePreference || 'English',
       learningModePreference: learningModePreference || ['Visual'],
       interestsOutsideClass: interestsOutsideClass || [],

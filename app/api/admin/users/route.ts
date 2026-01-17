@@ -7,6 +7,7 @@ import Parent from '@/models/Parent';
 import StudentProgress from '@/models/StudentProgress';
 import Organization from '@/models/Organization';
 import { canAccessOrganizationData, canManageOrganizationUsers, canCreateOrganizationUsers } from '@/lib/permissions';
+import { StudentKeyGenerator } from '@/lib/studentKeyGenerator';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -365,7 +366,7 @@ export async function POST(request: NextRequest) {
         fullName: name,
         classGrade,
         schoolName,
-        uniqueId: `STU${Date.now()}`, // Generate unique ID
+        uniqueId: StudentKeyGenerator.generate(),
         onboardingCompleted: false
       });
       await student.save();

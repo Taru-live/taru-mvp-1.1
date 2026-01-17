@@ -138,6 +138,7 @@ const defaultNavItems = [
   { id: 'overview', label: 'Overview', icon: '/icons/overview1.png' },
   { id: 'learning-path', label: 'Learning Path', icon: '/icons/learning-path.png' },
   { id: 'modules', label: 'My Learning Modules', icon: '/icons/modules.png' },
+  { id: 'tests', label: 'Tests', icon: '/icons/report.png' },
   { id: 'enhanced-learning', label: 'Enhanced Learning', icon: '/icons/ai-buddy.png' },
   { id: 'progress', label: 'My Progress Report', icon: '/icons/report.png' },
   { id: 'rewards', label: 'My Rewards & Badges', icon: '/icons/rewards.png' },

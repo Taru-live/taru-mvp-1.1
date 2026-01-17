@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import MarketingLayout from '../marketing-layout';
 import Link from 'next/link';
 
@@ -100,7 +101,7 @@ const Pricing = () => {
                       <div data-w-id="1d72323c-aea2-bae8-c863-ce331e9ec13e" style={{opacity:0}} className="pricing_first-card">
                         <div className="pricing_card-corner">
                           <a href="#" onClick={(e) => e.preventDefault()} className="pricing_corner w-inline-block">
-                            <img loading="lazy" src="/images/arrow-right-up-svgrepo-com.svg" alt="" className="pricing_arrow-image" />
+                            <Image loading="lazy" src="/images/arrow-right-up-svgrepo-com.svg" width={24} height={24} alt="" className="pricing_arrow-image" />
                           </a>
                         </div>
                         <div className="pricing_front-content">
@@ -109,7 +110,7 @@ const Pricing = () => {
                               <div className="text-size-small-2">Basic Plan</div>
                             </div>
                             <a href="#" onClick={(e) => e.preventDefault()} className="pricing_card-link w-inline-block">
-                              <img loading="lazy" src="/images/plus-large-svgrepo-com-1.svg" alt="" className="pricing_plus-image" />
+                              <Image loading="lazy" src="/images/plus-large-svgrepo-com-1.svg" width={24} height={24} alt="" className="pricing_plus-image" />
                             </a>
                           </div>
                           <div className="pricing_price-wrap">
@@ -144,7 +145,7 @@ const Pricing = () => {
                       <div data-w-id="1d72323c-aea2-bae8-c863-ce331e9ec160" style={{opacity:0}} className="pricing_first-card is-second">
                         <div className="pricing_card-corner">
                           <a href="#" onClick={(e) => e.preventDefault()} className="pricing_corner is-second w-inline-block">
-                            <img loading="lazy" src="/images/arrow-right-up-svgrepo-com.svg" alt="" className="pricing_arrow-image" />
+                            <Image loading="lazy" src="/images/arrow-right-up-svgrepo-com.svg" width={24} height={24} alt="" className="pricing_arrow-image" />
                           </a>
                         </div>
                         <div className="pricing_front-content">
@@ -154,7 +155,7 @@ const Pricing = () => {
                               <div style={{marginTop: '4px', fontSize: '11px', color: '#FFD700', fontWeight: '600'}}>POPULAR</div>
                             </div>
                             <a href="#" onClick={(e) => e.preventDefault()} className="pricing_card-link is-second w-inline-block">
-                              <img loading="lazy" src="/images/plus-large-svgrepo-com-1.svg" alt="" className="pricing_plus-image is-second" />
+                              <Image loading="lazy" src="/images/plus-large-svgrepo-com-1.svg" width={24} height={24} alt="" className="pricing_plus-image is-second" />
                             </a>
                           </div>
                           <div className="pricing_price-wrap">

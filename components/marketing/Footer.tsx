@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 const Footer = () => {
@@ -14,7 +15,7 @@ const Footer = () => {
                 <div className="footer-left-wrapper">
                   <div className="margin-bottom margin-small">
                     <Link href="/" className="footer-logo-link w-nav-brand">
-                      <img src="/images/taru-logo-final-1.png" loading="lazy" alt="Taru Logo" className="footer-logo" />
+                      <Image src="/images/taru-logo-final-1.png" width={120} height={40} alt="Taru Logo" className="footer-logo" />
                     </Link>
                   </div>
                 </div>

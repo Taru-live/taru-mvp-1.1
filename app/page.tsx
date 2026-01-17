@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import MarketingLayout from './marketing-layout';
 
@@ -36,13 +37,11 @@ const Home = () => {
             </div>
           </div>
           <div data-w-id="6e00a9b8-14ad-25c0-90fe-f8842f1b9df8" style={{opacity:0}} className="div-block">
-            <img 
+            <Image 
               src="/images/1.png" 
-              loading="lazy" 
-              width="Auto" 
-              sizes="(max-width: 1828px) 100vw, 1828px" 
+              width={1828} 
+              height={1080} 
               alt="" 
-              srcSet="/images/3901dbb79ca65e84743cbccaaac45e8e_1-p-500.png 500w, /images/3901dbb79ca65e84743cbccaaac45e8e_1-p-800.png 800w, /images/3901dbb79ca65e84743cbccaaac45e8e_1-p-1080.png 1080w, /images/3901dbb79ca65e84743cbccaaac45e8e_1-p-1600.png 1600w, /images/1.png 1828w" 
               className="image-9" 
             />
           </div>
@@ -50,21 +49,21 @@ const Home = () => {
         <div data-w-id="4f717ac0-3df4-ac7f-31c9-554dcfb880bb" style={{opacity:0}} className="top-layer-div">
           <div className="grid-wrapper">
             <div className="content-wrapper">
-              <img src="/images/Vector-11414.png" loading="lazy" alt="" />
+              <Image src="/images/Vector-11414.png" width={24} height={24} alt="" />
               <div className="text-wrapper">
                 <h1 className="heading">Misdirected Potential</h1>
                 <div className="text-block">Many students enter careers they never wanted due to poor awareness and late guidance.</div>
               </div>
             </div>
             <div className="content-wrapper">
-              <img src="/images/Vector-11414.png" loading="lazy" alt="" />
+              <Image src="/images/Vector-11414.png" width={24} height={24} alt="" />
               <div className="text-wrapper">
                 <h1 className="heading">Scattered AI Confusion</h1>
                 <div className="text-block">Unfocused AI use creates confusion and shortcuts instead of real learning.</div>
               </div>
             </div>
             <div className="content-wrapper">
-              <img src="/images/Vector-11414.png" loading="lazy" alt="" />
+              <Image src="/images/Vector-11414.png" width={24} height={24} alt="" />
               <div className="text-wrapper">
                 <h1 className="heading">Unstructured Ambitions</h1>
                 <div className="text-block">Big goals fail without clear structure and disciplined preparation.</div>
@@ -82,22 +81,21 @@ const Home = () => {
       
       <div className="layer-scroll-wrapper">
         <div data-w-id="c3572098-2a69-a806-a987-acc75f6badca" style={{opacity:0}} className="div-block-3">
-          <img src="/images/Group-2147224520.png" loading="lazy" alt="" className="image-6" />
+          <Image src="/images/Group-2147224520.png" width={100} height={100} alt="" className="image-6" />
           <h1 className="heading-4">AI-Driven Learning with Purpose</h1>
         </div>
         
         <div data-w-id="1dda0677-15c2-e2ba-450b-0f826203f12f" style={{opacity:0}} className="content-wrapper-with-image _1">
           <div className="content-div">
-            <img src="/images/Group-2147224526.png" loading="lazy" alt="" className="image-2" />
+            <Image src="/images/Group-2147224526.png" width={50} height={50} alt="" className="image-2" />
             <h1 className="heading-3">Career Roadmaps</h1>
             <div className="text-block-2">AI designs personalized journeys from schooling to professional readiness, creating clear pathways for every student's unique aspirations.</div>
           </div>
           <div className="image-div">
-            <img 
+            <Image 
               src="/images/4.png" 
-              loading="lazy" 
-              sizes="(max-width: 1613px) 100vw, 1613px" 
-              srcSet="/images/4-p-500.png 500w, /images/4-p-800.png 800w, /images/4-p-1080.png 1080w, /images/4-p-1600.png 1600w, /images/4.png 1613w" 
+              width={1613} 
+              height={1080} 
               alt="" 
               className="image-8" 
             />
@@ -106,17 +104,16 @@ const Home = () => {
         
         <div data-w-id="9c6b7443-f4fe-afc1-bb74-b23fc4f75839" style={{opacity:0}} className="content-wrapper-with-image _2">
           <div className="image-div">
-            <img 
+            <Image 
               src="/images/7.png" 
-              loading="lazy" 
-              sizes="(max-width: 2304px) 100vw, 2304px" 
-              srcSet="/images/7-p-500.png 500w, /images/7-p-800.png 800w, /images/7-p-1080.png 1080w, /images/7-p-1600.png 1600w, /images/7-p-2000.png 2000w, /images/7.png 2304w" 
+              width={2304} 
+              height={1080} 
               alt="" 
               className="image-5" 
             />
           </div>
           <div className="content-div">
-            <img src="/images/Group-2147224526.png" loading="lazy" alt="" className="image-2" />
+            <Image src="/images/Group-2147224526.png" width={50} height={50} alt="" className="image-2" />
             <h1 className="heading-3">Skill Assessments</h1>
             <div className="text-block-2">Comprehensive evaluations identify strengths, weaknesses, and the right next steps for meaningful academic and career progression.</div>
           </div>
@@ -124,16 +121,15 @@ const Home = () => {
         
         <div data-w-id="2ada1271-9c18-074b-5d7a-37bcf26cf6e2" style={{opacity:0}} className="content-wrapper-with-image _3">
           <div className="content-div">
-            <img src="/images/Group-2147224526.png" loading="lazy" alt="" className="image-2" />
+            <Image src="/images/Group-2147224526.png" width={50} height={50} alt="" className="image-2" />
             <h1 className="heading-3 white">Multilingual Support</h1>
             <div className="text-block-2 white">Accessible in English and regional languages across India, ensuring no student is left behind due to language barriers.</div>
           </div>
           <div className="image-div">
-            <img 
+            <Image 
               src="/images/9.png" 
-              loading="lazy" 
-              sizes="(max-width: 1613px) 100vw, 1613px" 
-              srcSet="/images/9-p-500.png 500w, /images/9-p-800.png 800w, /images/9-p-1080.png 1080w, /images/9-p-1600.png 1600w, /images/9.png 1613w" 
+              width={1613} 
+              height={1080} 
               alt="" 
               className="image-3" 
             />
@@ -142,17 +138,16 @@ const Home = () => {
         
         <div data-w-id="aef41e77-d487-f133-b508-5ed464542b06" style={{opacity:0}} className="content-wrapper-with-image _4">
           <div className="image-div">
-            <img 
+            <Image 
               src="/images/6.png" 
-              loading="lazy" 
-              sizes="(max-width: 2304px) 100vw, 2304px" 
-              srcSet="/images/6-p-500.png 500w, /images/6-p-800.png 800w, /images/6-p-1080.png 1080w, /images/6-p-1600.png 1600w, /images/6-p-2000.png 2000w, /images/6.png 2304w" 
+              width={2304} 
+              height={1080} 
               alt="" 
               className="image-4" 
             />
           </div>
           <div className="content-div">
-            <img src="/images/Group-2147224526.png" loading="lazy" alt="" className="image-2" />
+            <Image src="/images/Group-2147224526.png" width={50} height={50} alt="" className="image-2" />
             <h1 className="heading-3 black">Guided Learning Journeys</h1>
             <div className="text-block-2 black">Learning is structured through proven methods, delivered via one intuitive platform for students, parents, and institutions.</div>
           </div>
@@ -171,7 +166,7 @@ const Home = () => {
               <div className="text-block-3">AI guidance organized into logical, progressive steps rather than random suggestions that confuse and overwhelm students seeking direction.</div>
             </div>
             <div className="div-block-4">
-              <img src="/images/image-104925.png" loading="lazy" alt="" className="image-7" />
+              <Image src="/images/image-104925.png" width={200} height={200} alt="" className="image-7" />
             </div>
           </div>
           
@@ -182,7 +177,7 @@ const Home = () => {
               <div className="text-block-3">Every feature strategically aligns learning with real-world outcomes, ensuring students develop skills employers actually need and value.</div>
             </div>
             <div className="div-block-4">
-              <img src="/images/image-104926.png" loading="lazy" alt="" className="image-7" />
+              <Image src="/images/image-104926.png" width={200} height={200} alt="" className="image-7" />
             </div>
           </div>
           
@@ -193,7 +188,7 @@ const Home = () => {
               <div className="text-block-3">Multilingual, affordable, and accessible for urban and rural learners alike, breaking down traditional barriers to quality education.</div>
             </div>
             <div className="div-block-4">
-              <img src="/images/image-104927.png" loading="lazy" alt="" className="image-7" />
+              <Image src="/images/image-104927.png" width={200} height={200} alt="" className="image-7" />
             </div>
           </div>
           
@@ -204,7 +199,7 @@ const Home = () => {
               <div className="text-block-3">Encourages genuine growth and learning rather than shortcuts or dependency, building students' confidence and capabilities.</div>
             </div>
             <div className="div-block-4">
-              <img src="/images/image-104929.png" loading="lazy" alt="" className="image-7 _1" />
+              <Image src="/images/image-104929.png" width={200} height={200} alt="" className="image-7 _1" />
             </div>
           </div>
           
@@ -215,7 +210,7 @@ const Home = () => {
               <div className="text-block-3">Flexible platform designed to partner seamlessly with schools, NGOs, and existing education platforms for maximum reach and impact.</div>
             </div>
             <div className="div-block-4">
-              <img src="/images/image-104928.png" loading="lazy" alt="" className="image-7" />
+              <Image src="/images/image-104928.png" width={200} height={200} alt="" className="image-7" />
             </div>
           </div>
           
@@ -224,20 +219,19 @@ const Home = () => {
               <h4 className="heading-7 white pt-6"><strong>Taru</strong> stands apart as the bridge between aspirations and achievement in the AI era.</h4>
             </div>
             <div className="div-block-4">
-              <img src="/images/Group-2147224522.png" loading="lazy" alt="" className="image-7 last" />
+              <Image src="/images/Group-2147224522.png" width={200} height={200} alt="" className="image-7 last" />
             </div>
           </div>
         </div>
       </div>
       
       <div className="comman-section-no-padding">
-        <div data-w-id="4fdd7265-093b-3c81-bc9c-ac47ab108b2f" style={{opacity:0}} className="div-block-6">
+          <div data-w-id="4fdd7265-093b-3c81-bc9c-ac47ab108b2f" style={{opacity:0}} className="div-block-6">
           <div className="div-block-11">
-            <img 
+            <Image 
               src="/images/Gemini_Generated_Image_253ng6253ng6253n.png" 
-              loading="lazy" 
-              sizes="(max-width: 1279px) 100vw, 1280px" 
-              srcSet="/images/Gemini_Generated_Image_253ng6253ng6253n-p-500.png 500w, /images/Gemini_Generated_Image_253ng6253ng6253n-p-800.png 800w, /images/Gemini_Generated_Image_253ng6253ng6253n-p-1080.png 1080w, /images/Gemini_Generated_Image_253ng6253ng6253n.png 1280w" 
+              width={1280} 
+              height={720} 
               alt="" 
             />
           </div>
@@ -249,14 +243,14 @@ const Home = () => {
               </div>
               <div className="div-block-8">
                 <div className="content-wrapper">
-                  <img src="/images/Vector-11414.png" loading="lazy" alt="" />
+                  <Image src="/images/Vector-11414.png" width={24} height={24} alt="" />
                   <div className="text-wrapper">
                     <h1 className="heading">Investment Path</h1>
                     <div className="text-block">Support full-scale platform growth and nationwide student reach.</div>
                   </div>
                 </div>
                 <div className="content-wrapper">
-                  <img src="/images/Vector-11414.png" loading="lazy" alt="" />
+                  <Image src="/images/Vector-11414.png" width={24} height={24} alt="" />
                   <div className="text-wrapper">
                     <h1 className="heading">Acquisition Path</h1>
                     <div className="text-block">Integrate Taru's platform into an existing education ecosystem.</div>

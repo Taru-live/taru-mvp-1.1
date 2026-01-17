@@ -8,13 +8,11 @@ const subscriptionSchema = new mongoose.Schema({
   },
   uniqueId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   learningPathId: {
     type: String,
-    default: null, // null for global subscription, specific ID for per-learning-path subscription
-    index: true
+    default: null // null for global subscription, specific ID for per-learning-path subscription
   },
   planType: {
     type: String,
@@ -83,7 +81,6 @@ subscriptionSchema.pre('save', function(next) {
 // Index for efficient queries
 subscriptionSchema.index({ expiryDate: 1, isActive: 1 });
 subscriptionSchema.index({ createdAt: -1 });
-subscriptionSchema.index({ uniqueId: 1, learningPathId: 1 });
 // Composite unique index: one subscription per user per learning path
 // Note: MongoDB treats null as a value, so this allows one global subscription (null) and one per learning path
 subscriptionSchema.index({ uniqueId: 1, learningPathId: 1 }, { 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp, 
@@ -183,9 +184,11 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
           transition={{ delay: 0.6 }}
         >
           <div className="w-full max-w-4xl">
-            <img 
+            <Image 
               src="/studentDashboard/train.png" 
               alt="Progress Train" 
+              width={800}
+              height={400}
               className="w-full h-auto"
             />
           </div>

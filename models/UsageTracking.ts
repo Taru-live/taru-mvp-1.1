@@ -3,19 +3,19 @@ import mongoose from 'mongoose';
 const usageTrackingSchema = new mongoose.Schema({
   studentId: {
     type: String,
-    required: true,
-    index: true
+    required: true
+    // Indexed via composite index below
   },
   uniqueId: {
     type: String,
-    required: true,
-    index: true
+    required: true
+    // Indexed via composite indexes below
   },
   subscriptionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscription',
-    required: true,
-    index: true
+    required: true
+    // Indexed via composite index below
   },
   // Daily chat usage tracking
   dailyChatUsage: {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { FileText, Loader2, Image as ImageIcon, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -343,9 +344,11 @@ export default function PDFToInfoTab() {
                             </div>
                           ) : infographic.imageUrl ? (
                             <div className="space-y-2">
-                              <img
+                              <Image
                                 src={infographic.imageUrl}
                                 alt={infographic.sectionTitle}
+                                width={800}
+                                height={450}
                                 className="w-full rounded aspect-video object-cover"
                               />
                               <button
