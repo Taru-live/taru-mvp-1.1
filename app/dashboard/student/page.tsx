@@ -1294,7 +1294,7 @@ function StudentDashboardContent() {
             
              {/* Enhanced User Profile Section */}
              <motion.div 
-               className="bg-white/80 backdrop-blur-sm rounded-xl p-1.5 sm:p-3 shadow-lg border border-gray-200/50 flex items-center gap-1.5 sm:gap-3 group hover:shadow-xl transition-all duration-300"
+               className="bg-white/80 backdrop-blur-sm rounded-[999px] p-1.5 sm:p-3 shadow-lg border border-gray-200/50 flex items-center gap-1.5 sm:gap-3 group hover:shadow-xl transition-all duration-300"
                whileHover={{ scale: 1.02, y: -2 }}
                whileTap={{ scale: 0.98 }}
              >
@@ -1307,12 +1307,13 @@ function StudentDashboardContent() {
                    whileTap={{ scale: 0.95 }}
                    transition={{ duration: 0.2 }}
                 >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="30.24" height="30.24" transform="translate(0.899902 1.38086)" fill="#F5F5F5"/>
-                    <path d="M16.0204 3.90039C13.6812 3.90039 11.4378 4.82964 9.7837 6.48371C8.12963 8.13778 7.20039 10.3812 7.20039 12.7204V17.1657C7.20057 17.3611 7.15527 17.554 7.06809 17.7289L4.90467 22.0545C4.79899 22.2658 4.74908 22.5006 4.7597 22.7367C4.77032 22.9727 4.8411 23.2021 4.96533 23.4031C5.08956 23.6041 5.2631 23.77 5.46948 23.885C5.67586 24.0001 5.90823 24.0604 6.14451 24.0604H25.8963C26.1325 24.0604 26.3649 24.0001 26.5713 23.885C26.7777 23.77 26.9512 23.6041 27.0754 23.4031C27.1997 23.2021 27.2705 22.9727 27.2811 22.7367C27.2917 22.5006 27.2418 22.2658 27.1361 22.0545L24.9739 17.7289C24.8863 17.5541 24.8406 17.3612 24.8404 17.1657V12.7204C24.8404 10.3812 23.9111 8.13778 22.2571 6.48371C20.603 4.82964 18.3596 3.90039 16.0204 3.90039ZM16.0204 27.8404C15.2384 27.8408 14.4755 27.5987 13.8368 27.1473C13.1982 26.696 12.7153 26.0577 12.4546 25.3204H19.5862C19.3255 26.0577 18.8426 26.696 18.2039 27.1473C17.5653 27.5987 16.8024 27.8408 16.0204 27.8404Z" fill="#A5A5A5"/>
-                    <circle cx="23.58" cy="6.27336" r="5.78118" fill="#FDBB30"/>
-                    <path d="M21.8094 7.82227V7.15526L23.579 5.42054C23.7482 5.24964 23.8893 5.09782 24.0021 4.96508C24.1149 4.83234 24.1995 4.70375 24.2559 4.57931C24.3124 4.45487 24.3406 4.32213 24.3406 4.1811C24.3406 4.02015 24.3041 3.88244 24.2311 3.76795C24.158 3.6518 24.0577 3.56221 23.9299 3.49916C23.8021 3.43611 23.657 3.40458 23.4944 3.40458C23.3268 3.40458 23.1799 3.43942 23.0538 3.50911C22.9277 3.57714 22.8298 3.6742 22.7601 3.80031C22.6921 3.92641 22.6581 4.07657 22.6581 4.25078H21.7795C21.7795 3.92724 21.8534 3.646 22.0011 3.40707C22.1487 3.16814 22.352 2.98314 22.6108 2.85206C22.8713 2.72098 23.17 2.65544 23.5068 2.65544C23.8486 2.65544 24.1489 2.71932 24.4078 2.84708C24.6666 2.97484 24.8674 3.14989 25.0101 3.37223C25.1544 3.59456 25.2266 3.84842 25.2266 4.13381C25.2266 4.32462 25.1901 4.51211 25.1171 4.69629C25.0441 4.88046 24.9155 5.08454 24.7313 5.30854C24.5488 5.53254 24.2924 5.80382 23.9623 6.12239L23.0837 7.01588V7.05073H25.3037V7.82227H21.8094Z" fill="white"/>
-                  </svg>
+                  <Image 
+                    src="/images/Vector.png" 
+                    alt="Notification bell" 
+                    width={24} 
+                    height={24} 
+                    className="w-5 h-5 sm:w-6 sm:h-6"
+                  />
                    {/* Enhanced Notification count */}
                   {unreadCount > 0 && (
                      <motion.span 
@@ -1605,7 +1606,7 @@ function StudentDashboardContent() {
                   height: '67.67px',
                   left: '60px',
                   top: '0px',
-                  background: '#F5F5F5',
+                  background: '#FEFEFE',
                   borderRadius: '135.35px',
                 }}
               >
@@ -1625,7 +1626,7 @@ function StudentDashboardContent() {
                         height: '14px',
                         right: '-2px',
                         top: '-2px',
-                        background: '#FDBB30',
+                        background: '#FEFEFE',
                       }}
                     >
                       <span 
@@ -1669,7 +1670,7 @@ function StudentDashboardContent() {
                 
                 {/* Name */}
                 <span 
-                  className="absolute font-bold text-black hidden sm:flex items-center"
+                  className="absolute font-bold text-black  sm:flex items-center"
                   style={{
                     left: '56.85px',
                     top: '5.42px',
@@ -1690,7 +1691,7 @@ function StudentDashboardContent() {
                 
                 {/* ID */}
                 <span 
-                  className="absolute text-gray-600 hidden sm:flex items-center"
+                  className="absolute text-gray-600  sm:flex items-center"
                   style={{
                     left: '56.85px',
                     top: '22.48px',

@@ -354,10 +354,9 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
                   className={`
                     flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-300 
                     font-medium text-gray-900 relative overflow-hidden group flex-shrink-0 min-h-[44px]
-                    ${isHovered ? 'rounded-lg' : 'rounded-none'}
                     ${activeTab === item.id 
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
-                      : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 active:bg-purple-100'
+                      ? 'rounded-3xl bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
+                      : 'rounded-lg hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 active:bg-purple-100'
                     }
                   `}
                   initial={{ x: -50, opacity: 0 }}

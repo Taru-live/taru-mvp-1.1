@@ -206,7 +206,7 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Header with title and edit button */}
+      {/* Header with title */}
       <motion.div 
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8"
         initial={{ opacity: 0, y: -20 }}
@@ -219,22 +219,8 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
           </div>
           <div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{profile.name}</h2>
-            <p className="text-gray-600 text-sm sm:text-base md:text-lg">Update your Details!</p>
           </div>
         </div>
-        
-        {!isEditing && (
-          <motion.button
-            onClick={() => setIsEditing(true)}
-            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto justify-center"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Edit Profile</span>
-            <span className="sm:hidden">Edit</span>
-          </motion.button>
-        )}
       </motion.div>
 
       {/* Error and Success Messages */}
@@ -611,28 +597,41 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
         </div>
       </div>
 
-      {/* Edit Mode Buttons */}
-      {isEditing && (
-        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={handleCancel}
-            disabled={isLoading}
-            className="px-5 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 font-medium text-sm sm:text-base w-full sm:w-auto"
+      {/* Action Buttons at Bottom */}
+      <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        {isEditing ? (
+          <>
+            <button
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="px-5 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 font-medium text-sm sm:text-base w-full sm:w-auto"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isLoading}
+              className="px-5 py-2.5 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm font-medium text-sm sm:text-base w-full sm:w-auto"
+            >
+              {isLoading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              )}
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </>
+        ) : (
+          <motion.button
+            onClick={() => setIsEditing(true)}
+            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto justify-center"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
           >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isLoading}
-            className="px-5 py-2.5 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm font-medium text-sm sm:text-base w-full sm:w-auto"
-          >
-            {isLoading && (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            )}
-            {isLoading ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      )}
+            <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Edit Profile</span>
+            <span className="sm:hidden">Edit</span>
+          </motion.button>
+        )}
+      </div>
     </motion.div>
   );
 } 

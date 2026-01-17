@@ -295,13 +295,41 @@ export default function SubmodulePage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <button
-            onClick={() => router.push(`/modules/youtube/${moduleId}`)}
-            className="flex items-center gap-2 text-purple-700 hover:text-purple-900 mb-4 font-semibold transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Module</span>
-          </button>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <button
+              onClick={() => router.push(`/modules/youtube/${moduleId}`)}
+              className="flex items-center focus:outline-none gap-2 text-purple-700 hover:text-purple-900 font-semibold transition-colors "
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back to Module</span>
+            </button>
+
+            {/* View Mode Toggle - Mobile: Right side of back button */}
+            <div className="flex items-center gap-2 sm:hidden">
+              <div className="flex bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-1 border-2 border-purple-200">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    viewMode === 'grid' 
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105' 
+                      : 'hover:bg-purple-200 text-purple-600'
+                  }`}
+                >
+                  <Grid3X3 className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    viewMode === 'list' 
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105' 
+                      : 'hover:bg-purple-200 text-purple-600'
+                  }`}
+                >
+                  <List className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
           
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-purple-200 p-6 sm:p-8">
             <div className="flex items-center justify-between gap-4 mb-4">
@@ -331,8 +359,8 @@ export default function SubmodulePage() {
                 </div>
               </div>
 
-              {/* View Mode Toggle - Aligned with title */}
-              <div className="flex items-center gap-2">
+              {/* View Mode Toggle - Desktop: Aligned with title */}
+              <div className="hidden sm:flex items-center gap-2">
                 <div className="flex bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-1 border-2 border-purple-200">
                   <button
                     onClick={() => setViewMode('grid')}

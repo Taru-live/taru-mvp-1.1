@@ -325,7 +325,7 @@ export default function AIBuddyTab() {
             )}
           </div>
 
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto p-4 max-h-[calc(100vh-200px)]">
             {!isPDFReady ? (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center space-y-4">
@@ -342,7 +342,7 @@ export default function AIBuddyTab() {
                       </>
                     ) : (
                       <>
-                        <Upload className="w-4 h-4 mr-2" />
+                        <Upload className="w-4 h-4 mr-2"/>
                         Choose PDF File
                       </>
                     )}

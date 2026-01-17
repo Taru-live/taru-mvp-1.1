@@ -117,19 +117,6 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
             <p className="text-gray-600 text-sm sm:text-base md:text-lg">Track your learning journey and achievements</p>
           </div>
         </div>
-        
-        {hasData && (
-          <motion.button
-            className="group bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-4 py-2 sm:px-6 sm:py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
-            onClick={handleDownloadCSV}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Download Report</span>
-            <span className="sm:hidden">Download</span>
-          </motion.button>
-        )}
       </motion.div>
 
       {/* Weekly Goal & XP Progress */}
@@ -456,24 +443,6 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
         </motion.div>
       )}
 
-      {/* Continue Learning Button */}
-      <div className="text-center">
-        <motion.button 
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-medium text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
-          onClick={() => onTabChange?.('modules')}
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
-        >
-          Continue Learning
-        </motion.button>
-      </div>
-
-    
-
-
       {/* Additional Progress Details */}
       {hasData && (
         <motion.div 
@@ -548,6 +517,36 @@ export default function ProgressTab({ progress, onTabChange, onRefresh }: Progre
           </div>
         </motion.div>
       )}
+
+      {/* Action Buttons at Bottom */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
+        {hasData && (
+          <motion.button
+            className="group bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 text-base sm:text-lg w-full sm:w-auto justify-center"
+            onClick={handleDownloadCSV}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.9 }}
+          >
+            <Download className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span>Download Report</span>
+          </motion.button>
+        )}
+        
+        <motion.button 
+          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-medium text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
+          onClick={() => onTabChange?.('modules')}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.0 }}
+        >
+          Continue Learning
+        </motion.button>
+      </div>
     </motion.div>
   );
 } 

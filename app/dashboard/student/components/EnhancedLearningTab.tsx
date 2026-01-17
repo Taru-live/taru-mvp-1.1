@@ -150,7 +150,7 @@ export default function EnhancedLearningTab() {
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 via-purple-50/30 to-blue-50/30">
       {/* Header */}
-      <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b px-6 py-6">
+      <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b px-6 py-6 rounded-3xl">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
@@ -226,17 +226,22 @@ export default function EnhancedLearningTab() {
 
           {/* Info Section */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm"
+            className="mt-12"
           >
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
-                <BookOpen className="w-5 h-5 text-blue-600" />
+            <div className="h-full bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+              {/* Icon Header */}
+              <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-6 flex items-center justify-center">
+                <div className="text-white">
+                  <BookOpen className="w-8 h-8" />
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">About Enhanced Learning</h3>
+
+              {/* Content */}
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">About Enhanced Learning</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   Enhanced Learning provides access to cutting-edge AI-powered educational tools designed to make your learning journey more effective and engaging. 
                   Each app is carefully crafted to help you understand concepts better, practice skills, and achieve your learning goals.
