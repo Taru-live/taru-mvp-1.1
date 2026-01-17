@@ -2065,14 +2065,15 @@ When any threat is found, these tools give details so you can quickly fix the pr
                     return (
                       <motion.div
                         key={module.moduleId}
-                        className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
+                        onClick={() => {
+                          router.push(`/modules/youtube/${module.moduleId}`);
+                        }}
+                        className="bg-white cursor-pointer rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ y: -5 }}
                       >
-                        <div className="p-6" onClick={() => {
-                              router.push(`/modules/youtube/${module.moduleId}`);
-                            }}>
+                        <div className="p-6">
                           <div className="flex items-center justify-center mb-4">
                             <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
                               <BookOpen className="w-8 h-8 text-white" />

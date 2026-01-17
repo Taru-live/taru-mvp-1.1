@@ -110,7 +110,8 @@ export default function ChangePassword() {
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Enter your temporary password"
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+              style={{ backgroundColor: 'white' }}
             />
           </div>
 
@@ -126,7 +127,8 @@ export default function ChangePassword() {
               placeholder="Enter new password"
               required
               minLength={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+              style={{ backgroundColor: 'white' }}
             />
             <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters long</p>
           </div>
@@ -143,7 +145,8 @@ export default function ChangePassword() {
               placeholder="Confirm new password"
               required
               minLength={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+              style={{ backgroundColor: 'white' }}
             />
           </div>
 

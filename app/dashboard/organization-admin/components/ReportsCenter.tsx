@@ -158,14 +158,16 @@ export default function ReportsCenter({ onBack }: ReportsCenterProps) {
               type="date"
               value={dateRange.startDate}
               onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+              style={{ backgroundColor: 'white' }}
             />
             <span className="text-gray-500">to</span>
             <input
               type="date"
               value={dateRange.endDate}
               onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+              style={{ backgroundColor: 'white' }}
             />
             <button
               onClick={handleDateRangeChange}

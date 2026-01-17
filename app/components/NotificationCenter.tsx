@@ -35,10 +35,21 @@ interface NotificationCenterProps {
   userId: string;
   userRole: string;
   className?: string;
+  isOpen?: boolean;
+  onToggle?: (open: boolean) => void;
+  hideButton?: boolean;
 }
 
-const NotificationCenter: React.FC<NotificationCenterProps> = ({ userId, userRole, className = '' }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const NotificationCenter: React.FC<NotificationCenterProps> = ({ userId, userRole, className = '', isOpen: externalIsOpen, onToggle, hideButton = false }) => {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = (open: boolean) => {
+    if (externalIsOpen !== undefined && onToggle) {
+      onToggle(open);
+    } else {
+      setInternalIsOpen(open);
+    }
+  };
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -197,30 +208,43 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userId, userRol
 
   return (
     <div className={`relative ${className}`} ref={notificationRef}>
-      {/* Bell Icon Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        aria-label="Notifications"
-      >
-        <Bell className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
+      {/* Bell Icon Button - Hidden if hideButton is true */}
+      {!hideButton && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          aria-label="Notifications"
+        >
+          <Bell className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Notification Panel */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-[600px] flex flex-col"
-          >
+          <>
+            {/* Overlay */}
+            <motion.div
+              className="fixed inset-0 bg-black/20 z-[10000]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsOpen(false)}
+            />
+            {/* Notification Panel */}
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className={`${hideButton ? 'fixed right-4 top-14' : 'absolute right-0 mt-2'} w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[10001] max-h-[600px] flex flex-col pointer-events-auto`}
+            >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -326,6 +350,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userId, userRol
               )}
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

@@ -161,59 +161,465 @@ function parseN8nOutput(n8nOutput: N8nOutput): AssessmentQuestion[] {
   }
 }
 
-// Fallback questions if n8n hasn't generated questions yet
-const fallbackQuestions: AssessmentQuestion[] = [
-  {
-    id: '1',
-    question: 'What is the capital of France?',
-    type: 'MCQ',
-    options: ['London', 'Berlin', 'Paris', 'Madrid'],
-    correctAnswer: 'Paris',
-    category: 'Geography',
-    difficulty: 'easy'
-  },
-  {
-    id: '2',
-    question: 'Explain the water cycle in your own words.',
-    type: 'OPEN',
-    category: 'Science',
-    difficulty: 'medium'
-  },
-  {
-    id: '3',
-    question: 'What is 2 + 2?',
-    type: 'MCQ',
-    options: ['3', '4', '5', '6'],
-    correctAnswer: '4',
-    category: 'Mathematics',
-    difficulty: 'easy'
-  },
-  {
-    id: '4',
-    question: 'Describe your favorite hobby and why you enjoy it.',
-    type: 'OPEN',
-    category: 'Personal',
-    difficulty: 'easy'
-  },
-  {
-    id: '5',
-    question: 'Which of these is a renewable energy source?',
-    type: 'MCQ',
-    options: ['Coal', 'Oil', 'Solar', 'Natural Gas'],
-    correctAnswer: 'Solar',
-    category: 'Environmental Science',
-    difficulty: 'medium'
-  },
-  {
-    id: '6',
-    question: 'How do you prefer to learn new concepts?',
-    type: 'MCQ',
-    options: ['Reading and writing', 'Visual diagrams and charts', 'Hands-on practice', 'Listening to explanations'],
-    correctAnswer: 'Visual diagrams and charts',
-    category: 'Learning Style',
-    difficulty: 'easy'
+// Helper function to get fallback questions based on class grade
+function getFallbackQuestionsByClass(classGrade?: string): AssessmentQuestion[] {
+  if (!classGrade) {
+    // Default to class 4-7 if no class grade is provided
+    return fallbackQuestions.class4to7;
   }
-];
+
+  // Normalize the class grade string (remove extra spaces, convert to lowercase)
+  const normalizedGrade = classGrade.trim().toLowerCase();
+
+  // Handle various formats:
+  // - "Class 1", "Class 2", "Class 3" -> class1to3
+  // - "Class 4", "Class 5", "Class 6", "Class 7" -> class4to7
+  // - "Class 8", "Class 9", "Class 10" -> class7to10
+  // - "Class 11", "Class 12" -> class11to12
+  // - "Grade 1", "Grade 2", etc. -> same mapping
+  // - Just numbers "1", "2", "3", etc. -> same mapping
+  // - "1st", "2nd", "3rd", etc. -> extract number
+  // - "Class 1-3", "Grade 4-7" -> use the first number or range
+
+  // Extract all numbers from the string
+  const numberMatches = normalizedGrade.match(/\d+/g);
+  
+  if (!numberMatches || numberMatches.length === 0) {
+    // No numbers found, default to class 4-7
+    console.log(`🔍 No class number found in "${classGrade}", defaulting to class4to7`);
+    return fallbackQuestions.class4to7;
+  }
+
+  // Get the first number (in case of ranges like "Class 4-7")
+  const classNumber = parseInt(numberMatches[0], 10);
+
+  // Map class numbers to question sets
+  if (classNumber >= 1 && classNumber <= 3) {
+    console.log(`🔍 Class ${classNumber} mapped to class1to3 questions`);
+    return fallbackQuestions.class1to3;
+  } else if (classNumber >= 4 && classNumber <= 7) {
+    console.log(`🔍 Class ${classNumber} mapped to class4to7 questions`);
+    return fallbackQuestions.class4to7;
+  } else if (classNumber >= 8 && classNumber <= 10) {
+    console.log(`🔍 Class ${classNumber} mapped to class7to10 questions`);
+    return fallbackQuestions.class7to10;
+  } else if (classNumber >= 11 && classNumber <= 12) {
+    console.log(`🔍 Class ${classNumber} mapped to class11to12 questions`);
+    return fallbackQuestions.class11to12;
+  } else if (classNumber < 1) {
+    // Invalid class number (0 or negative), default to class 1-3
+    console.log(`🔍 Invalid class number ${classNumber}, defaulting to class1to3`);
+    return fallbackQuestions.class1to3;
+  } else {
+    // Class number > 12, default to class 11-12 (highest level)
+    console.log(`🔍 Class number ${classNumber} > 12, defaulting to class11to12`);
+    return fallbackQuestions.class11to12;
+  }
+}
+
+// Fallback questions if n8n hasn't generated questions yet
+const fallbackQuestions: {
+  class1to3: AssessmentQuestion[];
+  class4to7: AssessmentQuestion[];
+  class7to10: AssessmentQuestion[];
+  class11to12: AssessmentQuestion[];
+} = {
+
+  /* =======================
+     CLASS 1 TO 3 (EASY)
+  ======================= */
+  class1to3: [
+    {
+      id: '1',
+      question: 'Which animal is called the King of the Jungle?',
+      type: 'MCQ',
+      options: ['Elephant', 'Lion', 'Tiger', 'Bear'],
+      correctAnswer: 'Lion',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    },
+    {
+      id: '2',
+      question: 'How many days are there in a week?',
+      type: 'MCQ',
+      options: ['5', '6', '7', '8'],
+      correctAnswer: '7',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    },
+    {
+      id: '3',
+      question: 'Which color is the sky?',
+      type: 'MCQ',
+      options: ['Green', 'Blue', 'Red', 'Yellow'],
+      correctAnswer: 'Blue',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    },
+    {
+      id: '4',
+      question: 'Which fruit is yellow?',
+      type: 'MCQ',
+      options: ['Apple', 'Banana', 'Grapes', 'Orange'],
+      correctAnswer: 'Banana',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    },
+    {
+      id: '5',
+      question: 'How many legs does a dog have?',
+      type: 'MCQ',
+      options: ['2', '3', '4', '6'],
+      correctAnswer: '4',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    },
+    {
+      id: '6',
+      question: 'Which shape is round?',
+      type: 'MCQ',
+      options: ['Square', 'Triangle', 'Circle', 'Rectangle'],
+      correctAnswer: 'Circle',
+      category: 'Mathematics',
+      difficulty: 'easy'
+    },
+    {
+      id: '7',
+      question: 'Which vehicle flies in the sky?',
+      type: 'MCQ',
+      options: ['Car', 'Bus', 'Aeroplane', 'Train'],
+      correctAnswer: 'Aeroplane',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    },
+    {
+      id: '8',
+      question: 'Which animal gives us milk?',
+      type: 'MCQ',
+      options: ['Dog', 'Cat', 'Cow', 'Lion'],
+      correctAnswer: 'Cow',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    },
+    {
+      id: '9',
+      question: 'Which sense organ helps us hear?',
+      type: 'MCQ',
+      options: ['Eye', 'Nose', 'Ear', 'Tongue'],
+      correctAnswer: 'Ear',
+      category: 'Science',
+      difficulty: 'easy'
+    },
+    {
+      id: '10',
+      question: 'How many alphabets are there in English?',
+      type: 'MCQ',
+      options: ['24', '25', '26', '27'],
+      correctAnswer: '26',
+      category: 'General Knowledge',
+      difficulty: 'easy'
+    }
+  ],
+
+  /* =======================
+     CLASS 4 TO 7 (EASY–MEDIUM)
+  ======================= */
+  class4to7: [
+    {
+      id: '1',
+      question: 'Which planet is known as the Red Planet?',
+      type: 'MCQ',
+      options: ['Earth', 'Mars', 'Venus', 'Jupiter'],
+      correctAnswer: 'Mars',
+      category: 'Science',
+      difficulty: 'medium'
+    },
+    {
+      id: '2',
+      question: 'Who invented the telephone?',
+      type: 'MCQ',
+      options: ['Newton', 'Edison', 'Alexander Graham Bell', 'Einstein'],
+      correctAnswer: 'Alexander Graham Bell',
+      category: 'General Knowledge',
+      difficulty: 'medium'
+    },
+    {
+      id: '3',
+      question: 'Which is the largest continent?',
+      type: 'MCQ',
+      options: ['Africa', 'Europe', 'Asia', 'Australia'],
+      correctAnswer: 'Asia',
+      category: 'Geography',
+      difficulty: 'medium'
+    },
+    {
+      id: '4',
+      question: 'How many states are there in India?',
+      type: 'MCQ',
+      options: ['27', '28', '29', '30'],
+      correctAnswer: '28',
+      category: 'Civics',
+      difficulty: 'medium'
+    },
+    {
+      id: '5',
+      question: 'What gas do plants use for photosynthesis?',
+      type: 'MCQ',
+      options: ['Oxygen', 'Carbon Dioxide', 'Nitrogen', 'Hydrogen'],
+      correctAnswer: 'Carbon Dioxide',
+      category: 'Science',
+      difficulty: 'medium'
+    },
+    {
+      id: '6',
+      question: 'Which is the fastest land animal?',
+      type: 'MCQ',
+      options: ['Lion', 'Horse', 'Cheetah', 'Tiger'],
+      correctAnswer: 'Cheetah',
+      category: 'General Knowledge',
+      difficulty: 'medium'
+    },
+    {
+      id: '7',
+      question: 'Who is known as the Father of the Nation (India)?',
+      type: 'MCQ',
+      options: ['Nehru', 'Gandhi', 'Patel', 'Bose'],
+      correctAnswer: 'Gandhi',
+      category: 'History',
+      difficulty: 'medium'
+    },
+    {
+      id: '8',
+      question: 'Which ocean is the largest?',
+      type: 'MCQ',
+      options: ['Indian', 'Atlantic', 'Pacific', 'Arctic'],
+      correctAnswer: 'Pacific',
+      category: 'Geography',
+      difficulty: 'medium'
+    },
+    {
+      id: '9',
+      question: 'Which vitamin is given by sunlight?',
+      type: 'MCQ',
+      options: ['Vitamin A', 'Vitamin B', 'Vitamin C', 'Vitamin D'],
+      correctAnswer: 'Vitamin D',
+      category: 'Science',
+      difficulty: 'medium'
+    },
+    {
+      id: '10',
+      question: 'What is the currency of India?',
+      type: 'MCQ',
+      options: ['Dollar', 'Rupee', 'Euro', 'Yen'],
+      correctAnswer: 'Rupee',
+      category: 'General Knowledge',
+      difficulty: 'medium'
+    }
+  ],
+
+  /* =======================
+     CLASS 7 TO 10 (MEDIUM–HARD)
+  ======================= */
+  class7to10: [
+    {
+      id: '1',
+      question: 'What is the SI unit of force?',
+      type: 'MCQ',
+      options: ['Joule', 'Newton', 'Pascal', 'Watt'],
+      correctAnswer: 'Newton',
+      category: 'Physics',
+      difficulty: 'hard'
+    },
+    {
+      id: '2',
+      question: 'Who wrote the Indian National Anthem?',
+      type: 'MCQ',
+      options: ['Bankim Chandra', 'Tagore', 'Gandhi', 'Nehru'],
+      correctAnswer: 'Rabindranath Tagore',
+      category: 'History',
+      difficulty: 'hard'
+    },
+    {
+      id: '3',
+      question: 'Which gas is most abundant in the atmosphere?',
+      type: 'MCQ',
+      options: ['Oxygen', 'Carbon Dioxide', 'Nitrogen', 'Hydrogen'],
+      correctAnswer: 'Nitrogen',
+      category: 'Science',
+      difficulty: 'hard'
+    },
+    {
+      id: '4',
+      question: 'What is the capital of Australia?',
+      type: 'MCQ',
+      options: ['Sydney', 'Melbourne', 'Canberra', 'Perth'],
+      correctAnswer: 'Canberra',
+      category: 'Geography',
+      difficulty: 'hard'
+    },
+    {
+      id: '5',
+      question: 'Who discovered gravity?',
+      type: 'MCQ',
+      options: ['Newton', 'Einstein', 'Galileo', 'Tesla'],
+      correctAnswer: 'Newton',
+      category: 'Science',
+      difficulty: 'hard'
+    },
+    {
+      id: '6',
+      question: 'Which blood group is universal donor?',
+      type: 'MCQ',
+      options: ['A', 'B', 'AB', 'O'],
+      correctAnswer: 'O',
+      category: 'Biology',
+      difficulty: 'hard'
+    },
+    {
+      id: '7',
+      question: 'Which country gifted the Statue of Liberty to USA?',
+      type: 'MCQ',
+      options: ['UK', 'France', 'Germany', 'Italy'],
+      correctAnswer: 'France',
+      category: 'History',
+      difficulty: 'hard'
+    },
+    {
+      id: '8',
+      question: 'What is the chemical formula of water?',
+      type: 'MCQ',
+      options: ['CO2', 'H2O', 'O2', 'NaCl'],
+      correctAnswer: 'H2O',
+      category: 'Chemistry',
+      difficulty: 'hard'
+    },
+    {
+      id: '9',
+      question: 'Which Indian satellite was first sent to space?',
+      type: 'MCQ',
+      options: ['INSAT', 'Aryabhata', 'Chandrayaan', 'Mangalyaan'],
+      correctAnswer: 'Aryabhata',
+      category: 'Science',
+      difficulty: 'hard'
+    },
+    {
+      id: '10',
+      question: 'What does CPU stand for?',
+      type: 'MCQ',
+      options: ['Central Processing Unit', 'Computer Power Unit', 'Core Process Unit', 'Control Panel Unit'],
+      correctAnswer: 'Central Processing Unit',
+      category: 'Computer',
+      difficulty: 'hard'
+    }
+  ],
+
+  /* =======================
+     CLASS 11 TO 12 (HARD)
+  ======================= */
+  class11to12: [
+    {
+      id: '1',
+      question: 'What is the pH value of pure water?',
+      type: 'MCQ',
+      options: ['5', '6', '7', '8'],
+      correctAnswer: '7',
+      category: 'Chemistry',
+      difficulty: 'hard'
+    },
+    {
+      id: '2',
+      question: 'Who proposed the theory of relativity?',
+      type: 'MCQ',
+      options: ['Newton', 'Einstein', 'Galileo', 'Tesla'],
+      correctAnswer: 'Einstein',
+      category: 'Physics',
+      difficulty: 'hard'
+    },
+    {
+      id: '3',
+      question: 'Which article of Indian Constitution deals with Right to Equality?',
+      type: 'MCQ',
+      options: ['Article 14', 'Article 19', 'Article 21', 'Article 32'],
+      correctAnswer: 'Article 14',
+      category: 'Political Science',
+      difficulty: 'hard'
+    },
+    {
+      id: '4',
+      question: 'What is the chemical symbol of Gold?',
+      type: 'MCQ',
+      options: ['Ag', 'Au', 'Gd', 'Go'],
+      correctAnswer: 'Au',
+      category: 'Chemistry',
+      difficulty: 'hard'
+    },
+    {
+      id: '5',
+      question: 'Which organ produces insulin?',
+      type: 'MCQ',
+      options: ['Liver', 'Pancreas', 'Kidney', 'Heart'],
+      correctAnswer: 'Pancreas',
+      category: 'Biology',
+      difficulty: 'hard'
+    },
+    {
+      id: '6',
+      question: 'What is the speed of light?',
+      type: 'MCQ',
+      options: ['3×10⁸ m/s', '3×10⁶ m/s', '1×10⁸ m/s', '1×10⁶ m/s'],
+      correctAnswer: '3×10⁸ m/s',
+      category: 'Physics',
+      difficulty: 'hard'
+    },
+    {
+      id: '7',
+      question: 'Who is the author of "Discovery of India"?',
+      type: 'MCQ',
+      options: ['Gandhi', 'Nehru', 'Tagore', 'Ambedkar'],
+      correctAnswer: 'Jawaharlal Nehru',
+      category: 'History',
+      difficulty: 'hard'
+    },
+    {
+      id: '8',
+      question: 'What does DNA stand for?',
+      type: 'MCQ',
+      options: [
+        'Deoxyribonucleic Acid',
+        'Dynamic Nuclear Acid',
+        'Double Nitrogen Atom',
+        'Dual Nucleic Acid'
+      ],
+      correctAnswer: 'Deoxyribonucleic Acid',
+      category: 'Biology',
+      difficulty: 'hard'
+    },
+    {
+      id: '9',
+      question: 'Which country has the highest population?',
+      type: 'MCQ',
+      options: ['India', 'China', 'USA', 'Russia'],
+      correctAnswer: 'India',
+      category: 'Geography',
+      difficulty: 'hard'
+    },
+    {
+      id: '10',
+      question: 'What is the full form of GDP?',
+      type: 'MCQ',
+      options: [
+        'Gross Domestic Product',
+        'General Development Plan',
+        'Global Domestic Price',
+        'Gross Demand Product'
+      ],
+      correctAnswer: 'Gross Domestic Product',
+      category: 'Economics',
+      difficulty: 'hard'
+    }
+  ]
+};
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -279,8 +685,8 @@ export async function GET(request: NextRequest) {
       assessmentType: 'diagnostic'
     });
 
-    // Get questions from n8n or use fallback
-    let questions: AssessmentQuestion[] = fallbackQuestions;
+    // Get questions from n8n or use fallback based on student's class
+    let questions: AssessmentQuestion[] = getFallbackQuestionsByClass(student.classGrade);
     
     // Try to get N8N questions from assessment response
     if (assessmentResponse && assessmentResponse.generatedQuestions && assessmentResponse.generatedQuestions.length > 0) {
@@ -434,8 +840,8 @@ async function handleAnswerSubmission(decoded: DecodedToken, questionId: string,
       assessmentType: 'diagnostic'
     });
 
-    // Get questions (n8n generated or fallback)
-    let questions: AssessmentQuestion[] = fallbackQuestions;
+    // Get questions (n8n generated or fallback) based on student's class
+    let questions: AssessmentQuestion[] = getFallbackQuestionsByClass(student.classGrade);
     if (assessmentResponse && assessmentResponse.generatedQuestions && assessmentResponse.generatedQuestions.length > 0) {
       console.log('🔍 Found stored N8N questions for submission');
       console.log('🔍 Raw generatedQuestions type:', typeof assessmentResponse.generatedQuestions);
@@ -628,8 +1034,8 @@ async function handlePreviousQuestion(decoded: DecodedToken, currentQuestionNumb
       assessmentType: 'diagnostic'
     });
 
-    // Get questions (n8n generated or fallback)
-    let questions: AssessmentQuestion[] = fallbackQuestions;
+    // Get questions (n8n generated or fallback) based on student's class
+    let questions: AssessmentQuestion[] = getFallbackQuestionsByClass(student.classGrade);
     if (assessmentResponse && assessmentResponse.generatedQuestions && assessmentResponse.generatedQuestions.length > 0) {
       const parsedQuestions = parseN8nOutput(assessmentResponse.generatedQuestions);
       if (parsedQuestions.length > 0) {

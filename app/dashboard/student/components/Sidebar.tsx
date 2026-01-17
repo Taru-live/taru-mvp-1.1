@@ -154,11 +154,17 @@ interface SidebarProps {
   role?: 'student' | 'parent' | 'teacher' | 'admin';
 }
 
-export default function Sidebar({ activeTab, onTabChange, isOpen = false, onToggle, navItems }: SidebarProps) {
+export default function Sidebar({ activeTab, onTabChange, isOpen = false, onToggle, navItems, role }: SidebarProps) {
   // Use provided navItems or fall back to default student items
   const items = navItems || defaultNavItems;
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Hide scrollbar for admin role (organization dashboard)
+  const hideScrollbar = role === 'admin';
+  const scrollbarClass = hideScrollbar 
+    ? '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' 
+    : '';
 
   // Check if we're on mobile on component mount and window resize
   React.useEffect(() => {
@@ -347,19 +353,21 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
             </motion.div>
             
             {/* Navigation - Scrollable */}
-            <nav className="flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-              {items.map((item, index) => (
-                <motion.button
-                  key={item.id}
-                  onClick={() => handleTabChange(item.id)}
-                  className={`
-                    flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-300 
-                    font-medium text-gray-900 relative overflow-hidden group flex-shrink-0 min-h-[44px]
-                    ${activeTab === item.id 
-                      ? 'rounded-3xl bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
-                      : 'rounded-lg hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 active:bg-purple-100'
-                    }
-                  `}
+            <nav className={`flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden ${scrollbarClass}`}>
+            {items.map((item, index) => (
+              <motion.button
+                key={item.id}
+                onClick={() => handleTabChange(item.id)}
+                className={`
+                  flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-300 
+                  font-medium text-gray-900 relative overflow-hidden group flex-shrink-0 min-h-[44px]
+                  focus:outline-none focus:ring-0
+                  ${isSidebarExpanded ? 'mx-3' : ''}
+                  ${activeTab === item.id 
+                    ? 'rounded-3xl bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
+                    : 'rounded-lg hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 active:bg-purple-100'
+                  }
+                `}
                   initial={{ x: -50, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
@@ -423,7 +431,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
             {/* Logout Button - Fixed at bottom */}
             <motion.button
               onClick={() => handleTabChange('logout')}
-              className="flex items-center gap-3 px-4 py-2.5 mt-auto rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200 flex-shrink-0 min-h-[44px]"
+              className={`flex items-center gap-3 px-4 py-2.5 mt-auto rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200 flex-shrink-0 min-h-[44px] focus:outline-none focus:ring-0 ${isSidebarExpanded ? 'mx-2' : ''}`}
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.4 + items.length * 0.1, duration: 0.4 }}
@@ -503,7 +511,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
           
           {/* Navigation - Scrollable */}
           <motion.nav 
-            className="flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+            className={`flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden ${scrollbarClass}`}
             animate={{
               gap: isHovered ? "0.75rem" : "0.5rem"
             }}
@@ -521,6 +529,8 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
                 className={`
                   flex items-center gap-3 pl-[0.7rem] pr-[0.3rem] py-2.5 rounded-3xl text-left transition-all duration-300 
                   font-medium text-gray-900 relative overflow-hidden group w-full min-h-[44px] flex-shrink-0
+                  focus:outline-none focus:ring-0
+                  ${isHovered ? 'mx-2' : ''}
                   ${activeTab === item.id 
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
                     : 'hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 active:bg-purple-200'
@@ -573,7 +583,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen = false, onTogg
           {/* Logout Button - Fixed at bottom */}
           <motion.button
             onClick={() => handleTabChange('logout')}
-            className="flex items-center gap-3 pl-[0.7rem] pr-[0.3rem] py-2.5 mt-auto rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200 flex-shrink-0 min-h-[44px]"
+            className={`flex items-center gap-3 pl-[0.7rem] pr-[0.3rem] py-2.5 mt-auto rounded-lg text-left text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-all duration-200 flex-shrink-0 min-h-[44px] focus:outline-none focus:ring-0 ${isHovered ? 'mx-2' : ''}`}
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 + items.length * 0.1, duration: 0.4 }}

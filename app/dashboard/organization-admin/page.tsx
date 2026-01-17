@@ -351,7 +351,8 @@ function ModuleManagementInterface() {
               placeholder="Search modules by title, description, or subject..."
               value={state.searchTerm}
               onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+              style={{ backgroundColor: 'white' }}
             />
           </div>
           <select
@@ -1807,21 +1808,24 @@ Please share these credentials with the teacher. They can use this password perm
               </svg>
             </motion.button>
 
-            {/* Notification Center */}
-            {user && (
-              <NotificationCenter
-                userId={user._id}
-                userRole={user.role || 'organization'}
-                className="relative"
-              />
-            )}
-           
+            
              {/* Enhanced User Profile Section */}
              <div 
                className="bg-white/80 backdrop-blur-sm rounded-xl p-1.5 sm:p-3 shadow-lg border border-gray-200/50 flex items-center gap-1.5 sm:gap-3"
              >
                {/* Enhanced Notification Bell */}
                <div className="relative" ref={notificationRef}>
+                 {/* Notification Center - Hidden button, controlled by bell icon */}
+                 {user && (
+                   <NotificationCenter
+                     userId={user._id}
+                     userRole={user.role || 'organization'}
+                     className="pointer-events-none"
+                     isOpen={isNotificationOpen}
+                     onToggle={setIsNotificationOpen}
+                     hideButton={true}
+                   />
+                 )}
                  <motion.button 
                   onClick={handleNotificationClick}
                    className="relative text-gray-900 hover:text-purple-600 transition-colors p-1 sm:p-2 rounded-full hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 touch-manipulation group"
@@ -2203,7 +2207,8 @@ Please share these credentials with the teacher. They can use this password perm
                           <input
                             name="schoolName"
                             type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+                            style={{ backgroundColor: 'white' }}
                           />
                         </div>
                         <div className="flex gap-3 pt-4">
