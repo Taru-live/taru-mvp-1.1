@@ -175,21 +175,50 @@ const careerTypes = [
 ];
 
 export default function InterestAssessment() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<InterestAssessmentData>({
-    broadInterestClusters: [],
-    clusterDeepDive: {},
-    personalityInsights: {
-      learningStyle: [],
-      challengeApproach: '',
-      coreValues: []
-    },
-    careerDirection: {
-      dreamCareer: '',
-      excitingCareerTypes: [],
-      careerAttraction: ''
+  // Load form data and step from localStorage on mount
+  const getInitialFormData = (): InterestAssessmentData => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('interest_assessment_formData');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved form data:', e);
+        }
+      }
     }
-  });
+    return {
+      broadInterestClusters: [],
+      clusterDeepDive: {},
+      personalityInsights: {
+        learningStyle: [],
+        challengeApproach: '',
+        coreValues: []
+      },
+      careerDirection: {
+        dreamCareer: '',
+        excitingCareerTypes: [],
+        careerAttraction: ''
+      }
+    };
+  };
+
+  const getInitialStep = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('interest_assessment_currentStep');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 1;
+        } catch (e) {
+          console.error('Error parsing saved step:', e);
+        }
+      }
+    }
+    return 1;
+  };
+
+  const [currentStep, setCurrentStep] = useState(getInitialStep());
+  const [formData, setFormData] = useState<InterestAssessmentData>(getInitialFormData());
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -470,6 +499,20 @@ export default function InterestAssessment() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Save formData to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('interest_assessment_formData', JSON.stringify(formData));
+    }
+  }, [formData]);
+
+  // Save currentStep to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('interest_assessment_currentStep', currentStep.toString());
+    }
+  }, [currentStep]);
+
   const handleNext = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -515,6 +558,12 @@ export default function InterestAssessment() {
       
       if (!response.ok) {
         throw new Error('Failed to save interest assessment');
+      }
+      
+      // Clear localStorage after successful submission
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('interest_assessment_formData');
+        localStorage.removeItem('interest_assessment_currentStep');
       }
       
       // Redirect to diagnostic assessment

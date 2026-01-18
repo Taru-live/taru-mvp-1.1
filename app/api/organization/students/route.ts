@@ -5,6 +5,8 @@ import Student from '@/models/Student';
 import User from '@/models/User';
 import Organization from '@/models/Organization';
 import AuditLog from '@/models/AuditLog';
+import { StudentKeyGenerator } from '@/lib/studentKeyGenerator';
+import { checkMustChangePassword } from '@/lib/auth-utils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -29,6 +31,12 @@ export async function GET(request: NextRequest) {
       decoded = jwt.verify(token, JWT_SECRET);
     } catch (jwtError) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    // Check if user must change password (backend enforcement)
+    const passwordCheck = checkMustChangePassword(request, decoded);
+    if (passwordCheck) {
+      return passwordCheck;
     }
 
     // Check if user is an organization admin
@@ -59,6 +67,7 @@ export async function GET(request: NextRequest) {
         schoolName: student.schoolName || 'Not specified',
         uniqueId: student.uniqueId,
         onboardingCompleted: student.onboardingCompleted,
+        isActive: user?.isActive !== false, // Default to true if not set
         joinedAt: student.createdAt.toISOString(),
         totalModulesCompleted: student.totalModulesCompleted || 0,
         totalXpEarned: student.totalXpEarned || 0,
@@ -66,7 +75,10 @@ export async function GET(request: NextRequest) {
         badgesEarned: student.badgesEarned || 0,
         assessmentCompleted: student.assessmentCompleted || false,
         diagnosticCompleted: student.diagnosticCompleted || false,
-        diagnosticScore: student.diagnosticScore || 0
+        diagnosticScore: student.diagnosticScore || 0,
+        createdBy: student.createdBy || null,
+        managedBy: student.managedBy || null,
+        teacherId: student.teacherId || null
       };
     }));
 
@@ -185,7 +197,8 @@ export async function POST(request: NextRequest) {
         classGrade,
         schoolName: schoolName || 'Not specified'
       },
-      firstTimeLogin: true // Mark for password change on first login
+      firstTimeLogin: true, // Mark for password change on first login
+      mustChangePassword: true // Force password change on first login
     });
 
     const savedUser = await newUser.save();
@@ -195,11 +208,21 @@ export async function POST(request: NextRequest) {
     const newStudent = new Student({
       userId: savedUser._id,
       organizationId: organization._id.toString(),
+      createdBy: {
+        type: 'organization',
+        id: organization._id.toString(),
+        name: organization.organizationName || 'Organization'
+      },
+      managedBy: {
+        type: 'organization',
+        id: organization._id.toString(),
+        name: organization.organizationName || 'Organization'
+      },
       fullName: name,
       classGrade,
       schoolName: schoolName || 'Not specified',
       schoolId: `SCH${Date.now()}`,
-      uniqueId: `STU${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+      uniqueId: StudentKeyGenerator.generate(),
       languagePreference: 'English',
       gender: 'Other',
       dateOfBirth: new Date('2000-01-01'),

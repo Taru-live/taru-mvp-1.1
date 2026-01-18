@@ -41,6 +41,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if user is active
+    if (user.isActive === false) {
+      return NextResponse.json(
+        { error: 'Your account has been disabled. Please contact your administrator.' },
+        { status: 403 }
+      );
+    }
+
     // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
@@ -84,6 +92,9 @@ export async function POST(request: NextRequest) {
       requiresOnboarding = !organizationProfile?.onboardingCompleted;
     }
 
+    // Check if user must change password
+    const mustChangePassword = user.mustChangePassword === true;
+
     // Generate JWT token
     const token = jwt.sign(
       { 
@@ -92,6 +103,7 @@ export async function POST(request: NextRequest) {
         fullName: user.name,
         role: user.role,
         firstTimeLogin: user.firstTimeLogin,
+        mustChangePassword: mustChangePassword,
         requiresOnboarding,
         requiresAssessment
       },
@@ -107,6 +119,7 @@ export async function POST(request: NextRequest) {
       { 
         message: 'Login successful',
         user: userResponse,
+        mustChangePassword: mustChangePassword,
         requiresOnboarding,
         requiresAssessment
       },

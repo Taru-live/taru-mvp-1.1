@@ -62,6 +62,7 @@ const invitationSchema = new mongoose.Schema<IInvitation>({
     type: String,
     required: [true, 'Token is required'],
     unique: true
+    // Note: unique: true automatically creates an index, so no need for separate index
   },
   status: {
     type: String,
@@ -95,12 +96,10 @@ const invitationSchema = new mongoose.Schema<IInvitation>({
 
 // Indexes for efficient queries
 invitationSchema.index({ email: 1 });
-invitationSchema.index({ token: 1 });
+// Note: token already has an index from unique: true
 invitationSchema.index({ organizationId: 1 });
 invitationSchema.index({ status: 1 });
-invitationSchema.index({ expiresAt: 1 });
-
-// Auto-expire invitations
+// Auto-expire invitations (this also creates the index for expiresAt)
 invitationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default (mongoose.models && mongoose.models.Invitation) || mongoose.model<IInvitation>('Invitation', invitationSchema);

@@ -99,7 +99,7 @@ const branchSchema = new mongoose.Schema<IBranch>({
 
 // Indexes for efficient queries
 branchSchema.index({ organizationId: 1 });
-branchSchema.index({ branchCode: 1 });
+// Note: branchCode already has an index from unique: true
 branchSchema.index({ isActive: 1 });
 
 export default (mongoose.models && mongoose.models.Branch) || mongoose.model<IBranch>('Branch', branchSchema);

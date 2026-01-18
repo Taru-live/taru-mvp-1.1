@@ -639,7 +639,7 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
 
       if (response.ok) {
         const result = await response.json();
-        setSuccess(result.message || 'YouTube scraping initiated! Please wait for modules to be processed.');
+        // Success message removed - N8N indicator will show the status instead
         
         // Clear local state if existing data was deleted
         if (deleteExisting) {
@@ -2065,7 +2065,10 @@ When any threat is found, these tools give details so you can quickly fix the pr
                     return (
                       <motion.div
                         key={module.moduleId}
-                        className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
+                        onClick={() => {
+                          router.push(`/modules/youtube/${module.moduleId}`);
+                        }}
+                        className="bg-white cursor-pointer rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ y: -5 }}
@@ -2078,9 +2081,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                           </div>
                           <h3 
                             className="text-xl font-bold text-gray-900 mb-2 text-center cursor-pointer hover:text-blue-600 transition-colors"
-                            onClick={() => {
-                              router.push(`/modules/youtube/${module.moduleId}`);
-                            }}
+                            
                           >
                             {module.moduleTitle}
                           </h3>
@@ -2172,7 +2173,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                 {isSubmoduleExpanded && (
                                   <div className="bg-gray-50/30">
                                     {(viewMode as 'grid' | 'list') === 'grid' ? (
-                                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+                                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
                                         {submodule.chapters
                                           .filter(chapter => {
                                             // Apply search filter
@@ -2195,9 +2196,9 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                             const isHovered = hoveredVideo === chapterId;
                     
                                             return (
-                                              <motion.div 
-                                                key={chapter.chapterId} 
-                                                className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                                              <motion.div
+                                                key={chapter.chapterId}
+                                                className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: chapterIndex * 0.1 }}
@@ -2321,23 +2322,24 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                   )}
                                                   
                                                   {/* Overlay Badges */}
-                                                  <div className="absolute top-4 left-4 flex gap-2">
-                                                    <span className="px-3 py-1 bg-black/70 text-white text-xs font-medium rounded-full backdrop-blur-sm">
-                                                      Chapter {chapter.chapterId}
+                                                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex gap-1 sm:gap-2 flex-wrap">
+                                                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-black/70 text-white text-xs font-medium rounded-full backdrop-blur-sm">
+                                                      Ch {chapter.chapterId}
                                                     </span>
                                                     {isCompleted && (
-                                                      <span className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
-                                                        <CheckCircle className="w-3 h-3 inline mr-1" />
-                                                        Completed
+                                                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+                                                        <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-0.5 sm:mr-1" />
+                                                        <span className="hidden sm:inline">Completed</span>
+                                                        <span className="sm:hidden">Done</span>
                                                       </span>
                                                     )}
                                                   </div>
                                                   
                                                   {/* Action Buttons Overlay */}
-                                                  <div className="absolute top-4 right-4 flex gap-2">
+                                                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex gap-1 sm:gap-2">
                                                     <motion.button
                                                       onClick={() => toggleBookmark(chapterId)}
-                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
                                                         isBookmarked 
                                                           ? 'bg-yellow-500 text-white' 
                                                           : 'bg-black/70 text-white hover:bg-yellow-500'
@@ -2346,15 +2348,15 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                       whileTap={{ scale: 0.9 }}
                                                     >
                                                       {isBookmarked ? (
-                                                        <BookmarkCheck className="w-4 h-4" />
+                                                        <BookmarkCheck className="w-3 h-3 sm:w-4 sm:h-4" />
                                                       ) : (
-                                                        <Bookmark className="w-4 h-4" />
+                                                        <Bookmark className="w-3 h-3 sm:w-4 sm:h-4" />
                                                       )}
                                                     </motion.button>
                                                     
                                                     <motion.button
                                                       onClick={() => toggleLike(chapterId)}
-                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
                                                         isLiked 
                                                           ? 'bg-blue-500 text-white' 
                                                           : 'bg-black/70 text-white hover:bg-blue-500'
@@ -2362,21 +2364,21 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                       whileHover={{ scale: 1.1 }}
                                                       whileTap={{ scale: 0.9 }}
                                                     >
-                                                      <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                                                      <ThumbsUp className={`w-3 h-3 sm:w-4 sm:h-4 ${isLiked ? 'fill-current' : ''}`} />
                                                     </motion.button>
                                                     
                                                     <motion.button
                                                       onClick={() => shareVideo(chapter.youtubeUrl, chapter.youtubeTitle)}
-                                                      className="p-2 rounded-full backdrop-blur-sm bg-black/70 text-white hover:bg-purple-500 transition-all"
+                                                      className="p-1.5 sm:p-2 rounded-full backdrop-blur-sm bg-black/70 text-white hover:bg-purple-500 transition-all"
                                                       whileHover={{ scale: 1.1 }}
                                                       whileTap={{ scale: 0.9 }}
                                                     >
-                                                      <Share className="w-4 h-4" />
+                                                      <Share className="w-3 h-3 sm:w-4 sm:h-4" />
                                                     </motion.button>
                                                     
                                                     <motion.button
                                                       onClick={() => toggleFavorite(chapterId)}
-                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
                                                         isFavorite 
                                                           ? 'bg-red-500 text-white' 
                                                           : 'bg-black/70 text-white hover:bg-red-500'
@@ -2384,12 +2386,12 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                       whileHover={{ scale: 1.1 }}
                                                       whileTap={{ scale: 0.9 }}
                                                     >
-                                                      <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+                                                      <Heart className={`w-3 h-3 sm:w-4 sm:h-4 ${isFavorite ? 'fill-current' : ''}`} />
                                                     </motion.button>
                                                     
                                                     <motion.button
                                                       onClick={() => markAsCompleted(chapterId)}
-                                                      className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
                                                         isCompleted 
                                                           ? 'bg-green-500 text-white' 
                                                           : 'bg-black/70 text-white hover:bg-green-500'
@@ -2397,29 +2399,29 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                       whileHover={{ scale: 1.1 }}
                                                       whileTap={{ scale: 0.9 }}
                                                     >
-                                                      <CheckCircle className="w-4 h-4" />
+                                                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                                                     </motion.button>
                                                   </div>
                                                 </div>
                       
                                                 {/* Content Section */}
-                                                <div className="p-6">
-                                                  <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                                <div className="p-4 sm:p-6">
+                                                  <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                                                     {chapter.chapterTitle}
                                                   </h4>
-                                                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                  <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2">
                                                     {chapter.chapterDescription}
                                                   </p>
                                                   
                                                   {/* Progress Bar */}
-                                                  <div className="mb-4">
-                                                    <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                                                  <div className="mb-3 sm:mb-4">
+                                                    <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-1">
                                                       <span>Quiz Score</span>
                                                       <span>{progress[chapterId] || 0}%</span>
                                                     </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                    <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                                                       <div 
-                                                        className={`h-2 rounded-full transition-all duration-300 ${
+                                                        className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                                                           isCompleted 
                                                             ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
                                                             : progress[chapterId] >= 75 
@@ -2442,19 +2444,19 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                   </div>
                                                   
                                                   {/* Action Buttons */}
-                                                  <div className="flex gap-2">
+                                                  <div className="flex flex-col sm:flex-row gap-2">
                                                     <button
                                                       onClick={() => {
                                                         setSelectedChapter(chapter.chapterId);
                                                         generateMCQ(chapter.chapterId.toString());
                                                       }}
                                                       disabled={mcqLoading}
-                                                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 font-medium"
+                                                      className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg sm:rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 font-medium text-sm sm:text-base"
                                                     >
                                                       {mcqLoading && selectedChapter === chapter.chapterId ? (
-                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                                                       ) : (
-                                                        <Brain className="w-4 h-4" />
+                                                        <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                       )}
                                                       Quiz
                                                     </button>
@@ -2465,9 +2467,9 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                         setShowChat(true);
                                                         setShowMcq(false);
                                                       }}
-                                                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 font-medium"
+                                                      className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg sm:rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 font-medium text-sm sm:text-base"
                                                     >
-                                                      <MessageCircle className="w-4 h-4" />
+                                                      <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                       Chat
                                                     </button>
                                                   </div>
@@ -2498,11 +2500,11 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                             return (
                                               <div 
                                                 key={chapter.chapterId} 
-                                                className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300"
+                                                className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
                                               >
-                                                <div className="flex items-center gap-6">
+                                                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                                                   {/* Video Placeholder */}
-                                                  <div className="relative w-32 h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-lg overflow-hidden flex-shrink-0 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                                                  <div className="relative w-full sm:w-32 h-32 sm:h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-lg overflow-hidden flex-shrink-0 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg">
                                                     {/* Animated Background Pattern */}
                                                     <div className="absolute inset-0 opacity-20">
                                                       <motion.div
@@ -2547,40 +2549,40 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                   
                                                   {/* Content */}
                                                   <div className="flex-1 min-w-0">
-                                                    <div className="flex items-start justify-between mb-2">
-                                                      <div className="flex-1">
-                                                        <h4 className="text-lg font-semibold text-gray-900 line-clamp-1 mb-1">
+                                                    <div className="flex items-start justify-between mb-2 gap-2">
+                                                      <div className="flex-1 min-w-0">
+                                                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-1 mb-1">
                                                           {chapter.chapterTitle}
                                                         </h4>
-                                                        <p className="text-sm text-gray-600 line-clamp-2">
+                                                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                                                           {chapter.chapterDescription}
                                                         </p>
                                                       </div>
-                                                      <div className="flex items-center gap-2 ml-4">
+                                                      <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4 flex-shrink-0">
                                                         <button
                                                           onClick={() => toggleFavorite(chapterId)}
-                                                          className={`p-2 rounded-lg transition-colors ${
+                                                          className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                                                             isFavorite 
                                                               ? 'bg-red-100 text-red-600' 
                                                               : 'text-gray-400 hover:bg-red-100 hover:text-red-600'
                                                           }`}
                                                         >
-                                                          <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+                                                          <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-current' : ''}`} />
                                                         </button>
                                                         <button
                                                           onClick={() => markAsCompleted(chapterId)}
-                                                          className={`p-2 rounded-lg transition-colors ${
+                                                          className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                                                             isCompleted 
                                                               ? 'bg-green-100 text-green-600' 
                                                               : 'text-gray-400 hover:bg-green-100 hover:text-green-600'
                                                           }`}
                                                         >
-                                                          <CheckCircle className="w-4 h-4" />
+                                                          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                         </button>
                                                       </div>
                                                     </div>
                                                     
-                                                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                                                    <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                                                       {isCompleted && (
                                                         <span className="flex items-center gap-1 text-green-600">
                                                           <CheckCircle className="w-4 h-4" />
@@ -2590,14 +2592,14 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                     </div>
 
                                                     {/* Progress Bar */}
-                                                    <div className="mb-4">
-                                                      <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                                                    <div className="mb-3 sm:mb-4">
+                                                      <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-1">
                                                         <span>Quiz Score</span>
                                                         <span>{progress[chapterId] || 0}%</span>
                                                       </div>
-                                                      <div className="w-full bg-gray-200 rounded-full h-2">
+                                                      <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                                                         <div 
-                                                          className={`h-2 rounded-full transition-all duration-300 ${
+                                                          className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                                                             isCompleted 
                                                               ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
                                                               : progress[chapterId] >= 75 
@@ -2620,19 +2622,19 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                     </div>
           
                                                     {/* Action Buttons */}
-                                                    <div className="flex gap-3">
+                                                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                                       <button
                                                         onClick={() => {
                                                           setSelectedChapter(chapter.chapterId);
                                                           generateMCQ(chapter.chapterId.toString());
                                                         }}
                                                         disabled={mcqLoading}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                                        className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 text-sm sm:text-base"
                                                       >
                                                         {mcqLoading && selectedChapter === chapter.chapterId ? (
-                                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                                          <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                                                         ) : (
-                                                          <Brain className="w-4 h-4" />
+                                                          <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                         )}
                                                         Take Quiz
                                                       </button>
@@ -2643,9 +2645,9 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                           setShowChat(true);
                                                           setShowMcq(false);
                                                         }}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                                        className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
                                                       >
-                                                        <MessageCircle className="w-4 h-4" />
+                                                        <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                         Ask Question
                                                       </button>
                                                     </div>
@@ -2938,19 +2940,19 @@ When any threat is found, these tools give details so you can quickly fix the pr
 
       {/* MCQ Modal */}
       {showMcq && (selectedChapter || selectedModule) && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 z-50 overflow-hidden">
+          <div className="bg-white rounded-none sm:rounded-3xl max-w-4xl w-full h-full sm:h-auto sm:max-h-[90vh] flex flex-col shadow-2xl">
             {/* Header */}
-            <div className="relative bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 flex-shrink-0">
+            <div className="relative bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 sm:p-8 flex-shrink-0">
               <div className="absolute inset-0 bg-black/10"></div>
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                    <Brain className="w-8 h-8" />
+              <div className="relative flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl sm:rounded-2xl backdrop-blur-sm flex-shrink-0">
+                    <Brain className="w-6 h-6 sm:w-8 sm:h-8" />
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold mb-1">MCQ Quiz</h3>
-                    <p className="text-purple-100">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-lg sm:text-2xl font-bold mb-1 truncate">MCQ Quiz</h3>
+                    <p className="text-purple-100 text-xs sm:text-base truncate">
                       {isModuleQuiz && selectedModule 
                         ? `Module ${selectedModule} - Test your knowledge`
                         : `Chapter ${selectedChapter} - Test your knowledge`}
@@ -2959,42 +2961,42 @@ When any threat is found, these tools give details so you can quickly fix the pr
                 </div>
                 <button
                   onClick={() => setShowMcq(false)}
-                  className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-xl transition-colors flex-shrink-0"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
             </div>
             
             {/* Content */}
-            <div className="p-8 flex-1 overflow-y-auto">
+            <div className="p-4 sm:p-8 flex-1 overflow-y-auto">
               {mcqQuestions.length > 0 ? (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {mcqQuestions.map((question, index) => (
-                    <div key={index} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="px-4 py-2 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">
+                    <div key={index} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 flex-wrap">
+                        <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-100 text-purple-800 text-xs sm:text-sm font-semibold rounded-full">
                           Q{question.Q}
                         </div>
-                        <div className={`px-4 py-2 text-sm font-semibold rounded-full ${
+                        <div className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-full ${
                           question.level === 'Basic' ? 'bg-green-100 text-green-800' :
                           question.level === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
                           {question.level}
                         </div>
-                        <div className="ml-auto">
-                          <Target className="w-5 h-5 text-gray-400" />
+                        <div className="ml-auto sm:ml-0">
+                          <Target className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                         </div>
                       </div>
                       
-                      <div className="mb-6">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4 leading-relaxed">
+                      <div className="mb-4 sm:mb-6">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 leading-relaxed">
                           {question.question}
                         </h4>
                         
                         {/* Options */}
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                           {question.options.map((option, optionIndex) => {
                             const isSelected = mcqAnswers[question.Q] === option;
                             const isCorrect = option === question.answer;
@@ -3071,15 +3073,15 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   
                   {/* Submit Button */}
                   {!mcqSubmitted && (
-                    <div className="flex justify-center pt-6">
+                    <div className="flex justify-center pt-4 sm:pt-6">
                       <button
                         onClick={submitMCQ}
                         disabled={Object.keys(mcqAnswers).length !== mcqQuestions.length}
-                        className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                        className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg sm:rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                       >
-                        <Brain className="w-5 h-5" />
-                        Submit Quiz
-                        <span className="text-sm opacity-75">
+                        <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Submit Quiz</span>
+                        <span className="text-xs sm:text-sm opacity-75">
                           ({Object.keys(mcqAnswers).length}/{mcqQuestions.length} answered)
                         </span>
                       </button>
@@ -3088,37 +3090,37 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   
                   {/* Results */}
                   {mcqSubmitted && mcqScore !== null && (
-                    <div className={`rounded-2xl p-6 border-2 ${
+                    <div className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 ${
                       mcqScore >= 75 
                         ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300' 
                         : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-300'
                     }`}>
                       <div className="text-center">
-                        <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${
+                        <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full flex items-center justify-center mb-3 sm:mb-4 ${
                           mcqScore >= 75 
                             ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
                             : 'bg-gradient-to-r from-orange-500 to-yellow-500'
                         }`}>
                           {mcqScore >= 75 ? (
-                            <Trophy className="w-8 h-8 text-white" />
+                            <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                           ) : (
-                            <Target className="w-8 h-8 text-white" />
+                            <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                           )}
                         </div>
                         
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                           {mcqScore >= 75 
                             ? (isModuleQuiz ? '🎉 Module Completed!' : '🎉 Chapter Completed!')
                             : 'Quiz Completed!'}
                         </h3>
                         
-                        <div className={`text-4xl font-bold mb-2 ${
+                        <div className={`text-3xl sm:text-4xl font-bold mb-2 ${
                           mcqScore >= 75 ? 'text-green-600' : 'text-orange-600'
                         }`}>
                           {mcqScore}%
                         </div>
                         
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-sm sm:text-base text-gray-600 mb-4">
                           {mcqScore >= 75 
                             ? `Excellent! You scored ${mcqScore}% and completed this ${isModuleQuiz ? 'module' : 'chapter'}!`
                             : `You scored ${mcqScore}%. Keep practicing to reach 75% for completion!`
@@ -3126,14 +3128,14 @@ When any threat is found, these tools give details so you can quickly fix the pr
                         </p>
 
                         {/* Progress indicator */}
-                        <div className="mb-6">
-                          <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                        <div className="mb-4 sm:mb-6">
+                          <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-2">
                             <span>{isModuleQuiz ? 'Module' : 'Chapter'} Progress</span>
                             <span>{mcqScore >= 75 ? '100%' : `${mcqScore}%`}</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
                             <div 
-                              className={`h-3 rounded-full transition-all duration-500 ${
+                              className={`h-2 sm:h-3 rounded-full transition-all duration-500 ${
                                 mcqScore >= 75 
                                   ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
                                   : 'bg-gradient-to-r from-orange-500 to-yellow-500'
@@ -3142,20 +3144,20 @@ When any threat is found, these tools give details so you can quickly fix the pr
                             />
                           </div>
                           {mcqScore >= 75 ? (
-                            <p className="text-sm text-green-600 mt-2 font-semibold">
+                            <p className="text-xs sm:text-sm text-green-600 mt-2 font-semibold">
                               🎉 Chapter completed! Great job!
                             </p>
                           ) : (
-                            <p className="text-sm text-gray-500 mt-2">
+                            <p className="text-xs sm:text-sm text-gray-500 mt-2">
                               Need 75% to complete this chapter
                             </p>
                           )}
                         </div>
                         
-                        <div className="flex gap-3 justify-center">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                           <button
                             onClick={resetMCQ}
-                            className="px-6 py-3 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border border-gray-300"
+                            className="w-full sm:w-auto px-6 py-3 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border border-gray-300"
                           >
                             Retake Quiz
                           </button>
@@ -3165,7 +3167,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                               // Refresh progress data to ensure main progress bars are updated
                               fetchProgressData();
                             }}
-                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors"
+                            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors"
                           >
                             Close
                           </button>
@@ -3190,19 +3192,19 @@ When any threat is found, these tools give details so you can quickly fix the pr
 
       {/* Chat Modal */}
       {showChat && (selectedChapter || selectedModule) && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl max-w-6xl w-full max-h-[95vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white rounded-none sm:rounded-3xl max-w-6xl w-full h-full sm:h-auto sm:max-h-[95vh] flex flex-col shadow-2xl">
             {/* Header */}
-            <div className="relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 flex-shrink-0">
+            <div className="relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 sm:p-6 flex-shrink-0">
               <div className="absolute inset-0 bg-black/10"></div>
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                    <MessageCircle className="w-8 h-8" />
+              <div className="relative flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl sm:rounded-2xl backdrop-blur-sm flex-shrink-0">
+                    <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8" />
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold mb-1">AI Learning Assistant</h3>
-                    <p className="text-emerald-100">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-lg sm:text-2xl font-bold mb-1 truncate">AI Learning Assistant</h3>
+                    <p className="text-emerald-100 text-xs sm:text-base truncate">
                       {selectedModule && !isModuleQuiz
                         ? `Module ${selectedModule} - Ask anything about this topic`
                         : `Chapter ${selectedChapter} - Ask anything about this topic`}
@@ -3214,32 +3216,32 @@ When any threat is found, these tools give details so you can quickly fix the pr
                     setShowChat(false);
                     setSelectedModule(null);
                   }}
-                  className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-xl transition-colors flex-shrink-0"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
             </div>
             
             {/* Content - Scrollable Area */}
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <div className="p-6">
-                <div className="space-y-6">
+              <div className="p-4 sm:p-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Chat Input */}
-                  <div className="bg-gradient-to-r from-gray-50 to-emerald-50 rounded-2xl p-6 border border-gray-200">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <div className="bg-gradient-to-r from-gray-50 to-emerald-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-200">
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                       Ask a question about this {selectedModule && !isModuleQuiz ? 'module' : 'chapter'}:
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                       <div className="flex-1 relative">
                         <input
                           type="text"
                           value={chatQuery}
                           onChange={(e) => setChatQuery(e.target.value)}
                           placeholder={selectedModule && !isModuleQuiz
-                            ? "e.g., What is this module about? How does this module work?"
-                            : "e.g., What is the main concept of this chapter? How does this work?"}
-                          className="w-full pl-4 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 bg-white text-lg"
+                            ? "e.g., What is this module about?"
+                            : "e.g., What is the main concept?"}
+                          className="w-full pl-3 sm:pl-4 pr-3 sm:pr-4 py-3 sm:py-4 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 bg-white text-sm sm:text-lg"
                           onKeyPress={(e) => {
                             if (e.key === 'Enter') {
                               if (selectedModule && !isModuleQuiz) {
@@ -3266,14 +3268,14 @@ When any threat is found, these tools give details so you can quickly fix the pr
                           }
                         }}
                         disabled={chatLoading || !chatQuery.trim()}
-                        className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl"
+                        className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg sm:rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                       >
                         {chatLoading ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         ) : (
                           <div className="flex items-center gap-2">
-                            <Zap className="w-5 h-5" />
-                            Ask
+                            <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span>Ask</span>
                           </div>
                         )}
                       </button>
@@ -3282,18 +3284,18 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   
                   {/* Chat Response */}
                   {chatResponse && (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-gray-200 shadow-lg">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl border border-gray-200 shadow-lg">
                       {/* Header */}
-                      <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white/50 backdrop-blur-sm rounded-t-2xl">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                            <Lightbulb className="w-5 h-5 text-blue-600" />
+                      <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-white/50 backdrop-blur-sm rounded-t-xl sm:rounded-t-2xl gap-2 sm:gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                          <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                            <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-lg font-semibold text-gray-900 truncate">
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                               {chatResponse ? parseHtmlResponse(chatResponse).header || 'AI Response' : 'AI Response'}
                             </h4>
-                            <p className="text-sm text-gray-500 truncate">
+                            <p className="text-xs sm:text-sm text-gray-500 truncate">
                               {chatResponse 
                                 ? (selectedModule && !isModuleQuiz 
                                     ? `Generated for Module ${selectedModule}` 
@@ -3304,10 +3306,10 @@ When any threat is found, these tools give details so you can quickly fix the pr
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                           <button
                             onClick={() => setChatResponse('')}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
                             title="Clear response"
                           >
                             <X className="w-4 h-4 text-gray-500" />
@@ -3318,7 +3320,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                               setSuccess('Response copied to clipboard!');
                               setTimeout(() => setSuccess(null), 3000);
                             }}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
                             title="Copy response"
                           >
                             <Download className="w-4 h-4 text-gray-500" />
@@ -3327,8 +3329,8 @@ When any threat is found, these tools give details so you can quickly fix the pr
                       </div>
                       
                       {/* Scrollable Content */}
-                      <div className="relative max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
-                        <div className="p-6">
+                      <div className="relative max-h-[50vh] sm:max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
+                        <div className="p-4 sm:p-6">
                           {chatLoading ? (
                             <div className="flex items-center justify-center py-12">
                               <div className="flex flex-col items-center gap-4">

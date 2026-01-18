@@ -18,6 +18,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'student_profile', actions: ['read', 'update'] },
     { resource: 'modules', actions: ['read', 'complete'] },
     { resource: 'assessments', actions: ['read', 'submit'] },
+    { resource: 'tests', actions: ['read', 'submit'] },
+    { resource: 'test_submissions', actions: ['read', 'create'] },
     { resource: 'progress', actions: ['read'] },
     { resource: 'learning_paths', actions: ['read', 'save'] }
   ],
@@ -27,6 +29,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'students', actions: ['read', 'create', 'update', 'bulk_import'] },
     { resource: 'student_progress', actions: ['read', 'export'] },
     { resource: 'assignments', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'tests', actions: ['create', 'read', 'update', 'delete', 'assign', 'evaluate'] },
+    { resource: 'test_submissions', actions: ['read', 'evaluate'] },
     { resource: 'reports', actions: ['read', 'export'] }
   ],
   
@@ -43,6 +47,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'branches', actions: ['create', 'read', 'update', 'delete'] },
     { resource: 'teachers', actions: ['create', 'read', 'update', 'invite', 'manage'] },
     { resource: 'students', actions: ['read', 'export'] },
+    { resource: 'tests', actions: ['create', 'read', 'update', 'delete', 'assign', 'evaluate'] },
+    { resource: 'test_submissions', actions: ['read', 'evaluate'] },
+    { resource: 'test_analytics', actions: ['read', 'export'] },
     { resource: 'reports', actions: ['read', 'export', 'generate'] },
     { resource: 'audit_logs', actions: ['read'] },
     { resource: 'invitations', actions: ['create', 'read', 'manage'] },

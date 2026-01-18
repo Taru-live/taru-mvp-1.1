@@ -13,6 +13,7 @@ import { StaggerContainer, StaggerItem } from '../../components/PageTransitions'
 import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../../components/ScrollAnimations';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
 import LearningPathTab from '../student/components/LearningPathTab';
+import NotificationCenter from '../../components/NotificationCenter';
 
 // Add custom hook for responsive behavior
 function useWindowSize() {
@@ -830,73 +831,85 @@ export default function ParentDashboard() {
                       <span style={{ color: '#6D18CE' }}>{user?.name || 'Parent'}</span>
                     </h1>
 
-                    {/* Language Selector */}
-                    <div className="flex items-center gap-2" style={{ width: '131.05px', height: '34px' }}>
-                      <div className="relative" ref={languageDropdownRef} style={{ width: '131.05px', height: '34px' }}>
-                        <button 
-                          className="flex items-center justify-between px-3 rounded-full"
-                          style={{ 
-                            background: '#6D18CE', 
-                            borderRadius: '86.5455px',
-                            width: '131.05px',
-                            height: '34px'
-                          }}
-                          onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                        >
-                          <span className="text-white font-semibold" style={{ 
-                            fontFamily: 'Inter',
-                            fontWeight: 600,
-                            fontSize: '9.88811px',
-                            lineHeight: '12px',
-                            color: '#FFFFFF'
-                          }}>
-                            {language}
-                          </span>
-                          <svg 
-                            width="16.44" 
-                            height="16.44" 
-                            viewBox="0 0 16 16" 
-                            fill="none" 
+                    {/* Language Selector and Notification Center */}
+                    <div className="flex items-center gap-4">
+                      {/* Notification Center */}
+                      {user && (
+                        <NotificationCenter
+                          userId={user._id}
+                          userRole={user.role || 'parent'}
+                          className="relative"
+                        />
+                      )}
+                      
+                      {/* Language Selector */}
+                      <div className="flex items-center gap-2" style={{ width: '131.05px', height: '34px' }}>
+                        <div className="relative" ref={languageDropdownRef} style={{ width: '131.05px', height: '34px' }}>
+                          <button 
+                            className="flex items-center justify-between px-3 rounded-full"
                             style={{ 
-                              transform: isLanguageDropdownOpen ? 'matrix(1, 0, 0, 1, 0, 0)' : 'matrix(1, 0, 0, -1, 0, 0)',
-                              transition: 'transform 0.2s ease'
-                            }}
-                          >
-                            <path d="M4 6L8 10L12 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                        
-                        {/* Language Dropdown Menu */}
-                        {isLanguageDropdownOpen && (
-                          <div 
-                            className="absolute top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden"
-                            style={{
+                              background: '#6D18CE', 
+                              borderRadius: '86.5455px',
                               width: '131.05px',
-                              minWidth: '150px'
+                              height: '34px'
                             }}
+                            onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
                           >
-                            {['English (USA)', 'Hindi', 'Spanish', 'French', 'German'].map((lang) => (
-                              <button
-                                key={lang}
-                                onClick={() => {
-                                  handleLanguageChange(lang);
-                                  setIsLanguageDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-2 text-sm hover:bg-purple-50 transition-colors ${
-                                  language === lang ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700'
-                                }`}
-                                style={{
-                                  fontFamily: 'Inter',
-                                  fontWeight: language === lang ? 600 : 400,
-                                  fontSize: '9.88811px',
-                                  lineHeight: '12px'
-                                }}
-                              >
-                                {lang}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                            <span className="text-white font-semibold" style={{ 
+                              fontFamily: 'Inter',
+                              fontWeight: 600,
+                              fontSize: '9.88811px',
+                              lineHeight: '12px',
+                              color: '#FFFFFF'
+                            }}>
+                              {language}
+                            </span>
+                            <svg 
+                              width="16.44" 
+                              height="16.44" 
+                              viewBox="0 0 16 16" 
+                              fill="none" 
+                              style={{ 
+                                transform: isLanguageDropdownOpen ? 'matrix(1, 0, 0, 1, 0, 0)' : 'matrix(1, 0, 0, -1, 0, 0)',
+                                transition: 'transform 0.2s ease'
+                              }}
+                            >
+                              <path d="M4 6L8 10L12 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                          
+                          {/* Language Dropdown Menu */}
+                          {isLanguageDropdownOpen && (
+                            <div 
+                              className="absolute top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden"
+                              style={{
+                                width: '131.05px',
+                                minWidth: '150px'
+                              }}
+                            >
+                              {['English (USA)', 'Hindi', 'Spanish', 'French', 'German'].map((lang) => (
+                                <button
+                                  key={lang}
+                                  onClick={() => {
+                                    handleLanguageChange(lang);
+                                    setIsLanguageDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2 text-sm hover:bg-purple-50 transition-colors ${
+                                    language === lang ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700'
+                                  }`}
+                                  style={{
+                                    fontFamily: 'Inter',
+                                    fontWeight: language === lang ? 600 : 400,
+                                    fontSize: '9.88811px',
+                                    lineHeight: '12px'
+                                  }}
+                                >
+                                  {lang}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -920,9 +933,8 @@ export default function ParentDashboard() {
                           <button
                             key={childItem.name}
                             onClick={() => setSelectedChild(childItem.name)}
-                            className="flex items-center justify-center rounded-full font-medium"
+                            className="flex items-center justify-center rounded-full font-medium px-4 py-2 whitespace-nowrap"
                             style={{
-                              width: '148px',
                               height: '41px',
                               borderRadius: '47.6503px',
                               background: selectedChild === childItem.name ? '#6D18CE' : '#F5F5F5',

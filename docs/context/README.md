@@ -50,6 +50,10 @@ docs/context/
 - [Auth Register](./api/auth-register.md) - `POST /api/auth/register`
 - [Auth Logout](./api/auth-logout.md) - `POST /api/auth/logout`
 - [Auth Me](./api/auth-me.md) - `GET /api/auth/me`
+- [Auth Change Password](./api/auth-change-password.md) - `POST /api/auth/change-password`
+- [Auth Forgot Password](./api/auth-forgot-password.md) - `POST /api/auth/forgot-password`
+- [Auth Reset Password](./api/auth-reset-password.md) - `POST /api/auth/reset-password`
+- [Auth Verify Reset Token](./api/auth-verify-reset-token.md) - `POST /api/auth/verify-reset-token`
 
 ### Career & Learning Paths
 - [Career Details](./api/career-details.md) - `GET /api/career-details`
@@ -68,6 +72,7 @@ docs/context/
 - [Modules ID](./api/modules-id.md) - `GET /api/modules/[id]`
 - [Modules Progress](./api/modules-progress.md) - `POST /api/modules/progress`
 - [Modules Recommended](./api/modules-recommended.md) - `GET /api/modules/recommended`
+- [Modules Check Access](./api/modules-check-access.md) - `GET /api/modules/check-access`
 
 ### Dashboard
 - [Dashboard Student Overview](./api/dashboard-student-overview.md) - `GET /api/dashboard/student/overview`
@@ -92,6 +97,7 @@ docs/context/
 - [Organization Branches](./api/organization-branches.md) - `GET /api/organization/branches`
 - [Organization Invite Teacher](./api/organization-invite-teacher.md) - `POST /api/organization/invite-teacher`
 - [Organization Invite Parent](./api/organization-invite-parent.md) - `POST /api/organization/invite-parent`
+- [Organization Reports](./api/organization-reports.md) - `GET /api/organization/reports`
 
 ### Admin Management
 - [Admin Users](./api/admin-users.md) - `GET /api/admin/users`
@@ -110,6 +116,20 @@ docs/context/
 - [Chat](./api/chat.md) - `POST /api/chat`
 - [Mindmap Process PDF](./api/mindmap-process-pdf.md) - `POST /api/mindmap/process-pdf`
 - [PDF to Info Brainstorm](./api/pdf-to-info-brainstorm.md) - `POST /api/pdf-to-info/brainstorm-topics`
+
+### Payments
+- [Payments Create Order](./api/payments-create-order.md) - `POST /api/payments/create-order`
+- [Payments Verify](./api/payments-verify.md) - `POST /api/payments/verify`
+- [Payments Subscription Status](./api/payments-subscription-status.md) - `GET /api/payments/subscription-status`
+- [Payments Create Learning Path Order](./api/payments-create-learning-path-order.md) - `POST /api/payments/create-learning-path-order`
+
+### Notifications
+- [Notifications](./api/notifications.md) - `GET /api/notifications` | `POST /api/notifications`
+- [Notifications Read](./api/notifications-read.md) - `POST /api/notifications/[id]/read`
+- [Notifications Read All](./api/notifications-read-all.md) - `POST /api/notifications/read-all`
+
+### Tests
+- [Tests](./api/tests.md) - `GET /api/tests` | `POST /api/tests`
 
 ### Webhooks
 - [Webhook Chat Transcribe](./api/webhook-chat-transcribe.md) - `POST /api/webhook/chat-transcribe`

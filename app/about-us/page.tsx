@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import MarketingLayout from '../marketing-layout';
 
 const AboutUs = () => {
@@ -43,13 +44,13 @@ const AboutUs = () => {
                   </p>
                 </div>
                 <div className="subpage-header-image-wrapper">
-                  <img className="subpage-header-image" src="/images/Untitled-1080-x-1080-px.png" alt="" style={{opacity:0}} sizes="(max-width: 1080px) 100vw, 1080px" data-w-id="199e01f0-e9d4-83a6-68ae-f919f514cbde" loading="eager" srcSet="/images/Untitled-1080-x-1080-px.png 500w, /images/Untitled-1080-x-1080-px.png 800w, /images/Untitled-1080-x-1080-px.png 1080w" />
+                  <Image className="subpage-header-image" src="/images/Untitled-1080-x-1080-px.png" alt="" style={{opacity:0}} width={1080} height={1080} data-w-id="199e01f0-e9d4-83a6-68ae-f919f514cbde" priority />
                 </div>
               </div>
               
               <div className="w-layout-grid subpage-header-component">
                 <div className="subpage-header-image-wrapper">
-                  <img className="subpage-header-image" src="/images/Untitled-1080-x-1080-px-1.png" alt="" style={{opacity:0}} sizes="(max-width: 1080px) 100vw, 1080px" data-w-id="9daf65c0-bad3-7316-a09a-1b371d5698e6" loading="eager" srcSet="/images/Untitled-1080-x-1080-px-1.png 500w, /images/Untitled-1080-x-1080-px-1.png 800w, /images/Untitled-1080-x-1080-px-1.png 1080w" />
+                  <Image className="subpage-header-image" src="/images/Untitled-1080-x-1080-px-1.png" alt="" style={{opacity:0}} width={1080} height={1080} data-w-id="9daf65c0-bad3-7316-a09a-1b371d5698e6" priority />
                 </div>
                 <div className="header-content">
                   <div className="margin-bottom margin-small">
@@ -71,7 +72,7 @@ const AboutUs = () => {
                   </p>
                 </div>
                 <div className="subpage-header-image-wrapper">
-                  <img className="subpage-header-image" src="/images/Gemini_Generated_Image_yprmwiyprmwiyprm.png" alt="" style={{opacity:0}} sizes="(max-width: 1080px) 100vw, 1080px" data-w-id="e303aeae-0c20-1ecb-342c-8eee544a5794" loading="eager" srcSet="/images/Gemini_Generated_Image_yprmwiyprmwiyprm.png 500w, /images/Gemini_Generated_Image_yprmwiyprmwiyprm.png 800w, /images/Gemini_Generated_Image_yprmwiyprmwiyprm.png 1080w" />
+                  <Image className="subpage-header-image" src="/images/Gemini_Generated_Image_yprmwiyprmwiyprm.png" alt="" style={{opacity:0}} width={1080} height={1080} data-w-id="e303aeae-0c20-1ecb-342c-8eee544a5794" priority />
                 </div>
               </div>
             </div>
@@ -208,7 +209,7 @@ const AboutUs = () => {
                     </div>
                   </div>
                   <div className="cta-image-wrapper">
-                    <img src="/images/Untitled-design.png" loading="lazy" sizes="(max-width: 1839px) 100vw, 1839px" srcSet="/images/Untitled-design.png 500w, /images/Untitled-design.png 800w, /images/Untitled-design.png 1080w, /images/Untitled-design.png 1600w, /images/Untitled-design.png 1839w" alt="" />
+                    <Image src="/images/Untitled-design.png" width={1839} height={1080} alt="" />
                     <div className="div-block-12">
                       <div className="text-block-7">At its heart, Taru believes</div>
                       <ul role="list" className="list">

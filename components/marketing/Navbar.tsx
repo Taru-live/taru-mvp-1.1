@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -37,7 +38,7 @@ const Navbar = () => {
     >
       <div className="navbar-container">
         <Link href="/" className={`navbar-logo-link w-nav-brand ${isActive('/')}`}>
-          <img src="/images/taru-logo-final-1.png" loading="lazy" alt="Taru Logo" className="navbar-logo" />
+          <Image src="/images/taru-logo-final-1.png" width={120} height={40} alt="Taru Logo" className="navbar-logo" />
         </Link>
         <nav role="navigation" className="navbar-menu w-nav-menu">
           <div className="navbar-menu-link-wrapper">

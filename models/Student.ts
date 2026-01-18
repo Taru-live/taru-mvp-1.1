@@ -16,14 +16,48 @@ const studentSchema = new mongoose.Schema({
     required: false,
     ref: 'User'
   },
+  // OWNERSHIP TRACKING: Store who created/manages this student
+  // This is used for:
+  // 1. Access control (canAccessStudent checks these fields)
+  // 2. Free access determination (isStudentLinked checks these)
+  // 3. Display in dashboards/reports (shows who added the student)
+  // SECURITY: These fields are set server-side and cannot be spoofed from client
+  createdBy: {
+    type: {
+      type: String,
+      enum: ['teacher', 'organization', 'self'],
+      required: false
+    },
+    id: {
+      type: String,
+      required: false
+    },
+    name: {
+      type: String,
+      required: false
+    }
+  },
+  managedBy: {
+    type: {
+      type: String,
+      enum: ['teacher', 'organization', 'self'],
+      required: false
+    },
+    id: {
+      type: String,
+      required: false
+    },
+    name: {
+      type: String,
+      required: false
+    }
+  },
   uniqueId: {
     type: String,
     required: true,
-    unique: true,
-    default: function() {
-      // Generate a simple unique ID
-      return `STU${Date.now()}${Math.random().toString(36).substr(2, 5)}`;
-    }
+    unique: true
+    // Note: uniqueId should be generated using StudentKeyGenerator.generate() 
+    // in the code before creating the Student instance, not in the schema default
   },
   fullName: {
     type: String,

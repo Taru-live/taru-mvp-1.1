@@ -8,23 +8,52 @@ import { RegistrationDataManager } from '@/lib/utils';
 
 export default function OrganizationOnboarding() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
+  
+  // Load form data and step from localStorage on mount
+  const getInitialFormData = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('organization_onboarding_formData');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved form data:', e);
+        }
+      }
+    }
+    return {
+      organizationName: '',
+      organizationType: 'school',
+      industry: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'India',
+      phoneNumber: '',
+      website: '',
+      description: '',
+      employeeCount: '1-10'
+    };
+  };
+
+  const getInitialStep = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('organization_onboarding_currentStep');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 1;
+        } catch (e) {
+          console.error('Error parsing saved step:', e);
+        }
+      }
+    }
+    return 1;
+  };
+
+  const [currentStep, setCurrentStep] = useState(getInitialStep());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  const [formData, setFormData] = useState({
-    organizationName: '',
-    organizationType: 'school',
-    industry: '',
-    address: '',
-    city: '',
-    state: '',
-    country: 'India',
-    phoneNumber: '',
-    website: '',
-    description: '',
-    employeeCount: '1-10'
-  });
+  const [formData, setFormData] = useState(getInitialFormData());
 
   // Pre-fill form with registration data on component mount
   useEffect(() => {
@@ -40,19 +69,20 @@ export default function OrganizationOnboarding() {
           const registrationData = RegistrationDataManager.getRegistrationData();
           
           // Pre-fill form with existing data and registration data
-          setFormData(prev => ({
+          // Only fill empty fields to preserve localStorage data
+          setFormData((prev: any) => ({
             ...prev,
-            organizationName: user.name || registrationData?.fullName || '',
-            organizationType: user.profile?.organizationType || 'school',
-            industry: user.profile?.industry || 'Education',
+            organizationName: prev.organizationName || user.name || registrationData?.fullName || '',
+            organizationType: prev.organizationType || user.profile?.organizationType || 'school',
+            industry: prev.industry || user.profile?.industry || 'Education',
             // Use location from registration if available
-            city: registrationData?.location || '',
-            // Set default values for required fields
-            address: '123 Education Street',
-            state: 'Demo State',
-            phoneNumber: user.profile?.contactPhone || '7777777777',
-            website: 'https://demoschool.edu',
-            description: 'A leading educational institution dedicated to student success',
+            city: prev.city || registrationData?.location || '',
+            // Set default values for required fields only if empty
+            address: prev.address || '123 Education Street',
+            state: prev.state || 'Demo State',
+            phoneNumber: prev.phoneNumber || user.profile?.contactPhone || '7777777777',
+            website: prev.website || 'https://demoschool.edu',
+            description: prev.description || 'A leading educational institution dedicated to student success',
           }));
           
           console.log('🔍 Pre-filled organization form data:', {
@@ -69,7 +99,7 @@ export default function OrganizationOnboarding() {
   }, []);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       [field]: value
     }));
@@ -98,6 +128,12 @@ export default function OrganizationOnboarding() {
       // Clear registration data after successful onboarding
       RegistrationDataManager.clearRegistrationData();
 
+      // Clear localStorage after successful submission
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('organization_onboarding_formData');
+        localStorage.removeItem('organization_onboarding_currentStep');
+      }
+
       // Redirect to admin dashboard
       router.push('/dashboard/admin');
     } catch (err: unknown) {
@@ -107,6 +143,20 @@ export default function OrganizationOnboarding() {
       setLoading(false);
     }
   };
+
+  // Save formData to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('organization_onboarding_formData', JSON.stringify(formData));
+    }
+  }, [formData]);
+
+  // Save currentStep to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('organization_onboarding_currentStep', currentStep.toString());
+    }
+  }, [currentStep]);
 
   const nextStep = () => {
     if (currentStep < 3) {

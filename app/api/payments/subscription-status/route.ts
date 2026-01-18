@@ -8,7 +8,8 @@ import Payment from '@/models/Payment';
 import { 
   getPlanFromAmount, 
   getMostRecentCompletedPayment, 
-  correctSubscriptionFromPayment 
+  correctSubscriptionFromPayment,
+  isStudentLinked
 } from '@/lib/utils/paymentUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -78,6 +79,51 @@ export async function GET(request: NextRequest) {
         { error: 'Student not found or onboarding not completed' },
         { status: 404 }
       );
+    }
+
+    // CRITICAL: Linked students get free access - bypass subscription requirements
+    const isLinked = await isStudentLinked(student.uniqueId);
+    if (isLinked) {
+      console.log(`✅ Student ${student.uniqueId} is linked to teacher/organization - granting free access`);
+      
+      // Return free access response with unlimited limits
+      return NextResponse.json({
+        success: true,
+        hasSubscription: true,
+        isLinkedStudent: true,
+        subscription: {
+          planType: 'free',
+          planAmount: 0,
+          learningPathId: learningPathId || null,
+          startDate: new Date(),
+          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+          isActive: true,
+          dailyChatLimit: 999, // Unlimited
+          monthlyMcqLimit: 999, // Unlimited
+          learningPathsSaved: 0,
+          maxLearningPathsPerPayment: 999, // Unlimited
+          planBenefits: {
+            name: 'Free Access (Linked Student)',
+            description: 'Full platform access as a linked student',
+            features: [
+              'Unlimited AI Buddy chats per day per chapter',
+              'Unlimited MCQ generations per month per chapter',
+              'Unlimited learning path access',
+              'Full platform features',
+              'No payment required'
+            ],
+            icon: 'gift'
+          }
+        },
+        usage: {
+          dailyChatsUsed: 0,
+          dailyChatsRemaining: 999,
+          monthlyMcqsUsed: 0,
+          monthlyMcqsRemaining: 999,
+          canSaveLearningPath: true,
+          learningPathsSaved: 0
+        }
+      });
     }
 
     // CRITICAL: Subscriptions are scoped to individual learning paths

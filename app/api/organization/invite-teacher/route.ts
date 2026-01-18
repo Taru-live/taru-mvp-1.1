@@ -125,7 +125,8 @@ export async function POST(request: NextRequest) {
               gradeLevels,
               subjects
             },
-            firstTimeLogin: false
+            firstTimeLogin: true,
+            mustChangePassword: true // Force password change on first login
           },
           { new: true, runValidators: true }
         );
@@ -142,7 +143,8 @@ export async function POST(request: NextRequest) {
             gradeLevels,
             subjects
           },
-          firstTimeLogin: false // Password is permanent, no forced change required
+          firstTimeLogin: true, // Mark for password change on first login
+          mustChangePassword: true // Force password change on first login
         });
 
         savedUser = await newUser.save();

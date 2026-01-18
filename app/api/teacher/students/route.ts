@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
 import User from '@/models/User';
 import mongoose from 'mongoose';
+import { StudentKeyGenerator } from '@/lib/studentKeyGenerator';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,7 +56,10 @@ export async function GET(request: NextRequest) {
         badgesEarned: student.badgesEarned || 0,
         assessmentCompleted: student.assessmentCompleted || false,
         diagnosticCompleted: student.diagnosticCompleted || false,
-        diagnosticScore: student.diagnosticScore || 0
+        diagnosticScore: student.diagnosticScore || 0,
+        createdBy: student.createdBy || null,
+        managedBy: student.managedBy || null,
+        organizationId: student.organizationId || null
       };
     }));
 
@@ -200,11 +204,21 @@ export async function POST(request: NextRequest) {
     const newStudent = new Student({
       userId: savedUser._id,
       teacherId: teacherId, // Use the authenticated teacher's ID
+      createdBy: {
+        type: 'teacher',
+        id: teacherId,
+        name: user.name || 'Teacher'
+      },
+      managedBy: {
+        type: 'teacher',
+        id: teacherId,
+        name: user.name || 'Teacher'
+      },
       fullName,
       classGrade,
       schoolName: schoolName || 'Not specified',
       schoolId: `SCH${Date.now()}`,
-      uniqueId: `STU${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+      uniqueId: StudentKeyGenerator.generate(),
       languagePreference: 'English',
       gender: 'Other',
       dateOfBirth: new Date('2000-01-01'),

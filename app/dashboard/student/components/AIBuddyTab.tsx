@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { FileText, PlayCircle, Send, Loader2, Upload, ZoomIn, ZoomOut, Bot, User, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import { Button } from './ai-buddy/ui/button';
 import { Input } from './ai-buddy/ui/input';
@@ -66,8 +67,8 @@ export default function AIBuddyTab() {
 
   // Auto-initialize with API key on mount
   useEffect(() => {
-    // Initialize Gemini service with the API key
-    const apiKey: string = 'AIzaSyAcy_v7mHTGEm8SdNsIGZQnSA4ft_RrueA';
+    // Initialize Gemini service with the API key from environment variable
+    const apiKey: string = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
     if (apiKey && apiKey !== 'demo-mode') {
       handleAPIKeySet(apiKey);
     } else {
@@ -325,7 +326,7 @@ export default function AIBuddyTab() {
             )}
           </div>
 
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto p-4 max-h-[calc(100vh-200px)]">
             {!isPDFReady ? (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center space-y-4">
@@ -342,7 +343,7 @@ export default function AIBuddyTab() {
                       </>
                     ) : (
                       <>
-                        <Upload className="w-4 h-4 mr-2" />
+                        <Upload className="w-4 h-4 mr-2"/>
                         Choose PDF File
                       </>
                     )}
@@ -364,7 +365,7 @@ export default function AIBuddyTab() {
                     className="border border-gray-200 rounded-lg overflow-hidden"
                     style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}
                   >
-                    <img src={pageUrl} alt={`Page ${index + 1}`} className="w-full h-auto" />
+                    <Image src={pageUrl} alt={`Page ${index + 1}`} width={800} height={1000} className="w-full h-auto" />
                   </div>
                 ))}
               </div>

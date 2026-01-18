@@ -40,16 +40,27 @@ interface ProfileData {
   gender?: string;
   guardianName?: string;
   location?: string;
+  createdBy?: {
+    type?: 'teacher' | 'organization' | 'self';
+    id?: string;
+    name?: string;
+  } | null;
+  managedBy?: {
+    type?: 'teacher' | 'organization' | 'self';
+    id?: string;
+    name?: string;
+  } | null;
 }
 
 interface SettingsTabProps {
   profile: ProfileData;
   onProfileUpdate?: (updatedProfile: Partial<ProfileData>) => void;
   onAvatarChange?: (avatarPath: string) => void;
+  onAvatarClick?: () => void;
   availableAvatars?: string[];
 }
 
-export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabProps) {
+export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }: SettingsTabProps) {
   // Monitoring: Log profile data for debugging and monitoring
   console.log('[SettingsTab] Profile data received:', {
     name: profile.name,
@@ -58,6 +69,8 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
     school: profile.school,
     language: profile.language,
     studentKey: profile.studentKey,
+    createdBy: profile.createdBy,
+    managedBy: profile.managedBy,
   });
   
   const [isEditing, setIsEditing] = useState(false);
@@ -79,6 +92,17 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
   const [hoveredField, setHoveredField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'security'>('profile');
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
     setEditedProfile(prev => ({
@@ -205,7 +229,7 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Header with title and edit button */}
+      {/* Header with title */}
       <motion.div 
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8"
         initial={{ opacity: 0, y: -20 }}
@@ -218,27 +242,41 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
           </div>
           <div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{profile.name}</h2>
-            <p className="text-gray-600 text-sm sm:text-base md:text-lg">Update your Details!</p>
           </div>
         </div>
-        
-        {!isEditing && (
-          <motion.button
-            onClick={() => setIsEditing(true)}
-            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto justify-center"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Edit Profile</span>
-            <span className="sm:hidden">Edit</span>
-          </motion.button>
-        )}
       </motion.div>
+
+      {/* Tab Navigation */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="flex space-x-4">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'profile'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <User className="w-4 h-4 inline mr-2" />
+            Profile
+          </button>
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'security'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Shield className="w-4 h-4 inline mr-2" />
+            Security
+          </button>
+        </nav>
+      </div>
 
       {/* Error and Success Messages */}
       <AnimatePresence>
-        {error && (
+        {(error || passwordError) && (
           <motion.div 
             className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs sm:text-sm flex items-center gap-2 sm:gap-3"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -247,10 +285,10 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
             transition={{ duration: 0.3 }}
           >
             <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
-            <span className="break-words">{error}</span>
+            <span className="break-words">{error || passwordError}</span>
           </motion.div>
         )}
-        {success && (
+        {(success || passwordSuccess) && (
           <motion.div 
             className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs sm:text-sm flex items-center gap-2 sm:gap-3"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -259,18 +297,28 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
             transition={{ duration: 0.3 }}
           >
             <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-            <span className="break-words">{success}</span>
+            <span className="break-words">{success || passwordSuccess}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Profile Content */}
+      {/* Tab Content */}
+      {activeTab === 'profile' && (
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8">
         {/* Left Column - Avatar and Basic Info */}
         <div className="lg:w-1/3">
           {/* Avatar Section */}
           <div className="text-center mb-4 sm:mb-6">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center overflow-hidden">
+            <div 
+              className={`relative w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center overflow-hidden ${
+                isEditing && onAvatarClick ? 'cursor-pointer hover:ring-4 hover:ring-purple-300 transition-all duration-200' : ''
+              }`}
+              onClick={() => {
+                if (isEditing && onAvatarClick) {
+                  onAvatarClick();
+                }
+              }}
+            >
               {profile.avatar ? (
                 <Image 
                   src={profile.avatar} 
@@ -284,7 +332,16 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
                   {profile.name.charAt(0).toUpperCase()}
                 </span>
               )}
+              {/* Edit Overlay */}
+              {isEditing && onAvatarClick && (
+                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
+                  <Edit3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+              )}
             </div>
+            {isEditing && onAvatarClick && (
+              <p className="text-xs sm:text-sm text-purple-600 font-medium mb-2">Click to change avatar</p>
+            )}
             <h3 className="text-base sm:text-lg font-semibold text-gray-900">{profile.name}</h3>
             <p className="text-xs sm:text-sm text-gray-500">Student</p>
           </div>
@@ -295,6 +352,47 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
             <p className="font-mono text-purple-700 text-base sm:text-lg font-bold break-all">{profile.studentKey || 'Not available'}</p>
             <p className="text-xs text-gray-500 mt-1">This ID is unique and cannot be changed</p>
           </div>
+
+          {/* Account Association Display */}
+          {(profile.createdBy && (profile.createdBy.type || profile.createdBy.name || profile.createdBy.id)) || 
+           (profile.managedBy && (profile.managedBy.type || profile.managedBy.name || profile.managedBy.id)) ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+              <p className="text-xs sm:text-sm font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center gap-2">
+                <Building className="w-4 h-4 text-blue-600" />
+                Account Information
+              </p>
+              {profile.createdBy && (profile.createdBy.type || profile.createdBy.name) && (
+                <div className="mb-2">
+                  <p className="text-xs text-gray-600 mb-1">Created By:</p>
+                  <p className="text-sm font-medium text-blue-800">
+                    {profile.createdBy.type === 'teacher' && '👨‍🏫 '}
+                    {profile.createdBy.type === 'organization' && '🏢 '}
+                    {profile.createdBy.name || 'Unknown'}
+                    {profile.createdBy.type && (
+                      <span className="text-xs text-gray-600 ml-2">
+                        ({profile.createdBy.type})
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+              {profile.managedBy && (profile.managedBy.type || profile.managedBy.name) && (
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Managed By:</p>
+                  <p className="text-sm font-medium text-blue-800">
+                    {profile.managedBy.type === 'teacher' && '👨‍🏫 '}
+                    {profile.managedBy.type === 'organization' && '🏢 '}
+                    {profile.managedBy.name || 'Unknown'}
+                    {profile.managedBy.type && (
+                      <span className="text-xs text-gray-600 ml-2">
+                        ({profile.managedBy.type})
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : null}
 
           {/* Additional Student Information */}
           {(profile.nickname || profile.learningModePreference || profile.interestsOutsideClass || profile.preferredCareerDomains) && (
@@ -591,28 +689,260 @@ export default function SettingsTab({ profile, onProfileUpdate }: SettingsTabPro
           </div>
         </div>
       </div>
+      )}
 
-      {/* Edit Mode Buttons */}
-      {isEditing && (
-        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={handleCancel}
-            disabled={isLoading}
-            className="px-5 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 font-medium text-sm sm:text-base w-full sm:w-auto"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isLoading}
-            className="px-5 py-2.5 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm font-medium text-sm sm:text-base w-full sm:w-auto"
-          >
-            {isLoading && (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            )}
-            {isLoading ? 'Saving...' : 'Save Changes'}
-          </button>
+      {/* Security Tab Content - Password Change */}
+      {activeTab === 'security' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Shield className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Change Password</h3>
+                <p className="text-sm text-gray-600">Update your password to keep your account secure.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-2xl space-y-6">
+            {/* Current Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Current Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12 bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+                  style={{ backgroundColor: 'white' }}
+                  placeholder="Enter your current password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12 bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+                  style={{ backgroundColor: 'white' }}
+                  placeholder="Enter new password (min. 6 characters)"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters long</p>
+            </div>
+
+            {/* Confirm New Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12 bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+                  style={{ backgroundColor: 'white' }}
+                  placeholder="Confirm your new password"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Password Change Button */}
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={async () => {
+                  setPasswordLoading(true);
+                  setPasswordError(null);
+                  setPasswordSuccess(null);
+
+                  // Client-side validation
+                  if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+                    setPasswordError('All fields are required');
+                    setPasswordLoading(false);
+                    return;
+                  }
+
+                  if (passwordData.newPassword.length < 6) {
+                    setPasswordError('Password must be at least 6 characters long');
+                    setPasswordLoading(false);
+                    return;
+                  }
+
+                  if (passwordData.newPassword !== passwordData.confirmPassword) {
+                    setPasswordError('New password and confirmation do not match');
+                    setPasswordLoading(false);
+                    return;
+                  }
+
+                  if (passwordData.currentPassword === passwordData.newPassword) {
+                    setPasswordError('New password must be different from current password');
+                    setPasswordLoading(false);
+                    return;
+                  }
+
+                  try {
+                    const response = await fetch('/api/auth/change-password', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        currentPassword: passwordData.currentPassword,
+                        newPassword: passwordData.newPassword,
+                        confirmPassword: passwordData.confirmPassword
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                      throw new Error(data.error || 'Failed to change password');
+                    }
+
+                    setPasswordSuccess('Password changed successfully!');
+                    setPasswordData({
+                      currentPassword: '',
+                      newPassword: '',
+                      confirmPassword: ''
+                    });
+
+                    // Clear success message after 5 seconds
+                    setTimeout(() => setPasswordSuccess(null), 5000);
+                  } catch (err) {
+                    console.error('Password change error:', err);
+                    setPasswordError(err instanceof Error ? err.message : 'Failed to change password');
+                  } finally {
+                    setPasswordLoading(false);
+                  }
+                }}
+                disabled={passwordLoading}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm font-medium"
+              >
+                {passwordLoading && (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                {passwordLoading ? 'Changing Password...' : 'Change Password'}
+              </button>
+              <button
+                onClick={() => {
+                  setPasswordData({
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmPassword: ''
+                  });
+                  setPasswordError(null);
+                  setPasswordSuccess(null);
+                }}
+                disabled={passwordLoading}
+                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 font-medium"
+              >
+                Clear
+              </button>
+            </div>
+
+            {/* Security Note */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Password Security Tips:</p>
+                  <ul className="list-disc list-inside space-y-1 text-blue-700">
+                    <li>Use at least 6 characters</li>
+                    <li>Don't reuse your current password</li>
+                    <li>Choose a password you haven't used before</li>
+                    <li>Keep your password confidential</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Action Buttons at Bottom - Only show for Profile tab */}
+      {activeTab === 'profile' && (
+      <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        {isEditing ? (
+          <>
+            <button
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="px-5 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 font-medium text-sm sm:text-base w-full sm:w-auto"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isLoading}
+              className="px-5 py-2.5 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm font-medium text-sm sm:text-base w-full sm:w-auto"
+            >
+              {isLoading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              )}
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </>
+        ) : (
+          <motion.button
+            onClick={() => setIsEditing(true)}
+            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto justify-center"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Edit Profile</span>
+            <span className="sm:hidden">Edit</span>
+          </motion.button>
+        )}
+      </div>
       )}
     </motion.div>
   );

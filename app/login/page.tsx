@@ -100,6 +100,12 @@ export default function Login() {
         throw new Error(data.error || 'Login failed');
       }
 
+      // Check if user must change password (highest priority - redirect immediately)
+      if (data.mustChangePassword === true) {
+        router.push('/change-password');
+        return;
+      }
+
       // Check if user needs onboarding first
       if (data.requiresOnboarding) {
         if (data.user.role === 'student') {
@@ -482,9 +488,12 @@ export default function Login() {
                   />
                   <span className="text-xs sm:text-[13px] leading-tight sm:leading-[16px] font-normal text-black">Remember me</span>
                 </div>
-                <span className="text-xs sm:text-[13px] leading-tight sm:leading-[16px] font-bold text-[#6D18CE] cursor-pointer hover:text-[#5A14B0] transition-colors touch-manipulation">
-                  Forgot password
-                </span>
+                <a
+                  href="/forgot-password"
+                  className="text-xs sm:text-[13px] leading-tight sm:leading-[16px] font-bold text-[#6D18CE] cursor-pointer hover:text-[#5A14B0] transition-colors touch-manipulation"
+                >
+                  Forgot password?
+                </a>
               </div>
 
               {/* Error Message */}

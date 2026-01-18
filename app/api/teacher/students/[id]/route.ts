@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import Student from '@/models/Student';
 import User from '@/models/User';
+import { canAccessStudent } from '@/lib/auth-utils';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+interface DecodedToken {
+  userId: string;
+  role: string;
+  [key: string]: unknown;
+}
 
 export async function DELETE(
   request: NextRequest,
@@ -21,6 +31,26 @@ export async function DELETE(
       );
     }
 
+    // Get JWT token from cookies
+    const token = request.cookies.get('auth-token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Verify JWT token
+    let decoded: DecodedToken;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+    } catch (jwtError) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    // Check if user is a teacher
+    const user = await User.findById(decoded.userId);
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
     const { id: studentId } = await params;
     console.log('Attempting to delete student with ID:', studentId);
     
@@ -28,6 +58,15 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Student ID is required' },
         { status: 400 }
+      );
+    }
+
+    // Check authorization: teacher can only delete students assigned to them
+    const hasAccess = await canAccessStudent(decoded.userId, user.role, studentId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: 'You can only delete students assigned to you' },
+        { status: 403 }
       );
     }
 
@@ -108,6 +147,26 @@ export async function GET(
       );
     }
 
+    // Get JWT token from cookies
+    const token = request.cookies.get('auth-token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Verify JWT token
+    let decoded: DecodedToken;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+    } catch (jwtError) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    // Check if user is a teacher
+    const user = await User.findById(decoded.userId);
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
     const { id: studentId } = await params;
     console.log('Fetching student with ID:', studentId);
     
@@ -115,6 +174,15 @@ export async function GET(
       return NextResponse.json(
         { error: 'Student ID is required' },
         { status: 400 }
+      );
+    }
+
+    // Check authorization: teacher can only access students assigned to them
+    const hasAccess = await canAccessStudent(decoded.userId, user.role, studentId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: 'You can only view students assigned to you' },
+        { status: 403 }
       );
     }
 
@@ -129,13 +197,13 @@ export async function GET(
     }
 
     // Get user information
-    const user = await User.findById(student.userId);
+    const studentUser = await User.findById(student.userId);
     
     const studentData = {
       id: student._id.toString(),
       userId: student.userId.toString(),
       fullName: student.fullName,
-      email: user?.email || 'N/A',
+      email: studentUser?.email || 'N/A',
       classGrade: student.classGrade || 'Not specified',
       schoolName: student.schoolName || 'Not specified',
       uniqueId: student.uniqueId,

@@ -508,9 +508,9 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex items-center gap-3 sm:gap-4 md:gap-6 w-full lg:w-auto">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 md:gap-6 w-full lg:w-auto">
             <motion.div
-              className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl flex-shrink-0"
+              className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl flex-shrink-0 mt-0.5 sm:mt-0"
             >
               <Target className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
               <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
@@ -518,7 +518,7 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
               </div>
             </motion.div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1 sm:mb-2">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1 sm:mb-2 leading-tight">
                 Learning Paths
               </h2>
               <p className="text-gray-600 text-sm sm:text-base md:text-lg lg:text-xl">Your personalized career learning journey</p>
@@ -557,22 +557,6 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
               </div>
             </div>
           </div>
-          
-          {!isParentView && (
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto">
-              <motion.button
-                onClick={() => router.push('/career-exploration')}
-                className="group relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 shadow-xl hover:shadow-2xl overflow-hidden text-sm sm:text-base md:text-lg font-semibold"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 relative z-10" />
-                <span className="relative z-10">Choose New Path</span>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
-              </motion.button>
-            </div>
-          )}
         </motion.div>
 
         {/* Enhanced Error and Success Messages */}
@@ -689,22 +673,33 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                 
                 {/* Active Badge */}
                 {currentPath?._id === path._id && (
-                  <motion.div 
-                    className="absolute top-4 right-4 sm:top-6 sm:right-6 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 text-white px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1 sm:gap-2 shadow-xl z-20"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                  >
-                    <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
-                    <span className="hidden sm:inline">Active Path</span>
-                    <span className="sm:hidden">Active</span>
-                  </motion.div>
+                  <>
+                    {/* Mobile: Circular icon-only badge (same as subscription badge) */}
+                    <motion.div 
+                      className="sm:hidden absolute top-4 right-4 w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 text-white flex items-center justify-center shadow-xl z-20"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3, type: "spring" }}
+                    >
+                      <Star className="w-3 h-3" />
+                    </motion.div>
+                    {/* Desktop: Text badge */}
+                    <motion.div 
+                      className="hidden sm:flex absolute top-6 right-6 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-sm font-bold items-center gap-2 shadow-xl z-20"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3, type: "spring" }}
+                    >
+                      <Star className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      <span>Active Path</span>
+                    </motion.div>
+                  </>
                 )}
 
                 {/* Current Plan Badge */}
                 {subscriptionStatus?.hasSubscription && subscriptionStatus?.subscription && (
                   <motion.div 
-                    className={`absolute top-4 ${currentPath?._id === path._id ? 'right-24 sm:right-32 md:right-40' : 'right-4'} sm:top-6 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1 sm:gap-2 shadow-xl z-20 ${
+                    className={`group absolute top-4 ${currentPath?._id === path._id ? 'right-12 sm:right-32 md:right-40' : 'right-4'} sm:top-6 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-xl z-20 ${
                       subscriptionStatus.subscription.planType === 'premium'
                         ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white'
                         : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
@@ -714,18 +709,17 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                     transition={{ delay: 0.4, type: "spring" }}
                   >
                     {subscriptionStatus.subscription.planType === 'premium' ? (
-                      <>
-                        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
-                        <span className="hidden sm:inline">Premium Plan</span>
-                        <span className="sm:hidden">Premium</span>
-                      </>
+                      <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                     ) : (
-                      <>
-                        <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
-                        <span className="hidden sm:inline">Basic Plan</span>
-                        <span className="sm:hidden">Basic</span>
-                      </>
+                      <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                     )}
+                    
+                    {/* Hover Tooltip - Plan Name */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-white text-black text-xs sm:text-sm font-semibold rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-30 border border-gray-200">
+                      {subscriptionStatus.subscription.planType === 'premium' ? 'Premium Plan' : 'Basic Plan'}
+                      {/* Tooltip Arrow */}
+                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                    </div>
                   </motion.div>
                 )}
 
@@ -817,10 +811,10 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                   <div className="mb-4 sm:mb-6">
                     <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
                       <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
-                      Learning Modules
+                      Learning Modules ({path.learningModules.length})
                     </h4>
-                    <div className="space-y-2 sm:space-y-3">
-                      {path.learningModules.slice(0, 2).map((module, idx) => (
+                    <div className="space-y-2 sm:space-y-3 max-h-64 overflow-y-auto">
+                      {path.learningModules.map((module, idx) => (
                         <motion.div 
                           key={idx} 
                           className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-gray-100 hover:border-purple-200 transition-all duration-300"
@@ -830,11 +824,6 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                           <span className="text-xs sm:text-sm text-gray-700 font-medium truncate">{module.module}</span>
                         </motion.div>
                       ))}
-                      {path.learningModules.length > 2 && (
-                        <div className="text-xs sm:text-sm text-gray-500 bg-gray-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-center">
-                          +{path.learningModules.length - 2} more modules available
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -878,7 +867,7 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                                 </>
                               )}
                             </div>
-                            <div className="text-right">
+                            <div className="hidden sm:block text-right">
                               <p className="text-xs sm:text-sm text-gray-600 font-medium">Usage Limits</p>
                               <p className="text-xs sm:text-sm font-semibold text-gray-900">
                                 {subscriptionStatus.subscription.dailyChatLimit || 0} chats/day/chapter
@@ -1030,17 +1019,30 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
               </div>
 
               {!isParentView && (
-                <motion.button
-                  onClick={() => onTabChange?.('modules')}
-                  className="group relative w-full sm:w-auto bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 hover:from-purple-700 hover:via-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base md:text-lg transition-all duration-300 shadow-2xl hover:shadow-3xl flex items-center justify-center gap-2 sm:gap-3 md:gap-4 overflow-hidden"
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <Rocket className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                  <span className="relative z-10">Start Learning Journey</span>
-                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 group-hover:translate-x-2 transition-transform duration-300" />
-                </motion.button>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+                  <motion.button
+                    onClick={() => onTabChange?.('modules')}
+                    className="group relative w-full sm:w-auto bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 hover:from-purple-700 hover:via-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base md:text-lg transition-all duration-300 shadow-2xl hover:shadow-3xl flex items-center justify-center gap-2 sm:gap-3 md:gap-4 overflow-hidden"
+                    whileHover={{ scale: 1.05, y: -3 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <Rocket className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                    <span className="relative z-10">Start Learning Journey</span>
+                    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 group-hover:translate-x-2 transition-transform duration-300" />
+                  </motion.button>
+                  <motion.button
+                    onClick={() => router.push('/career-exploration')}
+                    className="group relative w-full sm:w-auto bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 shadow-xl hover:shadow-2xl overflow-hidden text-sm sm:text-base md:text-lg font-semibold"
+                    whileHover={{ scale: 1.05, y: -3 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 relative z-10" />
+                    <span className="relative z-10">Choose New Path</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
+                  </motion.button>
+                </div>
               )}
             </div>
           </motion.div>
@@ -1140,6 +1142,19 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                         const isExpanded = expandedModules.has(index);
                         const hasSubmodules = module.submodules && module.submodules.length > 0;
                         
+                        // Color array for module badges - cycles through colors
+                        const moduleColors = [
+                          'from-purple-500 to-blue-500',
+                          'from-green-500 to-emerald-500',
+                          'from-orange-500 to-red-500',
+                          'from-pink-500 to-rose-500',
+                          'from-indigo-500 to-purple-500',
+                          'from-cyan-500 to-blue-500',
+                          'from-yellow-500 to-orange-500',
+                          'from-teal-500 to-green-500'
+                        ];
+                        const moduleColor = moduleColors[index % moduleColors.length];
+                        
                         return (
                           <motion.div
                             key={index}
@@ -1151,7 +1166,7 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                             <div className="p-3 sm:p-4 md:p-6">
                               <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2 sm:gap-4">
                                 <div className="flex items-start gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
-                                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${moduleColor} rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0`}>
                                     <span className="text-white font-bold text-base sm:text-lg">{index + 1}</span>
                                   </div>
                                   <div className="flex-1 min-w-0">

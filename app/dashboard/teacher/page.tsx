@@ -14,6 +14,10 @@ import { ScrollFade, ScrollCounter, ParallaxScroll, ScrollProgress } from '../..
 import VantaBackground from '../../components/VantaBackground';
 import ConsistentLoadingPage from '../../components/ConsistentLoadingPage';
 import LearningPathTab from '../student/components/LearningPathTab';
+import TestManagement from './components/TestManagement';
+import TestAssignment from './components/TestAssignment';
+import TestEvaluation from './components/TestEvaluation';
+import NotificationCenter from '../../components/NotificationCenter';
 
 // Add custom hook for responsive behavior
 function useWindowSize() {
@@ -79,6 +83,17 @@ interface StudentData {
   assessmentCompleted: boolean;
   diagnosticCompleted: boolean;
   diagnosticScore: number;
+  createdBy?: {
+    type?: 'teacher' | 'organization' | 'self';
+    id?: string;
+    name?: string;
+  } | null;
+  managedBy?: {
+    type?: 'teacher' | 'organization' | 'self';
+    id?: string;
+    name?: string;
+  } | null;
+  organizationId?: string | null;
 }
 
 interface ModuleData {
@@ -153,6 +168,8 @@ export default function TeacherDashboard() {
   const [allStudentCredentials, setAllStudentCredentials] = useState<StudentData[]>([]);
   const [selectedStudentForLearningPaths, setSelectedStudentForLearningPaths] = useState<StudentData | null>(null);
   const [showLearningPathsModal, setShowLearningPathsModal] = useState(false);
+  const [selectedTestForAssignment, setSelectedTestForAssignment] = useState<string | null>(null);
+  const [selectedTestForEvaluation, setSelectedTestForEvaluation] = useState<string | null>(null);
   
   // Additional state for real data
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -179,6 +196,7 @@ export default function TeacherDashboard() {
     { id: 'students', label: 'My Students', icon: '/icons/profile.png' },
     { id: 'modules', label: 'Learning Modules', icon: '/icons/modules.png' },
     { id: 'assignments', label: 'Assignments', icon: '/icons/report.png' },
+    { id: 'tests', label: 'Tests', icon: '/icons/report.png' },
     { id: 'analytics', label: 'Analytics', icon: '/icons/rewards.png' },
     { id: 'settings', label: 'Settings', icon: '/icons/settings.png' },
   ];
@@ -1187,6 +1205,15 @@ export default function TeacherDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </motion.button>
+
+            {/* Notification Center */}
+            {teacherProfile && (
+              <NotificationCenter
+                userId={teacherProfile._id}
+                userRole={teacherProfile.role || 'teacher'}
+                className="relative"
+              />
+            )}
            
              {/* Enhanced User Profile Section */}
              <motion.div 
@@ -1299,7 +1326,7 @@ export default function TeacherDashboard() {
                 <>
                   {/* Welcome Section */}
                   <div className="mb-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
                       {/* Left side: Avatar and welcome text */}
                       <div className="flex items-center gap-4">
                         <motion.div 
@@ -1328,7 +1355,7 @@ export default function TeacherDashboard() {
                       </div>
                 
                       {/* Right side: Stats cards */}
-                      <div className="flex gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
                         {/* Students Card */}
                         <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 shadow-sm border border-purple-200/50 min-w-[140px] min-h-[100px] flex flex-col justify-center">
                         <ScrollCounter
@@ -1453,13 +1480,13 @@ export default function TeacherDashboard() {
           {activeTab === 'students' && (
             <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
                   <h2 className="text-2xl font-bold text-gray-900">My Students</h2>
-                  <div className="flex space-x-3">
+                  <div className="grid grid-cols-2 md:flex md:space-x-3 gap-3 md:gap-0">
                     <button
                       type="button"
                       onClick={() => setShowAddStudentForm(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1469,7 +1496,7 @@ export default function TeacherDashboard() {
                     <button
                       type="button"
                       onClick={() => setShowBulkImportForm(true)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -1479,7 +1506,7 @@ export default function TeacherDashboard() {
                     <button
                       type="button"
                       onClick={handleViewAllCredentials}
-                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -1489,7 +1516,7 @@ export default function TeacherDashboard() {
                     <button
                       type="button"
                       onClick={handleExportCredentials}
-                      className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                      className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1865,7 +1892,17 @@ export default function TeacherDashboard() {
             </div>
           )}
 
-          {activeTab === 'analytics' && (
+            {activeTab === 'tests' && (
+              <div className="space-y-6">
+                <TestManagement
+                  onTestSelect={(testId) => {
+                    // Could open a detail view or assignment modal
+                  }}
+                />
+              </div>
+            )}
+
+            {activeTab === 'analytics' && (
             <div className="space-y-6">
               {/* Analytics Overview Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -2120,30 +2157,21 @@ export default function TeacherDashboard() {
                       <div className="text-sm font-medium text-gray-900">Email Notifications</div>
                       <div className="text-sm text-gray-500">Receive notifications via email</div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" defaultChecked />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium text-gray-900">Student Progress Updates</div>
                       <div className="text-sm text-gray-500">Get notified when students complete modules</div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" defaultChecked />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium text-gray-900">Assignment Submissions</div>
                       <div className="text-sm text-gray-500">Get notified when students submit assignments</div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" defaultChecked />
                   </div>
                 </div>
               </div>
@@ -2192,20 +2220,14 @@ export default function TeacherDashboard() {
                       <div className="text-sm font-medium text-gray-900">Profile Visibility</div>
                       <div className="text-sm text-gray-500">Allow other teachers to see your profile</div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium text-gray-900">Student Data Sharing</div>
                       <div className="text-sm text-gray-500">Share anonymous student progress with organization</div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" defaultChecked />
                   </div>
                 </div>
               </div>

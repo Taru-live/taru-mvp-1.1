@@ -101,7 +101,7 @@ const teacherSchema = new mongoose.Schema<ITeacher>({
 });
 
 // Index for efficient queries
-teacherSchema.index({ userId: 1 });
+// Note: userId already has an index from unique: true
 teacherSchema.index({ schoolId: 1 });
 teacherSchema.index({ subjectSpecialization: 1 });
 teacherSchema.index({ isActive: 1 });

@@ -83,7 +83,59 @@ const preferredLearningStyles = [
 ];
 
 export default function StudentOnboarding() {
-  const [currentStep, setCurrentStep] = useState(1);
+  // Load form data and step from localStorage on mount
+  const getInitialFormData = (): StudentOnboardingData => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('student_onboarding_formData');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved form data:', e);
+        }
+      }
+    }
+    return {
+      fullName: '',
+      nickname: '',
+      dateOfBirth: '',
+      age: 0,
+      gender: '',
+      classGrade: '',
+      schoolName: 'Demo School',
+      schoolId: '',
+      languagePreference: '',
+      learningModePreference: [],
+      interestsOutsideClass: [],
+      preferredCareerDomains: [],
+      favoriteSubjects: [],
+      preferredLearningStyles: [],
+      guardianName: '',
+      guardianContactNumber: '',
+      guardianEmail: '',
+      location: '',
+      deviceId: 'device_' + Math.random().toString(36).substr(2, 9),
+      consentForDataUsage: false,
+      termsAndConditionsAccepted: false,
+      uniqueId: ''
+    };
+  };
+
+  const getInitialStep = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('student_onboarding_currentStep');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 1;
+        } catch (e) {
+          console.error('Error parsing saved step:', e);
+        }
+      }
+    }
+    return 1;
+  };
+
+  const [currentStep, setCurrentStep] = useState(getInitialStep());
   const [isSuccess, setIsSuccess] = useState(false);
   const [uniqueId, setUniqueId] = useState('');
   const [countdown, setCountdown] = useState(3);
@@ -168,30 +220,7 @@ export default function StudentOnboarding() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDatePicker]);
-  const [formData, setFormData] = useState<StudentOnboardingData>({
-    fullName: '',
-    nickname: '',
-    dateOfBirth: '',
-    age: 0,
-    gender: '',
-    classGrade: '',
-    schoolName: 'Demo School', // Auto-filled based on entity
-    schoolId: '',
-    languagePreference: '',
-    learningModePreference: [],
-    interestsOutsideClass: [],
-    preferredCareerDomains: [],
-    favoriteSubjects: [],
-    preferredLearningStyles: [],
-    guardianName: '',
-    guardianContactNumber: '',
-    guardianEmail: '',
-    location: '',
-    deviceId: 'device_' + Math.random().toString(36).substr(2, 9),
-    consentForDataUsage: false,
-    termsAndConditionsAccepted: false,
-    uniqueId: '' // Initialize uniqueId
-  });
+  const [formData, setFormData] = useState<StudentOnboardingData>(getInitialFormData());
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -209,7 +238,6 @@ export default function StudentOnboarding() {
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(countdownInterval);
-            router.push('/interest-assessment');
             return 0;
           }
           return prev - 1;
@@ -218,7 +246,19 @@ export default function StudentOnboarding() {
 
       return () => clearInterval(countdownInterval);
     }
-  }, [isSuccess, router]);
+  }, [isSuccess]);
+
+  // Handle navigation when countdown reaches 0
+  useEffect(() => {
+    if (isSuccess && countdown === 0) {
+      // Use setTimeout to ensure this runs after the state update
+      const timeoutId = setTimeout(() => {
+        router.push('/interest-assessment');
+      }, 0);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isSuccess, countdown, router]);
 
   const copyToClipboard = async () => {
     try {
@@ -272,16 +312,17 @@ export default function StudentOnboarding() {
           const registrationData = RegistrationDataManager.getRegistrationData();
           
           // Pre-fill form with existing data and registration data
+          // Only fill empty fields to preserve localStorage data
           const newFormData = {
             ...formData,
-            fullName: user.name || registrationData?.fullName || '',
-            classGrade: user.profile?.grade || registrationData?.classGrade || '',
-            languagePreference: user.profile?.language || registrationData?.language || '',
-            location: user.profile?.location || registrationData?.location || '',
-            guardianName: user.profile?.guardianName || registrationData?.guardianName || '',
-            guardianEmail: registrationData?.email || '',
+            fullName: formData.fullName || user.name || registrationData?.fullName || '',
+            classGrade: formData.classGrade || user.profile?.grade || registrationData?.classGrade || '',
+            languagePreference: formData.languagePreference || user.profile?.language || registrationData?.language || '',
+            location: formData.location || user.profile?.location || registrationData?.location || '',
+            guardianName: formData.guardianName || user.profile?.guardianName || registrationData?.guardianName || '',
+            guardianEmail: formData.guardianEmail || registrationData?.email || '',
             // Age will be calculated from date of birth
-            // Keep other fields empty for user to fill
+            // Keep other fields from formData (localStorage) if already filled
           };
           
           setFormData(newFormData);
@@ -373,6 +414,48 @@ export default function StudentOnboarding() {
     }
   }, []);
 
+  // Function to scroll to the first field with an error
+  const scrollToFirstError = (errorFields: {[key: string]: string}) => {
+    if (Object.keys(errorFields).length === 0) return;
+    
+    // Order of fields as they appear in the form (priority order)
+    const fieldOrder = [
+      'dateOfBirth',
+      'gender',
+      'guardianName',
+      'languagePreference',
+      'schoolId',
+      'favoriteSubjects',
+      'preferredLearningStyles',
+      'guardianContactNumber',
+      'guardianEmail',
+      'consentForDataUsage',
+      'termsAndConditionsAccepted'
+    ];
+    
+    // Find the first error field based on form order
+    const firstErrorField = fieldOrder.find(field => errorFields[field]);
+    
+    if (firstErrorField && typeof window !== 'undefined') {
+      // Small delay to ensure DOM has updated with error messages
+      setTimeout(() => {
+        const fieldElement = document.querySelector(`[data-field="${firstErrorField}"]`);
+        if (fieldElement) {
+          fieldElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+          // Focus on the field if it's an input/select
+          const focusableElement = fieldElement.querySelector('input, select, textarea, button') as HTMLElement;
+          if (focusableElement) {
+            focusableElement.focus();
+          }
+        }
+      }, 100);
+    }
+  };
+
   const validateStep = (step: number): boolean => {
     const newErrors: {[key: string]: string} = {};
 
@@ -433,8 +516,28 @@ export default function StudentOnboarding() {
     }
 
     setErrors(newErrors);
+    
+    // Scroll to first error field if validation fails
+    if (Object.keys(newErrors).length > 0) {
+      scrollToFirstError(newErrors);
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
+
+  // Save formData to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isSuccess) {
+      localStorage.setItem('student_onboarding_formData', JSON.stringify(formData));
+    }
+  }, [formData, isSuccess]);
+
+  // Save currentStep to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isSuccess) {
+      localStorage.setItem('student_onboarding_currentStep', currentStep.toString());
+    }
+  }, [currentStep, isSuccess]);
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
@@ -544,6 +647,12 @@ export default function StudentOnboarding() {
         
         // Clear registration data after successful onboarding
         RegistrationDataManager.clearRegistrationData();
+        
+        // Clear localStorage after successful submission
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('student_onboarding_formData');
+          localStorage.removeItem('student_onboarding_currentStep');
+        }
         
       } else {
         let errorData: any = {};
@@ -1118,7 +1227,7 @@ export default function StudentOnboarding() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
                     />
                   </div>
-                  <div>
+                  <div data-field="guardianName">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Guardian Name *
                     </label>
@@ -1127,18 +1236,22 @@ export default function StudentOnboarding() {
                       value={formData.guardianName}
                       onChange={(e) => handleInputChange('guardianName', e.target.value)}
                       placeholder="Enter guardian's full name"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 ${
+                        errors.guardianName ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     />
                     {errors.guardianName && <p className="text-red-500 text-sm mt-1">{errors.guardianName}</p>}
                   </div>
-                  <div className="relative date-picker-container">
+                  <div className="relative date-picker-container" data-field="dateOfBirth">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Date of Birth *
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowDatePicker(!showDatePicker)}
-                      className="w-full px-4 py-3 pl-12 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 text-left text-gray-900 font-medium hover:border-purple-400 hover:shadow-md transition-all duration-200 flex items-center relative"
+                      className={`w-full px-4 py-3 pl-12 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 text-left text-gray-900 font-medium hover:border-purple-400 hover:shadow-md transition-all duration-200 flex items-center relative ${
+                        errors.dateOfBirth ? 'border-red-500' : 'border-purple-200'
+                      }`}
                     >
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                         <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1252,14 +1365,16 @@ export default function StudentOnboarding() {
                     )}
                     {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
                   </div>
-                  <div>
+                  <div data-field="gender">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Gender *
                     </label>
                     <select
                       value={formData.gender}
                       onChange={(e) => handleInputChange('gender', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 ${
+                        errors.gender ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     >
                       <option value="">Select gender</option>
                       <option value="male">Male</option>
@@ -1280,7 +1395,7 @@ export default function StudentOnboarding() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
                     />
                   </div>
-                  <div>
+                  <div data-field="languagePreference">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Language Preference *
                     </label>
@@ -1288,7 +1403,9 @@ export default function StudentOnboarding() {
                       value={formData.languagePreference}
                       onChange={(e) => handleInputChange('languagePreference', e.target.value)}
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
-                        autoFilledFields.languagePreference 
+                        errors.languagePreference
+                          ? 'border-red-500 bg-white text-gray-900'
+                          : autoFilledFields.languagePreference 
                           ? 'border-green-300 bg-green-50 text-green-700' 
                           : 'border-gray-300 bg-white text-gray-900'
                       }`}
@@ -1356,7 +1473,7 @@ export default function StudentOnboarding() {
                         </p>
                       )}
                     </div>
-                    <div>
+                    <div data-field="schoolId">
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700">
                           School ID *
@@ -1370,17 +1487,21 @@ export default function StudentOnboarding() {
                         value={formData.schoolId}
                         onChange={(e) => handleInputChange('schoolId', e.target.value)}
                         placeholder="Enter your school ID"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 ${
+                          errors.schoolId ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       />
                       {errors.schoolId && <p className="text-red-500 text-sm mt-1">{errors.schoolId}</p>}
                     </div>
-                    <div className="dropdown-container md:col-span-2">
+                    <div className="dropdown-container md:col-span-2" data-field="favoriteSubjects">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Favourite Subjects *
                       </label>
                       <div className="relative">
                         <div 
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 min-h-[48px] flex flex-wrap gap-2 items-center cursor-pointer hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className={`w-full px-4 py-3 border rounded-lg bg-white text-gray-900 min-h-[48px] flex flex-wrap gap-2 items-center cursor-pointer hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
+                            errors.favoriteSubjects ? 'border-red-500' : 'border-gray-300'
+                          }`}
                           onClick={() => setShowFavoriteSubjectsDropdown(!showFavoriteSubjectsDropdown)}
                         >
                           {formData.favoriteSubjects.length === 0 ? (
@@ -1438,13 +1559,15 @@ export default function StudentOnboarding() {
                       )}
                       {errors.favoriteSubjects && <p className="text-red-500 text-sm mt-1">{errors.favoriteSubjects}</p>}
                     </div>
-                    <div className="dropdown-container md:col-span-2">
+                    <div className="dropdown-container md:col-span-2" data-field="preferredLearningStyles">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Preferred Learning Style *
                       </label>
                       <div className="relative">
                         <div 
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 min-h-[48px] flex flex-wrap gap-2 items-center cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className={`w-full px-4 py-3 border rounded-lg bg-white text-gray-900 min-h-[48px] flex flex-wrap gap-2 items-center cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            errors.preferredLearningStyles ? 'border-red-500' : 'border-gray-300'
+                          }`}
                           onClick={() => setShowLearningStylesDropdown(!showLearningStylesDropdown)}
                         >
                           {formData.preferredLearningStyles.length === 0 ? (
@@ -1520,7 +1643,7 @@ export default function StudentOnboarding() {
               <div>
                 <h2 className="text-xl font-semibold text-purple-600 mb-6">Guardian Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                  <div data-field="guardianContactNumber">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Guardian Contact Number *
                     </label>
@@ -1529,11 +1652,13 @@ export default function StudentOnboarding() {
                       value={formData.guardianContactNumber}
                       onChange={(e) => handleInputChange('guardianContactNumber', e.target.value)}
                       placeholder="Enter guardian's contact number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 ${
+                        errors.guardianContactNumber ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     />
                     {errors.guardianContactNumber && <p className="text-red-500 text-sm mt-1">{errors.guardianContactNumber}</p>}
                   </div>
-                  <div>
+                  <div data-field="guardianEmail">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Guardian Email
                     </label>
@@ -1542,7 +1667,9 @@ export default function StudentOnboarding() {
                       value={formData.guardianEmail}
                       onChange={(e) => handleInputChange('guardianEmail', e.target.value)}
                       placeholder="Enter guardian's email (optional)"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 ${
+                        errors.guardianEmail ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     />
                     {errors.guardianEmail && <p className="text-red-500 text-sm mt-1">{errors.guardianEmail}</p>}
                   </div>
@@ -1554,7 +1681,7 @@ export default function StudentOnboarding() {
               <div>
                 <h2 className="text-xl font-semibold text-purple-600 mb-6">Privacy & Consent</h2>
             <div className="space-y-6">
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4" data-field="consentForDataUsage">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-lg font-semibold text-purple-800">Data Usage Consent</h3>
                       <button
@@ -1577,7 +1704,7 @@ export default function StudentOnboarding() {
                         disabled={!hasReadPrivacy}
                         className={`rounded border-gray-300 text-purple-600 focus:ring-purple-500 ${
                           !hasReadPrivacy ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        } ${errors.consentForDataUsage ? 'border-red-500' : ''}`}
                       />
                       <span className={`text-sm text-purple-700 ${!hasReadPrivacy ? 'opacity-50' : ''}`}>
                         I consent to the collection and use of my learning data *
@@ -1587,7 +1714,7 @@ export default function StudentOnboarding() {
                     {errors.consentForDataUsage && <p className="text-red-500 text-sm mt-1">{errors.consentForDataUsage}</p>}
                   </div>
 
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4" data-field="termsAndConditionsAccepted">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-lg font-semibold text-gray-800">Terms and Conditions</h3>
                       <button
@@ -1609,7 +1736,7 @@ export default function StudentOnboarding() {
                         disabled={!hasReadTerms}
                         className={`rounded border-gray-300 text-purple-600 focus:ring-purple-500 ${
                           !hasReadTerms ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        } ${errors.termsAndConditionsAccepted ? 'border-red-500' : ''}`}
                       />
                       <span className={`text-sm text-gray-800 ${!hasReadTerms ? 'opacity-50' : ''}`}>
                         I accept the terms and conditions *
@@ -1761,7 +1888,7 @@ export default function StudentOnboarding() {
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  I Have Read and Understand
+                  I Have Read and Understood
                 </button>
               </div>
             </motion.div>
@@ -1901,7 +2028,7 @@ export default function StudentOnboarding() {
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  I Have Read and Understand
+                  I Have Read and Understood
                 </button>
               </div>
             </motion.div>

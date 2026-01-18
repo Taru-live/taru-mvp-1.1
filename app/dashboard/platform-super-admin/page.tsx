@@ -657,7 +657,7 @@ export default function PlatformSuperAdminDashboard() {
                     <TiltCard className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
                     <div className="flex items-center">
                         <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl">
-                        <img src="/icons/rewards.png" alt="Organizations" className="w-6 h-6" />
+                        <Image src="/icons/rewards.png" width={24} height={24} alt="Organizations" className="w-6 h-6" />
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Total Organizations</p>
@@ -669,7 +669,7 @@ export default function PlatformSuperAdminDashboard() {
                     <TiltCard className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
                     <div className="flex items-center">
                         <div className="p-3 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl">
-                        <img src="/icons/report.png" alt="Pending" className="w-6 h-6" />
+                        <Image src="/icons/report.png" width={24} height={24} alt="Pending" className="w-6 h-6" />
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
@@ -681,7 +681,7 @@ export default function PlatformSuperAdminDashboard() {
                     <TiltCard className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
                     <div className="flex items-center">
                         <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-xl">
-                        <img src="/icons/overview.png" alt="Approved" className="w-6 h-6" />
+                        <Image src="/icons/overview.png" width={24} height={24} alt="Approved" className="w-6 h-6" />
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Approved</p>
@@ -693,7 +693,7 @@ export default function PlatformSuperAdminDashboard() {
                     <TiltCard className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
                     <div className="flex items-center">
                         <div className="p-3 bg-gradient-to-r from-red-500 to-red-600 rounded-xl">
-                        <img src="/icons/settings.png" alt="Critical" className="w-6 h-6" />
+                        <Image src="/icons/settings.png" width={24} height={24} alt="Critical" className="w-6 h-6" />
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Critical Alerts</p>
@@ -880,9 +880,11 @@ export default function PlatformSuperAdminDashboard() {
                           <tr key={user._id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                <img
+                                <Image
                                   src={getRandomAvatar(user._id)}
                                   alt={user.name}
+                                  width={32}
+                                  height={32}
                                   className="w-8 h-8 rounded-full mr-3"
                                 />
                                 <div>
@@ -1231,9 +1233,11 @@ export default function PlatformSuperAdminDashboard() {
                         <tr key={log._id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                <img
+                                <Image
                                   src={getRandomAvatar(log.userId.email)}
                                   alt={log.userId.name}
+                                  width={32}
+                                  height={32}
                                   className="w-8 h-8 rounded-full mr-3"
                                 />
                             <div>

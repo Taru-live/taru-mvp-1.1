@@ -151,8 +151,37 @@ interface CollectedAnswer {
 }
 
 export default function DiagnosticAssessment() {
+  // Load collectedAnswers and currentQuestionNumber from localStorage on mount
+  const getInitialCollectedAnswers = (): CollectedAnswer[] => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('diagnostic_assessment_collectedAnswers');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved collected answers:', e);
+        }
+      }
+    }
+    return [];
+  };
+
+  const getInitialQuestionNumber = (): number => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('diagnostic_assessment_currentQuestionNumber');
+      if (saved) {
+        try {
+          return parseInt(saved, 10) || 1;
+        } catch (e) {
+          console.error('Error parsing saved question number:', e);
+        }
+      }
+    }
+    return 1;
+  };
+
   const [currentQuestion, setCurrentQuestion] = useState<AssessmentQuestion | null>(null);
-  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(getInitialQuestionNumber());
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [progress, setProgress] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -165,11 +194,25 @@ export default function DiagnosticAssessment() {
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [error, setError] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [collectedAnswers, setCollectedAnswers] = useState<CollectedAnswer[]>([]);
+  const [collectedAnswers, setCollectedAnswers] = useState<CollectedAnswer[]>(getInitialCollectedAnswers());
   const [isResetting, setIsResetting] = useState(false);
   const [isFromInterestAssessment, setIsFromInterestAssessment] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const router = useRouter();
+
+  // Save collectedAnswers to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isCompleted) {
+      localStorage.setItem('diagnostic_assessment_collectedAnswers', JSON.stringify(collectedAnswers));
+    }
+  }, [collectedAnswers, isCompleted]);
+
+  // Save currentQuestionNumber to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isCompleted) {
+      localStorage.setItem('diagnostic_assessment_currentQuestionNumber', currentQuestionNumber.toString());
+    }
+  }, [currentQuestionNumber, isCompleted]);
 
   // Helper function to generate motivating appreciation message
   const getAppreciationMessage = (result: AssessmentResult): string => {
@@ -296,6 +339,9 @@ export default function DiagnosticAssessment() {
     try {
       localStorage.setItem('diagnostic_assessment_completed', 'true');
       localStorage.setItem('diagnostic_assessment_result', JSON.stringify(resultData));
+      // Clear form data from localStorage after successful completion
+      localStorage.removeItem('diagnostic_assessment_collectedAnswers');
+      localStorage.removeItem('diagnostic_assessment_currentQuestionNumber');
     } catch (error) {
       console.warn('Failed to store assessment result in localStorage:', error);
     }
@@ -935,6 +981,8 @@ export default function DiagnosticAssessment() {
         try {
           localStorage.removeItem('diagnostic_assessment_completed');
           localStorage.removeItem('diagnostic_assessment_result');
+          localStorage.removeItem('diagnostic_assessment_collectedAnswers');
+          localStorage.removeItem('diagnostic_assessment_currentQuestionNumber');
         } catch (error) {
           console.warn('Failed to clear localStorage:', error);
         }

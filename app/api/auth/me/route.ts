@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check if user must change password (allow access to this endpoint for password check)
+    // This endpoint is allowed even if mustChangePassword is true
+
     // Connect to database
     await connectDB();
 

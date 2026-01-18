@@ -280,13 +280,37 @@ export default function YouTubeModulePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => router.push('/dashboard/student')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Dashboard</span>
-          </button>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <button
+              onClick={() => router.push('/dashboard/student')}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back to Dashboard</span>
+            </button>
+
+            {/* View Mode Toggle - Mobile: Right side of back button */}
+            <div className="flex items-center gap-2 sm:hidden">
+              <div className="flex bg-gray-100 rounded-xl p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                  }`}
+                >
+                  <Grid3X3 className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                  }`}
+                >
+                  <List className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
           
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between gap-4 mb-4">
@@ -302,8 +326,8 @@ export default function YouTubeModulePage() {
                 </div>
               </div>
 
-              {/* View Mode Toggle - Aligned with title */}
-              <div className="flex items-center gap-2">
+              {/* View Mode Toggle - Desktop: Aligned with title */}
+              <div className="hidden sm:flex items-center gap-2">
                 <div className="flex bg-gray-100 rounded-xl p-1">
                   <button
                     onClick={() => setViewMode('grid')}
