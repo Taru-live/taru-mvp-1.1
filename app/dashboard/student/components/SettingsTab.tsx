@@ -717,7 +717,8 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
                   type={showCurrentPassword ? 'text' : 'password'}
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12 bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+                  style={{ backgroundColor: 'white' }}
                   placeholder="Enter your current password"
                 />
                 <button
@@ -744,7 +745,8 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
                   type={showNewPassword ? 'text' : 'password'}
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12 bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+                  style={{ backgroundColor: 'white' }}
                   placeholder="Enter new password (min. 6 characters)"
                   minLength={6}
                 />
@@ -773,7 +775,8 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors pr-12 bg-white text-gray-900 autofill:bg-white autofill:text-gray-900"
+                  style={{ backgroundColor: 'white' }}
                   placeholder="Confirm your new password"
                   minLength={6}
                 />

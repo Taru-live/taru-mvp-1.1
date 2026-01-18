@@ -933,9 +933,8 @@ export default function ParentDashboard() {
                           <button
                             key={childItem.name}
                             onClick={() => setSelectedChild(childItem.name)}
-                            className="flex items-center justify-center rounded-full font-medium"
+                            className="flex items-center justify-center rounded-full font-medium px-4 py-2 whitespace-nowrap"
                             style={{
-                              width: '148px',
                               height: '41px',
                               borderRadius: '47.6503px',
                               background: selectedChild === childItem.name ? '#6D18CE' : '#F5F5F5',

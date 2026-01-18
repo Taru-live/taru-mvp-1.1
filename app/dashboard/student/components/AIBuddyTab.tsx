@@ -67,8 +67,8 @@ export default function AIBuddyTab() {
 
   // Auto-initialize with API key on mount
   useEffect(() => {
-    // Initialize Gemini service with the API key
-    const apiKey: string = 'AIzaSyAcy_v7mHTGEm8SdNsIGZQnSA4ft_RrueA';
+    // Initialize Gemini service with the API key from environment variable
+    const apiKey: string = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
     if (apiKey && apiKey !== 'demo-mode') {
       handleAPIKeySet(apiKey);
     } else {
