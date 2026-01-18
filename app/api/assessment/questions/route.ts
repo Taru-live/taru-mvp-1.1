@@ -227,394 +227,388 @@ const fallbackQuestions: {
 
   /* =======================
      CLASS 1 TO 3 (EASY)
+     Career Interests & Learning Preferences
   ======================= */
   class1to3: [
     {
       id: '1',
-      question: 'Which animal is called the King of the Jungle?',
+      question: 'What do you like to do when you play?',
       type: 'MCQ',
-      options: ['Elephant', 'Lion', 'Tiger', 'Bear'],
-      correctAnswer: 'Lion',
-      category: 'General Knowledge',
+      options: ['Draw pictures', 'Build with blocks', 'Read stories', 'Play outside'],
+      correctAnswer: '',
+      category: 'Interests',
       difficulty: 'easy'
     },
     {
       id: '2',
-      question: 'How many days are there in a week?',
+      question: 'Which subject do you enjoy the most?',
       type: 'MCQ',
-      options: ['5', '6', '7', '8'],
-      correctAnswer: '7',
-      category: 'General Knowledge',
+      options: ['Math', 'Drawing/Art', 'Stories/English', 'Science experiments'],
+      correctAnswer: '',
+      category: 'Learning Preferences',
       difficulty: 'easy'
     },
     {
       id: '3',
-      question: 'Which color is the sky?',
+      question: 'How do you like to learn new things?',
       type: 'MCQ',
-      options: ['Green', 'Blue', 'Red', 'Yellow'],
-      correctAnswer: 'Blue',
-      category: 'General Knowledge',
+      options: ['Watching videos', 'Reading books', 'Playing games', 'Talking to teachers'],
+      correctAnswer: '',
+      category: 'Learning Style',
       difficulty: 'easy'
     },
     {
       id: '4',
-      question: 'Which fruit is yellow?',
+      question: 'What would you like to be when you grow up?',
       type: 'MCQ',
-      options: ['Apple', 'Banana', 'Grapes', 'Orange'],
-      correctAnswer: 'Banana',
-      category: 'General Knowledge',
+      options: ['Teacher', 'Doctor', 'Engineer', 'Artist/Singer'],
+      correctAnswer: '',
+      category: 'Career Aspiration',
       difficulty: 'easy'
     },
     {
       id: '5',
-      question: 'How many legs does a dog have?',
+      question: 'Which activity do you enjoy most?',
       type: 'MCQ',
-      options: ['2', '3', '4', '6'],
-      correctAnswer: '4',
-      category: 'General Knowledge',
+      options: ['Solving puzzles', 'Drawing/Painting', 'Telling stories', 'Helping others'],
+      correctAnswer: '',
+      category: 'Interests',
       difficulty: 'easy'
     },
     {
       id: '6',
-      question: 'Which shape is round?',
+      question: 'Do you like working alone or with friends?',
       type: 'MCQ',
-      options: ['Square', 'Triangle', 'Circle', 'Rectangle'],
-      correctAnswer: 'Circle',
-      category: 'Mathematics',
+      options: ['Alone', 'With friends', 'Sometimes alone, sometimes with friends', "I don't mind"],
+      correctAnswer: '',
+      category: 'Learning Preference',
       difficulty: 'easy'
     },
     {
       id: '7',
-      question: 'Which vehicle flies in the sky?',
+      question: 'What makes you feel proud?',
       type: 'MCQ',
-      options: ['Car', 'Bus', 'Aeroplane', 'Train'],
-      correctAnswer: 'Aeroplane',
-      category: 'General Knowledge',
+      options: ['Getting good marks', 'Creating something new', 'Helping someone', 'Trying something new'],
+      correctAnswer: '',
+      category: 'Values',
       difficulty: 'easy'
     },
     {
       id: '8',
-      question: 'Which animal gives us milk?',
+      question: 'Which would you like to learn more about?',
       type: 'MCQ',
-      options: ['Dog', 'Cat', 'Cow', 'Lion'],
-      correctAnswer: 'Cow',
-      category: 'General Knowledge',
+      options: ['Numbers and counting', 'Animals and nature', 'Stories and languages', 'How things work'],
+      correctAnswer: '',
+      category: 'Interests',
       difficulty: 'easy'
     },
     {
       id: '9',
-      question: 'Which sense organ helps us hear?',
+      question: 'When you face a difficult problem, what do you do?',
       type: 'MCQ',
-      options: ['Eye', 'Nose', 'Ear', 'Tongue'],
-      correctAnswer: 'Ear',
-      category: 'Science',
+      options: ['Try again yourself', 'Ask for help', 'Try a different way', 'Take a break and think'],
+      correctAnswer: '',
+      category: 'Problem Solving',
       difficulty: 'easy'
     },
     {
       id: '10',
-      question: 'How many alphabets are there in English?',
+      question: 'What do you want to help others with?',
       type: 'MCQ',
-      options: ['24', '25', '26', '27'],
-      correctAnswer: '26',
-      category: 'General Knowledge',
+      options: ['Teaching something', 'Making them happy', 'Solving problems', 'Creating things'],
+      correctAnswer: '',
+      category: 'Career Interest',
       difficulty: 'easy'
     }
   ],
 
   /* =======================
      CLASS 4 TO 7 (EASY–MEDIUM)
+     Career Exploration & Skills Assessment
   ======================= */
   class4to7: [
     {
       id: '1',
-      question: 'Which planet is known as the Red Planet?',
+      question: 'Which subject area interests you the most?',
       type: 'MCQ',
-      options: ['Earth', 'Mars', 'Venus', 'Jupiter'],
-      correctAnswer: 'Mars',
-      category: 'Science',
+      options: ['Mathematics and Science', 'Arts and Creative Writing', 'Technology and Computers', 'Social Studies and History'],
+      correctAnswer: '',
+      category: 'Academic Interest',
       difficulty: 'medium'
     },
     {
       id: '2',
-      question: 'Who invented the telephone?',
+      question: 'What type of work environment appeals to you?',
       type: 'MCQ',
-      options: ['Newton', 'Edison', 'Alexander Graham Bell', 'Einstein'],
-      correctAnswer: 'Alexander Graham Bell',
-      category: 'General Knowledge',
+      options: ['Working with computers/technology', 'Helping and teaching others', 'Creating art or designs', 'Leading teams and projects'],
+      correctAnswer: '',
+      category: 'Career Preference',
       difficulty: 'medium'
     },
     {
       id: '3',
-      question: 'Which is the largest continent?',
+      question: 'How do you prefer to solve problems?',
       type: 'MCQ',
-      options: ['Africa', 'Europe', 'Asia', 'Australia'],
-      correctAnswer: 'Asia',
-      category: 'Geography',
+      options: ['Step-by-step logical approach', 'Creative and out-of-the-box thinking', 'Discussing with others', 'Learning from examples'],
+      correctAnswer: '',
+      category: 'Problem Solving Style',
       difficulty: 'medium'
     },
     {
       id: '4',
-      question: 'How many states are there in India?',
+      question: 'Which career field interests you?',
       type: 'MCQ',
-      options: ['27', '28', '29', '30'],
-      correctAnswer: '28',
-      category: 'Civics',
+      options: ['Engineering/Technology', 'Medicine/Healthcare', 'Teaching/Education', 'Arts/Design/Media'],
+      correctAnswer: '',
+      category: 'Career Interest',
       difficulty: 'medium'
     },
     {
       id: '5',
-      question: 'What gas do plants use for photosynthesis?',
+      question: 'What motivates you to learn?',
       type: 'MCQ',
-      options: ['Oxygen', 'Carbon Dioxide', 'Nitrogen', 'Hydrogen'],
-      correctAnswer: 'Carbon Dioxide',
-      category: 'Science',
+      options: ['Understanding how things work', 'Getting good grades', 'Creating something new', 'Helping others succeed'],
+      correctAnswer: '',
+      category: 'Learning Motivation',
       difficulty: 'medium'
     },
     {
       id: '6',
-      question: 'Which is the fastest land animal?',
+      question: 'Which skill would you like to develop most?',
       type: 'MCQ',
-      options: ['Lion', 'Horse', 'Cheetah', 'Tiger'],
-      correctAnswer: 'Cheetah',
-      category: 'General Knowledge',
+      options: ['Logical thinking and analysis', 'Communication and expression', 'Creative problem-solving', 'Leadership and teamwork'],
+      correctAnswer: '',
+      category: 'Skill Development',
       difficulty: 'medium'
     },
     {
       id: '7',
-      question: 'Who is known as the Father of the Nation (India)?',
+      question: 'When working on a project, you prefer:',
       type: 'MCQ',
-      options: ['Nehru', 'Gandhi', 'Patel', 'Bose'],
-      correctAnswer: 'Gandhi',
-      category: 'History',
+      options: ['Following a clear structure', 'Experimenting and exploring', 'Collaborating with peers', 'Leading the direction'],
+      correctAnswer: '',
+      category: 'Work Style',
       difficulty: 'medium'
     },
     {
       id: '8',
-      question: 'Which ocean is the largest?',
+      question: 'What type of achievements make you feel most accomplished?',
       type: 'MCQ',
-      options: ['Indian', 'Atlantic', 'Pacific', 'Arctic'],
-      correctAnswer: 'Pacific',
-      category: 'Geography',
+      options: ['Solving complex problems', 'Creating original work', 'Helping others achieve goals', 'Leading successful projects'],
+      correctAnswer: '',
+      category: 'Values',
       difficulty: 'medium'
     },
     {
       id: '9',
-      question: 'Which vitamin is given by sunlight?',
+      question: 'Which activity outside school interests you most?',
       type: 'MCQ',
-      options: ['Vitamin A', 'Vitamin B', 'Vitamin C', 'Vitamin D'],
-      correctAnswer: 'Vitamin D',
-      category: 'Science',
+      options: ['Coding/Technology projects', 'Sports/Physical activities', 'Art/Music/Dance', 'Volunteering/Community service'],
+      correctAnswer: '',
+      category: 'Interests',
       difficulty: 'medium'
     },
     {
       id: '10',
-      question: 'What is the currency of India?',
+      question: 'Your ideal future career would involve:',
       type: 'MCQ',
-      options: ['Dollar', 'Rupee', 'Euro', 'Yen'],
-      correctAnswer: 'Rupee',
-      category: 'General Knowledge',
+      options: ['Innovation and technology', 'Teaching and mentoring', 'Creative expression', 'Business and entrepreneurship'],
+      correctAnswer: '',
+      category: 'Career Aspiration',
       difficulty: 'medium'
     }
   ],
 
   /* =======================
      CLASS 7 TO 10 (MEDIUM–HARD)
+     Career Planning & Skill Assessment
   ======================= */
   class7to10: [
     {
       id: '1',
-      question: 'What is the SI unit of force?',
+      question: 'Which stream interests you most for higher education?',
       type: 'MCQ',
-      options: ['Joule', 'Newton', 'Pascal', 'Watt'],
-      correctAnswer: 'Newton',
-      category: 'Physics',
+      options: ['Science (Engineering/Medicine)', 'Commerce (Business/Economics)', 'Arts/Humanities', 'Technology/IT'],
+      correctAnswer: '',
+      category: 'Career Path',
       difficulty: 'hard'
     },
     {
       id: '2',
-      question: 'Who wrote the Indian National Anthem?',
+      question: 'What role would you prefer in a team project?',
       type: 'MCQ',
-      options: ['Bankim Chandra', 'Tagore', 'Gandhi', 'Nehru'],
-      correctAnswer: 'Rabindranath Tagore',
-      category: 'History',
+      options: ['Technical specialist', 'Creative designer', 'Project leader', 'Research and analysis'],
+      correctAnswer: '',
+      category: 'Work Preference',
       difficulty: 'hard'
     },
     {
       id: '3',
-      question: 'Which gas is most abundant in the atmosphere?',
+      question: 'Which career attribute is most important to you?',
       type: 'MCQ',
-      options: ['Oxygen', 'Carbon Dioxide', 'Nitrogen', 'Hydrogen'],
-      correctAnswer: 'Nitrogen',
-      category: 'Science',
+      options: ['High earning potential', 'Making a difference in society', 'Creative freedom', 'Stability and security'],
+      correctAnswer: '',
+      category: 'Career Values',
       difficulty: 'hard'
     },
     {
       id: '4',
-      question: 'What is the capital of Australia?',
+      question: 'How do you handle academic challenges?',
       type: 'MCQ',
-      options: ['Sydney', 'Melbourne', 'Canberra', 'Perth'],
-      correctAnswer: 'Canberra',
-      category: 'Geography',
+      options: ['Analyze systematically and study more', 'Seek help from teachers/peers', 'Find creative study methods', 'Practice through problem-solving'],
+      correctAnswer: '',
+      category: 'Learning Approach',
       difficulty: 'hard'
     },
     {
       id: '5',
-      question: 'Who discovered gravity?',
+      question: 'Which industry sector attracts you most?',
       type: 'MCQ',
-      options: ['Newton', 'Einstein', 'Galileo', 'Tesla'],
-      correctAnswer: 'Newton',
-      category: 'Science',
+      options: ['IT/Software/Technology', 'Healthcare/Medicine', 'Education/Research', 'Creative/Media/Design'],
+      correctAnswer: '',
+      category: 'Industry Interest',
       difficulty: 'hard'
     },
     {
       id: '6',
-      question: 'Which blood group is universal donor?',
+      question: 'Your ideal work day would involve:',
       type: 'MCQ',
-      options: ['A', 'B', 'AB', 'O'],
-      correctAnswer: 'O',
-      category: 'Biology',
+      options: ['Solving technical problems', 'Interacting with people', 'Creating original content', 'Planning and organizing tasks'],
+      correctAnswer: '',
+      category: 'Work Style',
       difficulty: 'hard'
     },
     {
       id: '7',
-      question: 'Which country gifted the Statue of Liberty to USA?',
+      question: 'Which skill do you think is your strongest?',
       type: 'MCQ',
-      options: ['UK', 'France', 'Germany', 'Italy'],
-      correctAnswer: 'France',
-      category: 'History',
+      options: ['Logical reasoning', 'Communication', 'Creativity', 'Leadership'],
+      correctAnswer: '',
+      category: 'Self-Assessment',
       difficulty: 'hard'
     },
     {
       id: '8',
-      question: 'What is the chemical formula of water?',
+      question: 'For career preparation, you would focus on:',
       type: 'MCQ',
-      options: ['CO2', 'H2O', 'O2', 'NaCl'],
-      correctAnswer: 'H2O',
-      category: 'Chemistry',
+      options: ['Academic excellence and competitive exams', 'Developing practical skills', 'Building a portfolio', 'Gaining work experience'],
+      correctAnswer: '',
+      category: 'Career Preparation',
       difficulty: 'hard'
     },
     {
       id: '9',
-      question: 'Which Indian satellite was first sent to space?',
+      question: 'What motivates your career choice?',
       type: 'MCQ',
-      options: ['INSAT', 'Aryabhata', 'Chandrayaan', 'Mangalyaan'],
-      correctAnswer: 'Aryabhata',
-      category: 'Science',
+      options: ['Personal interest and passion', 'Career growth opportunities', 'Social impact and contribution', 'Financial stability'],
+      correctAnswer: '',
+      category: 'Career Motivation',
       difficulty: 'hard'
     },
     {
       id: '10',
-      question: 'What does CPU stand for?',
+      question: 'When thinking about your future, you prioritize:',
       type: 'MCQ',
-      options: ['Central Processing Unit', 'Computer Power Unit', 'Core Process Unit', 'Control Panel Unit'],
-      correctAnswer: 'Central Processing Unit',
-      category: 'Computer',
+      options: ['Specialized expertise in a field', 'Versatile skills across areas', 'Entrepreneurship and innovation', 'Service to community'],
+      correctAnswer: '',
+      category: 'Career Vision',
       difficulty: 'hard'
     }
   ],
 
   /* =======================
      CLASS 11 TO 12 (HARD)
+     Advanced Career Planning & Specialization
   ======================= */
   class11to12: [
     {
       id: '1',
-      question: 'What is the pH value of pure water?',
+      question: 'What is your primary motivation for choosing a career path?',
       type: 'MCQ',
-      options: ['5', '6', '7', '8'],
-      correctAnswer: '7',
-      category: 'Chemistry',
+      options: ['Personal passion and interest', 'Financial security and growth', 'Social impact and contribution', 'Intellectual challenge'],
+      correctAnswer: '',
+      category: 'Career Motivation',
       difficulty: 'hard'
     },
     {
       id: '2',
-      question: 'Who proposed the theory of relativity?',
+      question: 'Which specialization area aligns with your strengths?',
       type: 'MCQ',
-      options: ['Newton', 'Einstein', 'Galileo', 'Tesla'],
-      correctAnswer: 'Einstein',
-      category: 'Physics',
+      options: ['STEM (Science/Technology/Engineering/Math)', 'Business/Management/Commerce', 'Arts/Humanities/Social Sciences', 'Healthcare/Medicine'],
+      correctAnswer: '',
+      category: 'Specialization',
       difficulty: 'hard'
     },
     {
       id: '3',
-      question: 'Which article of Indian Constitution deals with Right to Equality?',
+      question: 'How do you envision your professional growth?',
       type: 'MCQ',
-      options: ['Article 14', 'Article 19', 'Article 21', 'Article 32'],
-      correctAnswer: 'Article 14',
-      category: 'Political Science',
+      options: ['Becoming a technical expert', 'Leadership and management roles', 'Creative/entrepreneurial ventures', 'Research and academia'],
+      correctAnswer: '',
+      category: 'Career Growth',
       difficulty: 'hard'
     },
     {
       id: '4',
-      question: 'What is the chemical symbol of Gold?',
+      question: 'What work-life balance do you prefer?',
       type: 'MCQ',
-      options: ['Ag', 'Au', 'Gd', 'Go'],
-      correctAnswer: 'Au',
-      category: 'Chemistry',
+      options: ['High commitment, high reward', 'Structured schedule with flexibility', 'Creative freedom with deadlines', 'Balanced with personal time'],
+      correctAnswer: '',
+      category: 'Work-Life Balance',
       difficulty: 'hard'
     },
     {
       id: '5',
-      question: 'Which organ produces insulin?',
+      question: 'Which type of impact do you want to make?',
       type: 'MCQ',
-      options: ['Liver', 'Pancreas', 'Kidney', 'Heart'],
-      correctAnswer: 'Pancreas',
-      category: 'Biology',
+      options: ['Technological innovation', 'Social change and development', 'Economic growth and business', 'Knowledge and education'],
+      correctAnswer: '',
+      category: 'Impact Goals',
       difficulty: 'hard'
     },
     {
       id: '6',
-      question: 'What is the speed of light?',
+      question: 'How do you prefer to learn and grow professionally?',
       type: 'MCQ',
-      options: ['3×10⁸ m/s', '3×10⁶ m/s', '1×10⁸ m/s', '1×10⁶ m/s'],
-      correctAnswer: '3×10⁸ m/s',
-      category: 'Physics',
+      options: ['Formal education and certifications', 'Hands-on experience and projects', 'Mentorship and networking', 'Self-directed learning'],
+      correctAnswer: '',
+      category: 'Professional Development',
       difficulty: 'hard'
     },
     {
       id: '7',
-      question: 'Who is the author of "Discovery of India"?',
+      question: 'What is your approach to career decisions?',
       type: 'MCQ',
-      options: ['Gandhi', 'Nehru', 'Tagore', 'Ambedkar'],
-      correctAnswer: 'Jawaharlal Nehru',
-      category: 'History',
+      options: ['Data-driven and analytical', 'Following passion and interest', 'Considering market opportunities', 'Seeking guidance and advice'],
+      correctAnswer: '',
+      category: 'Decision Making',
       difficulty: 'hard'
     },
     {
       id: '8',
-      question: 'What does DNA stand for?',
+      question: 'Which professional environment suits you best?',
       type: 'MCQ',
-      options: [
-        'Deoxyribonucleic Acid',
-        'Dynamic Nuclear Acid',
-        'Double Nitrogen Atom',
-        'Dual Nucleic Acid'
-      ],
-      correctAnswer: 'Deoxyribonucleic Acid',
-      category: 'Biology',
+      options: ['Fast-paced and dynamic', 'Structured and organized', 'Creative and flexible', 'Collaborative and supportive'],
+      correctAnswer: '',
+      category: 'Work Environment',
       difficulty: 'hard'
     },
     {
       id: '9',
-      question: 'Which country has the highest population?',
+      question: 'What role does financial success play in your career choice?',
       type: 'MCQ',
-      options: ['India', 'China', 'USA', 'Russia'],
-      correctAnswer: 'India',
-      category: 'Geography',
+      options: ['Primary consideration', 'Important but not only factor', 'Secondary to passion', 'Less important than fulfillment'],
+      correctAnswer: '',
+      category: 'Career Values',
       difficulty: 'hard'
     },
     {
       id: '10',
-      question: 'What is the full form of GDP?',
+      question: 'Your ideal career would allow you to:',
       type: 'MCQ',
-      options: [
-        'Gross Domestic Product',
-        'General Development Plan',
-        'Global Domestic Price',
-        'Gross Demand Product'
-      ],
-      correctAnswer: 'Gross Domestic Product',
-      category: 'Economics',
+      options: ['Solve complex problems', 'Express creativity', 'Lead and inspire others', 'Contribute to society'],
+      correctAnswer: '',
+      category: 'Career Vision',
       difficulty: 'hard'
     }
   ]
