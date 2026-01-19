@@ -170,7 +170,7 @@ export default function PlatformSuperAdminDashboard() {
     { id: 'overview', label: 'Overview', icon: '/icons/overview.png' },
     { id: 'users', label: 'Manage Users', icon: '/icons/profile.png' },
     { id: 'organizations', label: 'Organizations', icon: '/icons/rewards.png' },
-    { id: 'reports', label: 'Reports', icon: '/icons/report.png' },
+    { id: 'reports', label: 'Reports', icon: 'reports' },
     { id: 'audit-logs', label: 'Audit Logs', icon: '/icons/settings.png' },
     { id: 'system', label: 'System Settings', icon: '/icons/settings.png' },
   ];

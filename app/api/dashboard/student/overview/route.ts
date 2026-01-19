@@ -69,19 +69,9 @@ export async function GET(request: NextRequest) {
     let totalModules = 0;
     
     if (youtubeData && youtubeData.Module && youtubeData.Module.length > 0) {
-      console.log('📺 YouTube data found:', {
-        totalModules: youtubeData.Module.length,
-        modules: youtubeData.Module.map((module: any, index: number) => ({
-          moduleIndex: index,
-          chapterKey: Object.keys(module)[0],
-          videoTitle: module[Object.keys(module)[0]]?.videoTitle || 'Unknown'
-        }))
-      });
-      
       // Each item in Module array is one chapter, so total is just the array length
       totalModules = youtubeData.Module.length;
     } else {
-      console.log('📚 No YouTube data found, using Module collection');
       // Fallback to Module collection if no YouTube data
       const allModules = await Module.find({});
       totalModules = allModules.length;

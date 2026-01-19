@@ -311,13 +311,14 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
           <div className="text-center mb-4 sm:mb-6">
             <div 
               className={`relative w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center overflow-hidden ${
-                isEditing && onAvatarClick ? 'cursor-pointer hover:ring-4 hover:ring-purple-300 transition-all duration-200' : ''
+                onAvatarClick ? 'cursor-pointer hover:ring-4 hover:ring-purple-300 transition-all duration-200' : ''
               }`}
               onClick={() => {
-                if (isEditing && onAvatarClick) {
+                if (onAvatarClick) {
                   onAvatarClick();
                 }
               }}
+              title="Click to change avatar"
             >
               {profile.avatar ? (
                 <Image 
@@ -333,13 +334,13 @@ export default function SettingsTab({ profile, onProfileUpdate, onAvatarClick }:
                 </span>
               )}
               {/* Edit Overlay */}
-              {isEditing && onAvatarClick && (
+              {onAvatarClick && (
                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
                   <Edit3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
               )}
             </div>
-            {isEditing && onAvatarClick && (
+            {onAvatarClick && (
               <p className="text-xs sm:text-sm text-purple-600 font-medium mb-2">Click to change avatar</p>
             )}
             <h3 className="text-base sm:text-lg font-semibold text-gray-900">{profile.name}</h3>

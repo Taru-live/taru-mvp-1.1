@@ -130,6 +130,9 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [filterLevel, setFilterLevel] = useState<'all' | 'basic' | 'intermediate' | 'advanced'>('all');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<YoutubeData | null>(null);
+  const [isSearchFromDB, setIsSearchFromDB] = useState(false);
   
   // Update search query when initialSearchQuery prop changes
   useEffect(() => {
@@ -1358,51 +1361,285 @@ export default function ModulesTab({ user, initialSearchQuery = '', onProgressUp
     return chapters;
   }, [youtubeData]);
 
-  // Filter and sort modules
-  const filteredChapters = React.useMemo(() => {
+  // Helper function to check if text matches search query
+  const matchesSearch = (text: string, query: string): boolean => {
+    if (!query) return true;
+    if (!text) return false;
+    return text.toLowerCase().includes(query.toLowerCase());
+  };
+
+  // Helper function to check if a chapter matches level filter
+  const matchesLevelFilter = (chapterId: number): boolean => {
+    if (filterLevel === 'all') return true;
+    const chapterNum = chapterId;
+    if (filterLevel === 'basic') return chapterNum <= 6;
+    if (filterLevel === 'intermediate') return chapterNum > 6 && chapterNum <= 12;
+    if (filterLevel === 'advanced') return chapterNum > 12;
+    return true;
+  };
+
+  // Comprehensive filtering function for modules, submodules, and chapters
+  const filteredModules = React.useMemo(() => {
+    // If searching from database, use search results
+    if (isSearchFromDB && searchResults?.modules) {
+      return searchResults.modules;
+    }
+    
+    // Otherwise, use client-side filtering
     if (!youtubeData?.modules) return [];
     
-    let chapters = getAllChapters;
+    const query = searchQuery.trim().toLowerCase();
     
-    // Filter by search query
-    if (searchQuery) {
-      chapters = chapters.filter(chapter => {
-        return chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               chapter.chapterDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               chapter.moduleTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               chapter.submoduleTitle.toLowerCase().includes(searchQuery.toLowerCase());
+    // If no search query, show all modules (with level filtering)
+    if (!query) {
+      return youtubeData.modules
+        .map(module => {
+          const filteredSubmodules = module.submodules.map(submodule => {
+            const filteredChapters = submodule.chapters.filter(chapter => {
+              return matchesLevelFilter(chapter.chapterId);
+            });
+            
+            // Sort chapters
+            switch (sortBy) {
+              case 'title':
+                filteredChapters.sort((a, b) => a.chapterTitle.localeCompare(b.chapterTitle));
+                break;
+              case 'oldest':
+                filteredChapters.sort((a, b) => a.chapterId - b.chapterId);
+                break;
+              case 'newest':
+              default:
+                filteredChapters.sort((a, b) => b.chapterId - a.chapterId);
+                break;
+            }
+            
+            return {
+              ...submodule,
+              chapters: filteredChapters
+            };
+          });
+          
+          return {
+            ...module,
+            submodules: filteredSubmodules
+          };
+        });
+    }
+    
+    // When searching, show ONLY matching items
+    return youtubeData.modules
+      .map(module => {
+        // Check if module itself matches search
+        const moduleMatches = 
+          matchesSearch(module.moduleTitle, query) || 
+          matchesSearch(module.moduleDescription, query);
+        
+        // Filter submodules - only include if they match or have matching chapters
+        const filteredSubmodules = module.submodules
+          .map(submodule => {
+            // Check if submodule itself matches search
+            const submoduleMatches =
+              matchesSearch(submodule.submoduleTitle, query) ||
+              matchesSearch(submodule.submoduleDescription, query);
+            
+            // Filter chapters - only include matching chapters
+            const filteredChapters = submodule.chapters.filter(chapter => {
+              // Check if chapter matches search (direct match only, not parent matches)
+              const chapterMatchesSearch =
+                matchesSearch(chapter.chapterTitle, query) ||
+                matchesSearch(chapter.chapterDescription, query);
+              
+              // Check level filter
+              const chapterMatchesLevel = matchesLevelFilter(chapter.chapterId);
+              
+              return chapterMatchesSearch && chapterMatchesLevel;
+            });
+            
+            // Sort chapters
+            switch (sortBy) {
+              case 'title':
+                filteredChapters.sort((a, b) => a.chapterTitle.localeCompare(b.chapterTitle));
+                break;
+              case 'oldest':
+                filteredChapters.sort((a, b) => a.chapterId - b.chapterId);
+                break;
+              case 'newest':
+              default:
+                filteredChapters.sort((a, b) => b.chapterId - a.chapterId);
+                break;
+            }
+            
+            // Include submodule ONLY if:
+            // 1. The submodule itself matches, OR
+            // 2. It has matching chapters (but only show those matching chapters)
+            if (submoduleMatches) {
+              // If submodule matches, show all its chapters (with level filter)
+              const allChapters = submodule.chapters.filter(ch => matchesLevelFilter(ch.chapterId));
+              switch (sortBy) {
+                case 'title':
+                  allChapters.sort((a, b) => a.chapterTitle.localeCompare(b.chapterTitle));
+                  break;
+                case 'oldest':
+                  allChapters.sort((a, b) => a.chapterId - b.chapterId);
+                  break;
+                case 'newest':
+                default:
+                  allChapters.sort((a, b) => b.chapterId - a.chapterId);
+                  break;
+              }
+              return {
+                ...submodule,
+                chapters: allChapters
+              };
+            } else if (filteredChapters.length > 0) {
+              // If submodule doesn't match but has matching chapters, show only those chapters
+              return {
+                ...submodule,
+                chapters: filteredChapters
+              };
+            }
+            return null;
+          })
+          .filter((sub): sub is Submodule => sub !== null);
+        
+        // Include module ONLY if:
+        // 1. The module itself matches (show all its submodules/chapters), OR
+        // 2. It has matching submodules (show only those matching submodules)
+        if (moduleMatches) {
+          // If module matches, show all its submodules (but still filter chapters by level)
+          const allSubmodules = module.submodules.map(submodule => {
+            const filteredChapters = submodule.chapters.filter(ch => matchesLevelFilter(ch.chapterId));
+            switch (sortBy) {
+              case 'title':
+                filteredChapters.sort((a, b) => a.chapterTitle.localeCompare(b.chapterTitle));
+                break;
+              case 'oldest':
+                filteredChapters.sort((a, b) => a.chapterId - b.chapterId);
+                break;
+              case 'newest':
+              default:
+                filteredChapters.sort((a, b) => b.chapterId - a.chapterId);
+                break;
+            }
+            return {
+              ...submodule,
+              chapters: filteredChapters
+            };
+          });
+          return {
+            ...module,
+            submodules: allSubmodules
+          };
+        } else if (filteredSubmodules.length > 0) {
+          // If module doesn't match but has matching submodules, show only those submodules
+          return {
+            ...module,
+            submodules: filteredSubmodules
+          };
+        }
+        return null;
+      })
+      .filter((mod): mod is Module => mod !== null);
+  }, [youtubeData, searchQuery, filterLevel, sortBy, isSearchFromDB, searchResults]);
+
+  // Auto-expand modules and submodules that match search
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const modulesToExpand = new Set<number>();
+      const submodulesToExpand = new Set<string>();
+      
+      filteredModules.forEach(module => {
+        modulesToExpand.add(module.moduleId);
+        module.submodules.forEach(submodule => {
+          submodulesToExpand.add(`${module.moduleId}-${submodule.submoduleId}`);
+        });
       });
+      
+      setExpandedModules(modulesToExpand);
+      setExpandedSubmodules(submodulesToExpand);
     }
+  }, [searchQuery, filteredModules]);
+
+  // Get filtered chapters for count display
+  const filteredChapters = React.useMemo(() => {
+    const chapters: Array<Chapter & { moduleId: number; submoduleId: number; moduleTitle: string; submoduleTitle: string }> = [];
     
-    // Filter by level
-    if (filterLevel !== 'all') {
-      chapters = chapters.filter(chapter => {
-        // Simple level detection based on chapter ID
-        const chapterNum = chapter.chapterId;
-        if (filterLevel === 'basic') return chapterNum <= 6;
-        if (filterLevel === 'intermediate') return chapterNum > 6 && chapterNum <= 12;
-        if (filterLevel === 'advanced') return chapterNum > 12;
-        return true;
+    filteredModules.forEach(module => {
+      module.submodules.forEach(submodule => {
+        submodule.chapters.forEach(chapter => {
+          chapters.push({
+            ...chapter,
+            moduleId: module.moduleId,
+            submoduleId: submodule.submoduleId,
+            moduleTitle: module.moduleTitle,
+            submoduleTitle: submodule.submoduleTitle
+          });
+        });
       });
-    }
-    
-    // Sort chapters
-    switch (sortBy) {
-      case 'title':
-        chapters.sort((a, b) => a.chapterTitle.localeCompare(b.chapterTitle));
-        break;
-      case 'oldest':
-        chapters.sort((a, b) => a.chapterId - b.chapterId);
-        break;
-      case 'newest':
-      default:
-        // Sort by chapter ID descending (newest first)
-        chapters.sort((a, b) => b.chapterId - a.chapterId);
-        break;
-    }
+    });
     
     return chapters;
-  }, [youtubeData, searchQuery, filterLevel, sortBy, getAllChapters]);
+  }, [filteredModules]);
+
+  // Handle search button click or Enter key - search from database
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setIsSearchFromDB(false);
+      setSearchResults(null);
+      return;
+    }
+    
+    setIsSearching(true);
+    setIsSearchFromDB(true);
+    
+    try {
+      // Search from database
+      const response = await fetch(
+        `/api/modules/search?q=${encodeURIComponent(searchQuery.trim())}&level=${filterLevel}`,
+        { credentials: 'include' }
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Transform the search results to match the expected format
+          setSearchResults({
+            _id: youtubeData?._id || '',
+            uniqueid: youtubeData?.uniqueid || user?.uniqueId || '',
+            modules: result.data.modules,
+            createdAt: youtubeData?.createdAt,
+            updatedAt: youtubeData?.updatedAt
+          });
+          
+          // Scroll to first result if in list view
+          setTimeout(() => {
+            if (viewMode === 'list') {
+              const firstModule = document.querySelector('[data-module-id]');
+              if (firstModule) {
+                firstModule.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }
+          }, 100);
+        } else {
+          setSearchResults(null);
+        }
+      } else {
+        console.error('Search failed:', response.statusText);
+        setSearchResults(null);
+      }
+    } catch (error) {
+      console.error('Error searching modules:', error);
+      setSearchResults(null);
+    } finally {
+      setIsSearching(false);
+      
+      // Blur the input to show search is complete
+      const input = document.querySelector('input[placeholder*="Search modules"]') as HTMLInputElement;
+      if (input) {
+        input.blur();
+      }
+    }
+  };
 
   const toggleFavorite = (chapterId: string) => {
     setFavorites(prev => {
@@ -1985,26 +2222,100 @@ When any threat is found, these tools give details so you can quickly fix the pr
 
           {/* Search and Filter Controls */}
           {youtubeData && youtubeData.modules && youtubeData.modules.length > 0 && (
-            <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
               <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
                 {/* Search */}
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search modules..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-            />
-          </div>
+                <div className="relative flex-1 w-full max-w-md flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+                    <input
+                      type="text"
+                      placeholder="Search modules, submodules, chapters..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setIsSearching(false);
+                        // Clear database search results when typing
+                        if (isSearchFromDB) {
+                          setIsSearchFromDB(false);
+                          setSearchResults(null);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSearch();
+                        }
+                      }}
+                      className="w-full pl-10 pr-10 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white text-sm sm:text-base"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery('');
+                          setIsSearching(false);
+                          setIsSearchFromDB(false);
+                          setSearchResults(null);
+                        }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10"
+                        title="Clear search"
+                      >
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSearch}
+                    disabled={isSearching}
+                    className="px-4 py-2 sm:px-5 sm:py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-sm sm:text-base shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Search for modules, submodules, or chapters (or press Enter)"
+                    aria-label="Search"
+                  >
+                    {isSearching ? (
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
+                    <span className="hidden sm:inline">Search</span>
+                  </button>
+                </div>
 
                 {/* Filters */}
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto">
                   <select
                     value={filterLevel}
-                    onChange={(e) => setFilterLevel(e.target.value as any)}
-                    className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    onChange={async (e) => {
+                      const newLevel = e.target.value as any;
+                      setFilterLevel(newLevel);
+                      // If we have a search query and are searching from DB, re-search with new filter
+                      if (isSearchFromDB && searchQuery.trim()) {
+                        setIsSearching(true);
+                        try {
+                          const response = await fetch(
+                            `/api/modules/search?q=${encodeURIComponent(searchQuery.trim())}&level=${newLevel}`,
+                            { credentials: 'include' }
+                          );
+                          if (response.ok) {
+                            const result = await response.json();
+                            if (result.success && result.data) {
+                              setSearchResults({
+                                _id: youtubeData?._id || '',
+                                uniqueid: youtubeData?.uniqueid || user?.uniqueId || '',
+                                modules: result.data.modules,
+                                createdAt: youtubeData?.createdAt,
+                                updatedAt: youtubeData?.updatedAt
+                              });
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error filtering search results:', error);
+                        } finally {
+                          setIsSearching(false);
+                        }
+                      }
+                    }}
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white text-sm sm:text-base"
                   >
                     <option value="all">All Levels</option>
                     <option value="basic">Basic</option>
@@ -2015,7 +2326,7 @@ When any threat is found, these tools give details so you can quickly fix the pr
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white text-sm sm:text-base"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -2028,16 +2339,18 @@ When any threat is found, these tools give details so you can quickly fix the pr
                       className={`p-2 rounded-lg transition-colors ${
                         viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
                       }`}
+                      title="Grid view"
                     >
-                      <Grid3X3 className="w-5 h-5" />
+                      <Grid3X3 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
                       className={`p-2 rounded-lg transition-colors ${
                         viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
                       }`}
+                      title="List view"
                     >
-                      <List className="w-5 h-5" />
+                      <List className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
                 </div>
@@ -2059,53 +2372,63 @@ When any threat is found, these tools give details so you can quickly fix the pr
               
               {/* Modules Display based on viewMode */}
               {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {youtubeData.modules.map((module) => {
-                    const totalChapters = module.submodules.reduce((sum, sub) => sum + sub.chapters.length, 0);
-                    return (
-                      <motion.div
-                        key={module.moduleId}
-                        onClick={() => {
-                          router.push(`/modules/youtube/${module.moduleId}`);
-                        }}
-                        className="bg-white cursor-pointer rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ y: -5 }}
-                      >
-                        <div className="p-6">
-                          <div className="flex items-center justify-center mb-4">
-                            <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
-                              <BookOpen className="w-8 h-8 text-white" />
+                filteredModules.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredModules.map((module) => {
+                      const totalChapters = module.submodules.reduce((sum, sub) => sum + sub.chapters.length, 0);
+                      return (
+                        <motion.div
+                          key={module.moduleId}
+                          onClick={() => {
+                            router.push(`/modules/youtube/${module.moduleId}`);
+                          }}
+                          className="bg-white cursor-pointer rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          whileHover={{ y: -5 }}
+                        >
+                          <div className="p-6">
+                            <div className="flex items-center justify-center mb-4">
+                              <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                                <BookOpen className="w-8 h-8 text-white" />
+                              </div>
+                            </div>
+                            <h3 
+                              className="text-xl font-bold text-gray-900 mb-2 text-center cursor-pointer hover:text-blue-600 transition-colors"
+                              
+                            >
+                              {module.moduleTitle}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-4 text-center line-clamp-3">
+                              {module.moduleDescription}
+                            </p>
+                            <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                              <span>{module.submodules.length} submodules</span>
+                              <span>•</span>
+                              <span>{totalChapters} chapters</span>
                             </div>
                           </div>
-                          <h3 
-                            className="text-xl font-bold text-gray-900 mb-2 text-center cursor-pointer hover:text-blue-600 transition-colors"
-                            
-                          >
-                            {module.moduleTitle}
-                          </h3>
-                          <p className="text-gray-600 text-sm mb-4 text-center line-clamp-3">
-                            {module.moduleDescription}
-                          </p>
-                          <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-                            <span>{module.submodules.length} submodules</span>
-                            <span>•</span>
-                            <span>{totalChapters} chapters</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-white rounded-2xl shadow-lg border border-gray-200">
+                    <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg">No modules found matching your search.</p>
+                    <p className="text-gray-500 text-sm mt-2">Try adjusting your search query or filters.</p>
+                  </div>
+                )
               ) : (
                 /* Hierarchical View: Modules -> Submodules -> Chapters */
                 <div className="space-y-6">
-                  {youtubeData.modules.map((module) => {
-                    const isModuleExpanded = expandedModules.has(module.moduleId);
-                    
-                    return (
-                      <div key={module.moduleId} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                  {filteredModules.length > 0 ? (
+                    <>
+                      {                    filteredModules.map((module) => {
+                        const isModuleExpanded = expandedModules.has(module.moduleId);
+                        
+                        return (
+                      <div key={module.moduleId} data-module-id={module.moduleId} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
                       {/* Module Header */}
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -2174,18 +2497,8 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                   <div className="bg-gray-50/30">
                                     {(viewMode as 'grid' | 'list') === 'grid' ? (
                                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
-                                        {submodule.chapters
-                                          .filter(chapter => {
-                                            // Apply search filter
-                                            if (searchQuery) {
-                                              const matchesSearch = 
-                                                chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                chapter.chapterDescription.toLowerCase().includes(searchQuery.toLowerCase());
-                                              if (!matchesSearch) return false;
-                                            }
-                                            return true;
-                                          })
-                                          .map((chapter, chapterIndex) => {
+                                        {submodule.chapters.length > 0 ? (
+                                          submodule.chapters.map((chapter, chapterIndex) => {
                                             const videoId = getVideoId(chapter.youtubeUrl);
                                             const chapterId = getChapterId(chapter.chapterId);
                                             const isFavorite = favorites.has(chapterId);
@@ -2198,214 +2511,103 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                             return (
                                               <motion.div
                                                 key={chapter.chapterId}
-                                                className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                                                className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: chapterIndex * 0.1 }}
                                                 whileHover={{ scale: 1.02 }}
                                                 onHoverStart={() => setHoveredVideo(chapterId)}
                                                 onHoverEnd={() => setHoveredVideo(null)}
-                                                onClick={() => router.push(`/modules/youtube/${module.moduleId}/chapter/${chapter.chapterId}`)}
                                               >
-                                                {/* Video Section */}
-                                                <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
-                                                  {videoId ? (
-                                                    <>
-                                                      {isPlaying ? (
-                                                        <iframe
-                                                          key={`playing-${chapterId}`}
-                                                          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-                                                          title={chapter.youtubeTitle}
-                                                          className="w-full h-full"
-                                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                          allowFullScreen
-                                                        />
-                                                      ) : (
-                                                        <div className="w-full h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center relative overflow-hidden">
-                                                          {/* Animated Background Pattern */}
-                                                          <div className="absolute inset-0 opacity-20">
-                                                            <div className="absolute top-0 left-0 w-full h-full">
-                                                              <div className="absolute top-10 left-10 w-32 h-32 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
-                                                              <div className="absolute bottom-10 right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-                                                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-                                                            </div>
-                                                          </div>
-                                                          
-                                                          {/* Geometric Shapes */}
-                                                          <div className="absolute inset-0 opacity-10">
-                                                            <motion.div
-                                                              className="absolute top-4 right-4 w-16 h-16 border-2 border-white/30 rounded-lg"
-                                                              animate={{ rotate: [0, 90, 0] }}
-                                                              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                                                            />
-                                                            <motion.div
-                                                              className="absolute bottom-4 left-4 w-12 h-12 border-2 border-white/30 rounded-full"
-                                                              animate={{ scale: [1, 1.2, 1] }}
-                                                              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                                            />
-                                                          </div>
-                                                          
-                                                          {/* Video Placeholder Content - Icon Only */}
-                                                          <div className="absolute inset-0 flex items-center justify-center z-10">
-                                                            <motion.div
-                                                              animate={{ scale: [1, 1.1, 1] }}
-                                                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                                            >
-                                                              <div className="relative">
-                                                                <div className="absolute inset-0 bg-white/20 rounded-full blur-xl"></div>
-                                                                <div className="relative bg-white/10 backdrop-blur-sm rounded-full p-6 border-2 border-white/30">
-                                                                  <Video className="w-16 h-16 text-white mx-auto" />
-                                                                </div>
-                                                              </div>
-                                                            </motion.div>
-                                                          </div>
-                                                          
-                                                          {/* Title at Bottom */}
-                                                          <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/60 via-black/40 to-transparent px-4 py-3">
-                                                            <p className="text-white text-sm font-semibold line-clamp-2 text-center drop-shadow-lg">
-                                                              {chapter.youtubeTitle}
-                                                            </p>
-                                                          </div>
-                                                          
-                                                          {/* Play Overlay */}
-                                                          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                                                            <motion.button
-                                                              onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                router.push(`/modules/youtube/${module.moduleId}/chapter/${chapter.chapterId}`);
-                                                              }}
-                                                              className="pointer-events-auto p-6 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 rounded-full shadow-2xl transform transition-all duration-300 border-2 border-white/20"
-                                                              whileHover={{ scale: 1.15, boxShadow: "0 0 30px rgba(239, 68, 68, 0.6)" }}
-                                                              whileTap={{ scale: 0.95 }}
-                                                              initial={{ scale: 0 }}
-                                                              animate={{ scale: 1 }}
-                                                              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                                                            >
-                                                              <Play className="w-12 h-12 text-white" />
-                                                            </motion.button>
-                                                          </div>
-                                                        </div>
-                                                      )}
-                                                      
-                                                      {/* Control Overlay */}
-                                                      {isPlaying && (
-                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                                                          <div className="flex gap-3">
-                                                            <motion.button
-                                                              onClick={() => setPlayingVideo(null)}
-                                                              className="opacity-0 group-hover:opacity-100 duration-300 p-4 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
-                                                              whileHover={{ scale: 1.1 }}
-                                                              whileTap={{ scale: 0.9 }}
-                                                            >
-                                                              <PauseCircle className="w-8 h-8 text-gray-800" />
-                                                            </motion.button>
-                                                            
-                                                            <motion.button
-                                                              onClick={() => window.open(chapter.youtubeUrl, '_blank')}
-                                                              className="opacity-0 group-hover:opacity-100 duration-300 p-3 bg-white/90 rounded-full hover:bg-white hover:scale-110 transform transition-all"
-                                                              whileHover={{ scale: 1.1 }}
-                                                              whileTap={{ scale: 0.9 }}
-                                                            >
-                                                              <ExternalLink className="w-6 h-6 text-gray-800" />
-                                                            </motion.button>
-                                                          </div>
-                                                        </div>
-                                                      )}
-                                                    </>
-                                                  ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                                      <div className="text-center">
-                                                        <Video className="w-12 h-12 mx-auto mb-2" />
-                                                        <p>Video not available</p>
+                                                {/* Content Section */}
+                                                <div className="p-4 sm:p-6">
+                                                  {/* Header with Chapter Info and Action Buttons */}
+                                                  <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex items-start gap-3 flex-1">
+                                                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-red-600 font-bold text-sm">Ch {chapter.chapterId}</span>
+                                                      </div>
+                                                      <div className="flex-1 min-w-0">
+                                                        <h4 
+                                                          className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors cursor-pointer"
+                                                          onClick={() => router.push(`/modules/youtube/${module.moduleId}/chapter/${chapter.chapterId}`)}
+                                                        >
+                                                          {chapter.chapterTitle}
+                                                        </h4>
+                                                        <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2">
+                                                          {chapter.chapterDescription}
+                                                        </p>
                                                       </div>
                                                     </div>
-                                                  )}
+                                                    
+                                                    {/* Action Buttons */}
+                                                    <div className="flex items-center gap-1 sm:gap-2 ml-2 flex-shrink-0">
+                                                      <motion.button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          toggleBookmark(chapterId);
+                                                        }}
+                                                        className={`p-1.5 sm:p-2 rounded-full transition-all ${
+                                                          isBookmarked 
+                                                            ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-yellow-100 hover:text-yellow-600'
+                                                        }`}
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+                                                      >
+                                                        {isBookmarked ? (
+                                                          <BookmarkCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                        ) : (
+                                                          <Bookmark className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                        )}
+                                                      </motion.button>
+                                                      
+                                                      <motion.button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          toggleLike(chapterId);
+                                                        }}
+                                                        className={`p-1.5 sm:p-2 rounded-full transition-all ${
+                                                          isLiked 
+                                                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600'
+                                                        }`}
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        title={isLiked ? 'Unlike' : 'Like'}
+                                                      >
+                                                        <ThumbsUp className={`w-3 h-3 sm:w-4 sm:h-4 ${isLiked ? 'fill-current' : ''}`} />
+                                                      </motion.button>
+                                                      
+                                                      <motion.button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          markAsCompleted(chapterId);
+                                                        }}
+                                                        className={`p-1.5 sm:p-2 rounded-full transition-all ${
+                                                          isCompleted 
+                                                            ? 'bg-green-500 text-white hover:bg-green-600' 
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600'
+                                                        }`}
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        title={isCompleted ? 'Mark as incomplete' : 'Mark as completed'}
+                                                      >
+                                                        <CheckCircle className={`w-3 h-3 sm:w-4 sm:h-4 ${isCompleted ? 'fill-current' : ''}`} />
+                                                      </motion.button>
+                                                    </div>
+                                                  </div>
                                                   
-                                                  {/* Overlay Badges */}
-                                                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex gap-1 sm:gap-2 flex-wrap">
-                                                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-black/70 text-white text-xs font-medium rounded-full backdrop-blur-sm">
-                                                      Ch {chapter.chapterId}
-                                                    </span>
-                                                    {isCompleted && (
-                                                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-green-500 text-white text-xs font-medium rounded-full">
-                                                        <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-0.5 sm:mr-1" />
+                                                  {isCompleted && (
+                                                    <div className="mb-3">
+                                                      <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+                                                        <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                                         <span className="hidden sm:inline">Completed</span>
                                                         <span className="sm:hidden">Done</span>
                                                       </span>
-                                                    )}
-                                                  </div>
-                                                  
-                                                  {/* Action Buttons Overlay */}
-                                                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex gap-1 sm:gap-2">
-                                                    <motion.button
-                                                      onClick={() => toggleBookmark(chapterId)}
-                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
-                                                        isBookmarked 
-                                                          ? 'bg-yellow-500 text-white' 
-                                                          : 'bg-black/70 text-white hover:bg-yellow-500'
-                                                      }`}
-                                                      whileHover={{ scale: 1.1 }}
-                                                      whileTap={{ scale: 0.9 }}
-                                                    >
-                                                      {isBookmarked ? (
-                                                        <BookmarkCheck className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                      ) : (
-                                                        <Bookmark className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                      )}
-                                                    </motion.button>
-                                                    
-                                                    <motion.button
-                                                      onClick={() => toggleLike(chapterId)}
-                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
-                                                        isLiked 
-                                                          ? 'bg-blue-500 text-white' 
-                                                          : 'bg-black/70 text-white hover:bg-blue-500'
-                                                      }`}
-                                                      whileHover={{ scale: 1.1 }}
-                                                      whileTap={{ scale: 0.9 }}
-                                                    >
-                                                      <ThumbsUp className={`w-3 h-3 sm:w-4 sm:h-4 ${isLiked ? 'fill-current' : ''}`} />
-                                                    </motion.button>
-                                                    
-                                                    <motion.button
-                                                      onClick={() => shareVideo(chapter.youtubeUrl, chapter.youtubeTitle)}
-                                                      className="p-1.5 sm:p-2 rounded-full backdrop-blur-sm bg-black/70 text-white hover:bg-purple-500 transition-all"
-                                                      whileHover={{ scale: 1.1 }}
-                                                      whileTap={{ scale: 0.9 }}
-                                                    >
-                                                      <Share className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                    </motion.button>
-                                                    
-                                                    <motion.button
-                                                      onClick={() => toggleFavorite(chapterId)}
-                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
-                                                        isFavorite 
-                                                          ? 'bg-red-500 text-white' 
-                                                          : 'bg-black/70 text-white hover:bg-red-500'
-                                                      }`}
-                                                      whileHover={{ scale: 1.1 }}
-                                                      whileTap={{ scale: 0.9 }}
-                                                    >
-                                                      <Heart className={`w-3 h-3 sm:w-4 sm:h-4 ${isFavorite ? 'fill-current' : ''}`} />
-                                                    </motion.button>
-                                                    
-                                                    <motion.button
-                                                      onClick={() => markAsCompleted(chapterId)}
-                                                      className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
-                                                        isCompleted 
-                                                          ? 'bg-green-500 text-white' 
-                                                          : 'bg-black/70 text-white hover:bg-green-500'
-                                                      }`}
-                                                      whileHover={{ scale: 1.1 }}
-                                                      whileTap={{ scale: 0.9 }}
-                                                    >
-                                                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                    </motion.button>
-                                                  </div>
-                                                </div>
-                      
-                                                {/* Content Section */}
-                                                <div className="p-4 sm:p-6">
+                                                    </div>
+                                                  )}
                                                   <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                                                     {chapter.chapterTitle}
                                                   </h4>
@@ -2476,91 +2678,84 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                 </div>
                                               </motion.div>
                                             );
-                                          })}
+                                          })
+                                        ) : (
+                                          <div className="text-center py-8 text-gray-500">
+                                            <p className="text-sm">No chapters found in this submodule.</p>
+                                          </div>
+                                        )}
                                       </div>
                                     ) : (
                                       <div className="space-y-4 p-6">
-                                        {submodule.chapters
-                                          .filter(chapter => {
-                                            // Apply search filter
-                                            if (searchQuery) {
-                                              const matchesSearch = 
-                                                chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                chapter.chapterDescription.toLowerCase().includes(searchQuery.toLowerCase());
-                                              if (!matchesSearch) return false;
-                                            }
-                                            return true;
-                                          })
-                                          .map((chapter) => {
+                                        {submodule.chapters.length > 0 ? (
+                                          submodule.chapters.map((chapter) => {
                                             const videoId = getVideoId(chapter.youtubeUrl);
                                             const chapterId = getChapterId(chapter.chapterId);
                                             const isFavorite = favorites.has(chapterId);
                                             const isCompleted = completedModules.has(chapterId);
+                                            const isBookmarked = bookmarkedVideos.has(chapterId);
+                                            const isLiked = likedVideos.has(chapterId);
                                             
                                             return (
                                               <div 
                                                 key={chapter.chapterId} 
                                                 className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
                                               >
-                                                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                                                  {/* Video Placeholder */}
-                                                  <div className="relative w-full sm:w-32 h-32 sm:h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-lg overflow-hidden flex-shrink-0 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                                                    {/* Animated Background Pattern */}
-                                                    <div className="absolute inset-0 opacity-20">
-                                                      <motion.div
-                                                        className="absolute top-0 right-0 w-16 h-16 bg-white/20 rounded-full blur-xl"
-                                                        animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
-                                                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                                      />
-                                                    </div>
-                                                    
-                                                    {/* Geometric Accent */}
-                                                    <div className="absolute top-1 right-1 w-2 h-2 bg-white/40 rounded-full"></div>
-                                                    <div className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-white/40 rounded-full"></div>
-                                                    
-                                                    {/* Icon Container */}
-                                                    <div className="w-full h-full flex items-center justify-center relative z-10">
-                                                      <motion.div
-                                                        animate={{ scale: [1, 1.1, 1] }}
-                                                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                                      >
-                                                        <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 border border-white/20 shadow-lg">
-                                                          <Video className="w-5 h-5 text-white" />
-                                                        </div>
-                                                      </motion.div>
-                                                    </div>
-                                                    
-                                                    {/* Play Button Overlay */}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                                                      <motion.div
-                                                        initial={{ scale: 0.8, opacity: 0 }}
-                                                        whileHover={{ scale: 1.1 }}
-                                                        animate={{ scale: 1, opacity: 1 }}
-                                                        transition={{ duration: 0.2 }}
-                                                        className="bg-white/25 backdrop-blur-sm rounded-full p-1.5 border border-white/40 shadow-md"
-                                                      >
-                                                        <PlayCircle className="w-4 h-4 text-white" />
-                                                      </motion.div>
-                                                    </div>
-                                                    
-                                                    {/* Shine Effect on Hover */}
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none"></div>
-                                                  </div>
-                                                  
+                                                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
                                                   {/* Content */}
                                                   <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between mb-2 gap-2">
-                                                      <div className="flex-1 min-w-0">
-                                                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-1 mb-1">
-                                                          {chapter.chapterTitle}
-                                                        </h4>
-                                                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-                                                          {chapter.chapterDescription}
-                                                        </p>
+                                                      <div className="flex items-start gap-3 flex-1">
+                                                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                          <span className="text-red-600 font-bold text-sm">Ch {chapter.chapterId}</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                          <h4 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-1 mb-1">
+                                                            {chapter.chapterTitle}
+                                                          </h4>
+                                                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                                                            {chapter.chapterDescription}
+                                                          </p>
+                                                        </div>
                                                       </div>
                                                       <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4 flex-shrink-0">
                                                         <button
-                                                          onClick={() => toggleFavorite(chapterId)}
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            toggleBookmark(chapterId);
+                                                          }}
+                                                          className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                                                            isBookmarked 
+                                                              ? 'bg-yellow-100 text-yellow-600' 
+                                                              : 'text-gray-400 hover:bg-yellow-100 hover:text-yellow-600'
+                                                          }`}
+                                                          title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+                                                        >
+                                                          {isBookmarked ? (
+                                                            <BookmarkCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                          ) : (
+                                                            <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                          )}
+                                                        </button>
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            toggleLike(chapterId);
+                                                          }}
+                                                          className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                                                            isLiked 
+                                                              ? 'bg-blue-100 text-blue-600' 
+                                                              : 'text-gray-400 hover:bg-blue-100 hover:text-blue-600'
+                                                          }`}
+                                                          title={isLiked ? 'Unlike' : 'Like'}
+                                                        >
+                                                          <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-current' : ''}`} />
+                                                        </button>
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            toggleFavorite(chapterId);
+                                                          }}
                                                           className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                                                             isFavorite 
                                                               ? 'bg-red-100 text-red-600' 
@@ -2570,14 +2765,18 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                           <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-current' : ''}`} />
                                                         </button>
                                                         <button
-                                                          onClick={() => markAsCompleted(chapterId)}
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            markAsCompleted(chapterId);
+                                                          }}
                                                           className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                                                             isCompleted 
                                                               ? 'bg-green-100 text-green-600' 
                                                               : 'text-gray-400 hover:bg-green-100 hover:text-green-600'
                                                           }`}
+                                                          title={isCompleted ? 'Mark as incomplete' : 'Mark as completed'}
                                                         >
-                                                          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                          <CheckCircle className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isCompleted ? 'fill-current' : ''}`} />
                                                         </button>
                                                       </div>
                                                     </div>
@@ -2655,7 +2854,12 @@ When any threat is found, these tools give details so you can quickly fix the pr
                                                 </div>
                                               </div>
                                             );
-                                          })}
+                                          })
+                                        ) : (
+                                          <div className="text-center py-8 text-gray-500">
+                                            <p className="text-sm">No chapters found in this submodule.</p>
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
@@ -2666,8 +2870,16 @@ When any threat is found, these tools give details so you can quickly fix the pr
                         </div>
                       )}
                     </div>
-                  )
-                })}
+                        )
+                      })}
+                    </>
+                  ) : (
+                    <div className="text-center py-12 bg-white rounded-2xl shadow-lg border border-gray-200">
+                      <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 text-lg">No modules found matching your search.</p>
+                      <p className="text-gray-500 text-sm mt-2">Try adjusting your search query or filters.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

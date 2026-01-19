@@ -177,7 +177,7 @@ export default function ParentDashboard() {
     { id: 'overview', label: 'Overview', icon: '/icons/overview.png' },
     { id: 'child-progress', label: "Child's Progress", icon: '/icons/report.png' },
     { id: 'learning-paths', label: 'Learning Path', icon: '/icons/learning-path.png' },
-    { id: 'reports', label: 'Reports', icon: '/icons/rewards.png' },
+    { id: 'reports', label: 'Reports', icon: 'reports' },
     { id: 'messages', label: 'Message', icon: '/icons/bot.png' },
   ];
 

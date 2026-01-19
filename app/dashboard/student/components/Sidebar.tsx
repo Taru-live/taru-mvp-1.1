@@ -59,6 +59,22 @@ const IconRenderer = ({ icon, label, size = 24, className = "", isActive = false
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
         </div>
       ),
+      'tests': (
+        <div className="relative">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
+        </div>
+      ),
+      'reports': (
+        <div className="relative">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-green-500 to-teal-500 rounded-full"></div>
+        </div>
+      ),
       'progress': (
         <div className="relative">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +152,7 @@ const defaultNavItems = [
   { id: 'overview', label: 'Overview', icon: '/icons/overview1.png' },
   { id: 'learning-path', label: 'Learning Path', icon: '/icons/learning-path.png' },
   { id: 'modules', label: 'My Learning Modules', icon: '/icons/modules.png' },
-  { id: 'tests', label: 'Tests', icon: '/icons/report.png' },
+  { id: 'tests', label: 'Tests', icon: 'tests' },
   { id: 'enhanced-learning', label: 'Enhanced Learning', icon: '/icons/ai-buddy.png' },
   { id: 'progress', label: 'My Progress Report', icon: '/icons/report.png' },
   { id: 'rewards', label: 'My Rewards & Badges', icon: '/icons/rewards.png' },

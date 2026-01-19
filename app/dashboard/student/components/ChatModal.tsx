@@ -181,38 +181,26 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
     setIsLoading(true);
 
     try {
-      // Call your n8n API with student unique ID
-      const response = await fetch('/api/chat', {
+      // Use the new AI-BUDDY-MAIN webhook endpoint for main screen chat
+      const response = await fetch('/api/chat/main', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           query: currentMessage,
-          studentUniqueId: studentUniqueId, // Send student's unique ID
-          sessionId: sessionId, // Send session ID
-          studentData: {
-            name: studentData.name,
-            email: studentData.email,
-            grade: studentData.grade,
-            school: studentData.school || 'Taru Learning',
-            uniqueId: studentUniqueId, // Include unique ID in student data
-            timestamp: new Date().toISOString()
-          }
+          uniqueId: studentUniqueId || studentData.uniqueId
         }),
       });
 
       const data = await response.json();
       
       // Log debug information to console
-      console.log('Chat API Response:', data);
-      if (data.n8nOutput) {
-        console.log('N8N Output:', data.n8nOutput);
-        console.log('AI-BUDDY Input:', data.n8nOutput.aiInput);
-        console.log('AI-BUDDY Response:', data.n8nOutput.aiResponse);
+      console.log('AI-BUDDY-MAIN Chat API Response:', data);
+      if (data.metadata) {
         console.log('Response Metadata:', data.metadata);
-        console.log('Webhook URL used:', data.metadata?.webhookUrl);
-        console.log('Response time:', data.metadata?.responseTime);
+        console.log('Unique ID used:', data.metadata.uniqueId);
+        console.log('Response time:', data.metadata.responseTime);
       }
 
       if (data.success) {
@@ -222,9 +210,9 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
           isUser: false,
           timestamp: new Date(),
           metadata: {
-            n8nOutput: data.n8nOutput,
+            n8nOutput: data.rawResponse,
             responseMetadata: data.metadata,
-            fallback: data.fallback || false
+            fallback: false
           }
         };
         setMessages(prev => [...prev, aiResponse]);
@@ -524,7 +512,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6, duration: 0.4 }}
                 >
-                  What can i help you?
+                  How can I help you today?
                 </motion.p>
               </motion.div>
               

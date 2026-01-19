@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, Clock, CheckCircle, AlertCircle, Play } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertCircle, Play, Sparkles } from 'lucide-react';
 
 interface Test {
   _id: string;
@@ -28,16 +28,53 @@ interface Submission {
   submittedAt?: string;
 }
 
+interface StudentProfile {
+  teacherId?: string;
+  organizationId?: string;
+}
+
 export default function TestList() {
   const [tests, setTests] = useState<Test[]>([]);
   const [submissions, setSubmissions] = useState<Record<string, Submission>>({});
   const [loading, setLoading] = useState(true);
+  const [isLinked, setIsLinked] = useState<boolean | null>(null);
+  const [checkingLinkage, setCheckingLinkage] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    fetchTests();
-    fetchSubmissions();
+    checkStudentLinkage();
   }, []);
+
+  useEffect(() => {
+    if (isLinked === true) {
+      fetchTests();
+    } else if (isLinked === false) {
+      setLoading(false);
+    }
+  }, [isLinked]);
+
+  const checkStudentLinkage = async () => {
+    try {
+      setCheckingLinkage(true);
+      const response = await fetch('/api/student/profile');
+      const data = await response.json();
+      
+      if (data.success) {
+        const studentProfile: StudentProfile = data;
+        // Check if student is linked to a teacher or organization
+        const hasLinkage = !!(studentProfile.teacherId || studentProfile.organizationId);
+        setIsLinked(hasLinkage);
+      } else {
+        // If we can't fetch profile, assume not linked to be safe
+        setIsLinked(false);
+      }
+    } catch (err) {
+      console.error('Error checking student linkage:', err);
+      setIsLinked(false);
+    } finally {
+      setCheckingLinkage(false);
+    }
+  };
 
   const fetchTests = async () => {
     try {
@@ -53,32 +90,34 @@ export default function TestList() {
     }
   };
 
-  const fetchSubmissions = async () => {
-    try {
-      const submissionsMap: Record<string, Submission> = {};
-      
-      // Fetch submissions for each test
-      for (const test of tests) {
-        try {
-          const response = await fetch(`/api/tests/${test._id}/submissions`);
-          const data = await response.json();
-          if (data.success && data.submissions && data.submissions.length > 0) {
-            // Get the latest submission
-            const latest = data.submissions[0];
-            submissionsMap[test._id] = latest;
-          }
-        } catch (err) {
-          // Ignore errors for individual test submissions
-        }
-      }
-      
-      setSubmissions(submissionsMap);
-    } catch (err) {
-      console.error('Error fetching submissions:', err);
-    }
-  };
-
   useEffect(() => {
+    const fetchSubmissions = async () => {
+      if (tests.length === 0) return;
+      
+      try {
+        const submissionsMap: Record<string, Submission> = {};
+        
+        // Fetch submissions for each test
+        for (const test of tests) {
+          try {
+            const response = await fetch(`/api/tests/${test._id}/submissions`);
+            const data = await response.json();
+            if (data.success && data.submissions && data.submissions.length > 0) {
+              // Get the latest submission
+              const latest = data.submissions[0];
+              submissionsMap[test._id] = latest;
+            }
+          } catch (err) {
+            // Ignore errors for individual test submissions
+          }
+        }
+        
+        setSubmissions(submissionsMap);
+      } catch (err) {
+        console.error('Error fetching submissions:', err);
+      }
+    };
+
     if (tests.length > 0) {
       fetchSubmissions();
     }
@@ -133,10 +172,35 @@ export default function TestList() {
     router.push(`/dashboard/student/tests/${testId}`);
   };
 
-  if (loading) {
+  if (checkingLinkage || loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show "coming soon" message if student is not linked to teacher or organization
+  if (isLinked === false) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">My Tests</h2>
+          <p className="text-gray-600 mt-1">Tests assigned to you</p>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center py-16 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-xl border-2 border-purple-200 shadow-lg">
+          <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-full p-6 mb-6 shadow-xl">
+            <Sparkles className="w-16 h-16 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">Coming Soon!</h3>
+          <p className="text-gray-600 text-center max-w-md mb-2">
+            Tests will be available once you're linked to a teacher or organization.
+          </p>
+          <p className="text-sm text-gray-500 text-center max-w-md">
+            Your teacher or organization administrator will assign tests to you once you're connected.
+          </p>
+        </div>
       </div>
     );
   }
