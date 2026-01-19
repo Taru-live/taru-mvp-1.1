@@ -6,6 +6,7 @@ import Test from '@/models/Test';
 import TestQuestion from '@/models/TestQuestion';
 import TestSubmission from '@/models/TestSubmission';
 import Student from '@/models/Student';
+import Notification from '@/models/Notification';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -152,6 +153,35 @@ export async function POST(
     });
 
     await submission.save();
+
+    // Send notification to the assigning teacher
+    try {
+      const teacherUser = await User.findById(test.createdBy.id);
+      if (teacherUser) {
+        const notification = new Notification({
+          recipientId: test.createdBy.id,
+          recipientRole: 'teacher',
+          senderId: user._id.toString(),
+          senderRole: 'student',
+          senderName: student.fullName || user.name || 'Student',
+          type: 'test_result',
+          priority: 'normal',
+          title: 'Test Submission Received',
+          message: `${student.fullName || 'A student'} has submitted the test "${test.title}". ${test.showResultsImmediately && autoScore > 0 ? `Score: ${autoScore}/${test.totalPoints}` : 'Evaluation pending.'}`,
+          read: false,
+          metadata: {
+            testId: test._id.toString(),
+            submissionId: submission._id.toString(),
+            studentId: student.uniqueId || student.userId,
+            autoGraded: test.showResultsImmediately && autoScore > 0
+          }
+        });
+        await notification.save();
+      }
+    } catch (notifError) {
+      console.error('Error sending notification to teacher:', notifError);
+      // Don't fail the submission if notification fails
+    }
 
     // Return results if immediate results are enabled
     const response: any = {

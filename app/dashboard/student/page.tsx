@@ -14,6 +14,7 @@ import StatsCards from './components/StatsCards';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import OverviewTab from './components/OverviewTab';
+import TestList from './components/TestList';
 import { TypewriterText, StaggeredText, GradientText, CharacterAnimation } from '../../components/TextAnimations';
 import { TiltCard, MagneticButton } from '../../components/InteractiveElements';
 import { StaggerContainer, StaggerItem } from '../../components/PageTransitions';
@@ -1519,6 +1520,11 @@ function StudentDashboardContent() {
                 />
               )}
               {activeTab === 'enhanced-learning' && <EnhancedLearningTab />}
+              {activeTab === 'tests' && (
+                <div className="pr-4 sm:pr-6 md:pr-8 lg:pr-12">
+                  <TestList />
+                </div>
+              )}
               {activeTab === 'progress' && (
                 <div className="pr-4 sm:pr-6 md:pr-8 lg:pr-12">
                   {dashboardLoading ? (

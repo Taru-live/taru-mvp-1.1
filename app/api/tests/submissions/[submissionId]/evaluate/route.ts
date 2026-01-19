@@ -8,6 +8,9 @@ import Test from '@/models/Test';
 import TestSubmission from '@/models/TestSubmission';
 import TestQuestion from '@/models/TestQuestion';
 import TestEvaluation from '@/models/TestEvaluation';
+import Student from '@/models/Student';
+import Parent from '@/models/Parent';
+import Notification from '@/models/Notification';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -145,6 +148,82 @@ export async function POST(
     };
     submission.feedback = overallFeedback;
     await submission.save();
+
+    // Send notifications to student and parents
+    try {
+      const studentRecord = await Student.findOne({
+        $or: [
+          { uniqueId: submission.studentId },
+          { userId: submission.studentId }
+        ]
+      });
+
+      if (studentRecord) {
+        const studentUser = await User.findById(submission.studentUserId);
+        
+        // Notify student
+        if (studentUser) {
+          const studentNotification = new Notification({
+            recipientId: submission.studentUserId,
+            recipientRole: 'student',
+            senderId: user._id.toString(),
+            senderRole: user.role as 'teacher' | 'organization',
+            senderName: user.name,
+            type: 'test_result',
+            priority: 'normal',
+            title: 'Test Results Available',
+            message: `Your test "${test.title}" has been evaluated. Score: ${totalScore}/${maxScore} (${percentage}%)${isPassed ? ' - Passed!' : ' - Needs improvement.'}`,
+            read: false,
+            metadata: {
+              testId: test._id.toString(),
+              submissionId: submission._id.toString(),
+              score: totalScore,
+              maxScore,
+              percentage,
+              isPassed
+            }
+          });
+          await studentNotification.save();
+        }
+
+        // Notify parents
+        const parents = await Parent.find({ 
+          studentUniqueId: studentRecord.uniqueId || studentRecord.userId 
+        });
+        
+        for (const parent of parents) {
+          const parentUser = await User.findById(parent.userId);
+          if (parentUser) {
+            const parentNotification = new Notification({
+              recipientId: parent.userId,
+              recipientRole: 'parent',
+              senderId: user._id.toString(),
+              senderRole: user.role as 'teacher' | 'organization',
+              senderName: user.name,
+              type: 'test_result',
+              priority: 'normal',
+              title: 'Test Results Available',
+              message: `${studentRecord.fullName}'s test "${test.title}" has been evaluated. Score: ${totalScore}/${maxScore} (${percentage}%)${isPassed ? ' - Passed!' : ' - Needs improvement.'}`,
+              read: false,
+              metadata: {
+                testId: test._id.toString(),
+                submissionId: submission._id.toString(),
+                studentId: studentRecord.uniqueId || studentRecord.userId,
+                studentName: studentRecord.fullName,
+                score: totalScore,
+                maxScore,
+                percentage,
+                isPassed
+              }
+            });
+            await parentNotification.save();
+          }
+        }
+      }
+    } catch (notifError) {
+      console.error('Error sending notifications:', notifError);
+      // Don't fail the evaluation if notification fails
+    }
 
     return NextResponse.json({
       success: true,

@@ -149,7 +149,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
       setMessages([
         {
           id: '1',
-          content: `Hi ${studentData.name}! I&apos;m your AI Learning Assistant. I&apos;m here to help you with your studies, answer questions, and guide you through your learning journey. What would you like to know?`,
+          content: `Hi ${studentData.name}! I'm your AI Learning Assistant. I'm here to help you with your studies, answer questions, and guide you through your learning journey. What would you like to know?`,
           isUser: false,
           timestamp: new Date(),
         }
@@ -232,7 +232,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
         // Handle API errors
         const errorResponse: Message = {
           id: (Date.now() + 1).toString(),
-          content: data.response || "I&apos;m having trouble connecting right now. Please try again later.",
+          content: data.response || "I'm having trouble connecting right now. Please try again later.",
           isUser: false,
           timestamp: new Date(),
           metadata: {
@@ -247,7 +247,7 @@ export default function ChatModal({ isOpen, onClose, studentData }: ChatModalPro
       // Fallback response for network errors
       const fallbackResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Hi ${studentData.name}! I&apos;m having trouble connecting to my learning database right now. While I work on reconnecting, feel free to ask me about your studies, and I&apos;ll help you as soon as I can!`,
+        content: `Hi ${studentData.name}! I'm having trouble connecting to my learning database right now. While I work on reconnecting, feel free to ask me about your studies, and I'll help you as soon as I can!`,
         isUser: false,
         timestamp: new Date(),
         metadata: {

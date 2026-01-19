@@ -5,6 +5,7 @@ import User from '@/models/User';
 import LearningPath from '@/models/LearningPath';
 import LearningPathResponse from '@/models/LearningPathResponse';
 import Student from '@/models/Student';
+import CareerSession from '@/models/CareerSession';
 import { normalizeCareerDetailsData, validateCareerDetailsData } from '@/lib/utils/learningPathUtils';
 import { canSaveLearningPath, recordLearningPathSave } from '@/lib/utils/paymentUtils';
 
@@ -296,6 +297,74 @@ export async function POST(request: NextRequest) {
     // Pass learningPathId to ensure we increment the counter on the correct subscription
     await recordLearningPathSave(normalizedCareerDetails.uniqueid, savedLearningPath._id.toString());
 
+    // Save career details to CareerSession (for exploration tracking)
+    // This tracks which career paths the student has explored
+    let careerSessionId: string | null = null;
+    try {
+      const student = await Student.findOne({ uniqueId: normalizedCareerDetails.uniqueid });
+      if (student) {
+        // Find existing career session or create new one
+        let careerSession = await CareerSession.findOne({
+          userId: student.userId,
+          studentId: student.uniqueId,
+          isCompleted: false
+        });
+
+        if (!careerSession) {
+          // Create new career session
+          careerSession = new CareerSession({
+            userId: student.userId,
+            studentId: student.uniqueId,
+            sessionId: `career_${student.uniqueId}_${Date.now()}`,
+            currentCareerPath: careerPath,
+            careerPaths: [],
+            explorationHistory: [],
+            selectedCareerDetails: null,
+            isCompleted: false,
+            lastActivity: new Date()
+          });
+        }
+
+        // Add or update career path details
+        const careerPathData = {
+          careerPath: careerPath,
+          description: description || '',
+          details: normalizedCareerDetails.output,
+          selectedAt: new Date()
+        };
+
+        // Check if this career path already exists in the session
+        const existingPathIndex = careerSession.careerPaths.findIndex(
+          (path: any) => path.careerPath === careerPath
+        );
+
+        if (existingPathIndex >= 0) {
+          // Update existing career path
+          careerSession.careerPaths[existingPathIndex] = careerPathData;
+        } else {
+          // Add new career path
+          careerSession.careerPaths.push(careerPathData);
+        }
+
+        // Update current career path and selected details
+        careerSession.currentCareerPath = careerPath;
+        careerSession.selectedCareerDetails = normalizedCareerDetails.output;
+        careerSession.lastActivity = new Date();
+
+        // Add to exploration history if not already present
+        if (!careerSession.explorationHistory.includes(careerPath)) {
+          careerSession.explorationHistory.push(careerPath);
+        }
+
+        await careerSession.save();
+        careerSessionId = careerSession.sessionId;
+        console.log('✅ Career details saved to session:', careerSessionId);
+      }
+    } catch (sessionError) {
+      console.error('❌ Error saving career details to session:', sessionError);
+      // Don't fail the save operation if session tracking fails
+    }
+
     return NextResponse.json({
       message: duplicatePaths.length > 0 
         ? `Learning path updated successfully (removed ${duplicatePaths.length - 1} duplicate(s))`
@@ -310,7 +379,8 @@ export async function POST(request: NextRequest) {
         focusAreas: normalizedCareerDetails.output.focusAreas,
         createdAt: savedLearningPath.createdAt,
         updatedAt: savedLearningPath.updatedAt
-      }
+      },
+      careerSessionId: careerSessionId
     });
 
   } catch (error) {
