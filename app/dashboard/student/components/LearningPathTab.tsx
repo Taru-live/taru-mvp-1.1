@@ -31,7 +31,8 @@ import {
   ChevronRight,
   MessageCircle,
   Brain,
-  Sparkles
+  Sparkles,
+  Play
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import RazorpayPaymentModal from '@/components/RazorpayPaymentModal';
@@ -91,6 +92,32 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForLearningPath, setPaymentForLearningPath] = useState(false);
   const [upgradeForPath, setUpgradeForPath] = useState<LearningPath | null>(null);
+  
+  // YouTube data state
+  const [youtubeDataCounts, setYoutubeDataCounts] = useState<{
+    modules: number;
+    submodules: number;
+    chapters: number;
+    loading: boolean;
+  }>({
+    modules: 0,
+    submodules: 0,
+    chapters: 0,
+    loading: false
+  });
+
+  // YouTube data state for current path
+  const [currentPathYoutubeCounts, setCurrentPathYoutubeCounts] = useState<{
+    modules: number;
+    submodules: number;
+    chapters: number;
+    loading: boolean;
+  }>({
+    modules: 0,
+    submodules: 0,
+    chapters: 0,
+    loading: false
+  });
 
   // Helper function to normalize career path title for comparison
   const normalizeCareerPath = (careerPath: string): string => {
@@ -111,6 +138,123 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Invalid date';
+    }
+  };
+
+  // Helper function to calculate total submodules count
+  const getTotalSubmodules = (learningModules: Array<{
+    module: string;
+    description: string;
+    submodules?: Array<{
+      title: string;
+      description: string;
+      chapters?: Array<{
+        title: string;
+        description?: string;
+      }>;
+    }>;
+  }>): number => {
+    if (!learningModules || !Array.isArray(learningModules)) return 0;
+    return learningModules.reduce((total, module) => {
+      return total + (module.submodules?.length || 0);
+    }, 0);
+  };
+
+  // Helper function to calculate total chapters count
+  const getTotalChapters = (learningModules: Array<{
+    module: string;
+    description: string;
+    submodules?: Array<{
+      title: string;
+      description: string;
+      chapters?: Array<{
+        title: string;
+        description?: string;
+      }>;
+    }>;
+  }>): number => {
+    if (!learningModules || !Array.isArray(learningModules)) return 0;
+    return learningModules.reduce((total, module) => {
+      const moduleChapters = module.submodules?.reduce((subTotal, submodule) => {
+        return subTotal + (submodule.chapters?.length || 0);
+      }, 0) || 0;
+      return total + moduleChapters;
+    }, 0);
+  };
+
+  // Fetch YouTube data counts from actual YouTube data structure
+  const fetchYouTubeDataCounts = async (uniqueId: string) => {
+    if (!uniqueId) return;
+    
+    setYoutubeDataCounts(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const response = await fetch(`/api/youtube-urls?uniqueid=${encodeURIComponent(uniqueId)}`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          // Check if data has hierarchical modules structure
+          if (data.data.modules && Array.isArray(data.data.modules)) {
+            const modules = data.data.modules;
+            const totalModules = modules.length;
+            const totalSubmodules = modules.reduce((sum: number, module: any) => {
+              return sum + (module.submodules?.length || 0);
+            }, 0);
+            const totalChapters = modules.reduce((sum: number, module: any) => {
+              const moduleChapters = module.submodules?.reduce((subSum: number, submodule: any) => {
+                return subSum + (submodule.chapters?.length || 0);
+              }, 0) || 0;
+              return sum + moduleChapters;
+            }, 0);
+            
+            setYoutubeDataCounts({
+              modules: totalModules,
+              submodules: totalSubmodules,
+              chapters: totalChapters,
+              loading: false
+            });
+            return;
+          }
+          
+          // Check if data has flat chapters structure
+          if (data.data.chapters && Array.isArray(data.data.chapters)) {
+            const totalChapters = data.data.chapters.length;
+            // Estimate modules and submodules from chapters (2 chapters per submodule, 2 submodules per module)
+            const chaptersPerSubmodule = 2;
+            const submodulesPerModule = 2;
+            const estimatedSubmodules = Math.ceil(totalChapters / chaptersPerSubmodule);
+            const estimatedModules = Math.ceil(estimatedSubmodules / submodulesPerModule);
+            
+            setYoutubeDataCounts({
+              modules: estimatedModules,
+              submodules: estimatedSubmodules,
+              chapters: totalChapters,
+              loading: false
+            });
+            return;
+          }
+        }
+      }
+      
+      // If no data found or error, reset counts
+      setYoutubeDataCounts({
+        modules: 0,
+        submodules: 0,
+        chapters: 0,
+        loading: false
+      });
+    } catch (error) {
+      console.error('Error fetching YouTube data counts:', error);
+      setYoutubeDataCounts({
+        modules: 0,
+        submodules: 0,
+        chapters: 0,
+        loading: false
+      });
     }
   };
 
@@ -446,6 +590,109 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
     }
   }, [currentPath?._id, learningPaths.length]);
 
+  // Fetch YouTube data counts when View Details modal opens
+  useEffect(() => {
+    if (showDetailsModal && selectedPathDetails && user?.uniqueId) {
+      fetchYouTubeDataCounts(user.uniqueId);
+    } else if (!showDetailsModal) {
+      // Reset counts when modal closes
+      setYoutubeDataCounts({
+        modules: 0,
+        submodules: 0,
+        chapters: 0,
+        loading: false
+      });
+    }
+  }, [showDetailsModal, selectedPathDetails, user?.uniqueId]);
+
+  // Fetch YouTube data counts for current path
+  useEffect(() => {
+    const fetchCurrentPathCounts = async () => {
+      if (!currentPath || !user?.uniqueId) {
+        setCurrentPathYoutubeCounts({
+          modules: 0,
+          submodules: 0,
+          chapters: 0,
+          loading: false
+        });
+        return;
+      }
+      
+      setCurrentPathYoutubeCounts(prev => ({ ...prev, loading: true }));
+      
+      try {
+        const response = await fetch(`/api/youtube-urls?uniqueid=${encodeURIComponent(user.uniqueId)}`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.success && data.data) {
+            // Check if data has hierarchical modules structure
+            if (data.data.modules && Array.isArray(data.data.modules)) {
+              const modules = data.data.modules;
+              const totalModules = modules.length;
+              const totalSubmodules = modules.reduce((sum: number, module: any) => {
+                return sum + (module.submodules?.length || 0);
+              }, 0);
+              const totalChapters = modules.reduce((sum: number, module: any) => {
+                const moduleChapters = module.submodules?.reduce((subSum: number, submodule: any) => {
+                  return subSum + (submodule.chapters?.length || 0);
+                }, 0) || 0;
+                return sum + moduleChapters;
+              }, 0);
+              
+              setCurrentPathYoutubeCounts({
+                modules: totalModules,
+                submodules: totalSubmodules,
+                chapters: totalChapters,
+                loading: false
+              });
+              return;
+            }
+            
+            // Check if data has flat chapters structure
+            if (data.data.chapters && Array.isArray(data.data.chapters)) {
+              const totalChapters = data.data.chapters.length;
+              // Estimate modules and submodules from chapters (2 chapters per submodule, 2 submodules per module)
+              const chaptersPerSubmodule = 2;
+              const submodulesPerModule = 2;
+              const estimatedSubmodules = Math.ceil(totalChapters / chaptersPerSubmodule);
+              const estimatedModules = Math.ceil(estimatedSubmodules / submodulesPerModule);
+              
+              setCurrentPathYoutubeCounts({
+                modules: estimatedModules,
+                submodules: estimatedSubmodules,
+                chapters: totalChapters,
+                loading: false
+              });
+              return;
+            }
+          }
+        }
+        
+        // If no data found or error, reset counts
+        setCurrentPathYoutubeCounts({
+          modules: 0,
+          submodules: 0,
+          chapters: 0,
+          loading: false
+        });
+      } catch (error) {
+        console.error('Error fetching current path YouTube data counts:', error);
+        setCurrentPathYoutubeCounts({
+          modules: 0,
+          submodules: 0,
+          chapters: 0,
+          loading: false
+        });
+      }
+    };
+    
+    fetchCurrentPathCounts();
+  }, [currentPath?._id, user?.uniqueId]);
+
   const handlePaymentSuccess = async () => {
     setShowPaymentModal(false);
     setPaymentForLearningPath(false);
@@ -751,10 +998,6 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                           <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600 flex-shrink-0" />
                           <span className="font-medium truncate">{path.timeRequired}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 sm:gap-2 bg-blue-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                          <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
-                          <span className="font-medium">{path.learningModules.length} modules</span>
-                        </div>
                       </div>
                     </div>
                     
@@ -804,26 +1047,6 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                           +{path.focusAreas.length - 3} more
                         </span>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Enhanced Learning Modules Preview */}
-                  <div className="mb-4 sm:mb-6">
-                    <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
-                      <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
-                      Learning Modules ({path.learningModules.length})
-                    </h4>
-                    <div className="space-y-2 sm:space-y-3 max-h-64 overflow-y-auto">
-                      {path.learningModules.map((module, idx) => (
-                        <motion.div 
-                          key={idx} 
-                          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-gray-100 hover:border-purple-200 transition-all duration-300"
-                          whileHover={{ x: 5 }}
-                        >
-                          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex-shrink-0"></div>
-                          <span className="text-xs sm:text-sm text-gray-700 font-medium truncate">{module.module}</span>
-                        </motion.div>
-                      ))}
                     </div>
                   </div>
 
@@ -1004,7 +1227,44 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm text-gray-500 font-medium">Modules</p>
-                    <p className="text-base sm:text-lg font-bold text-gray-800">{currentPath.learningModules.length}</p>
+                    {currentPathYoutubeCounts.loading ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+                        <p className="text-xs text-gray-500">Loading...</p>
+                      </div>
+                    ) : currentPathYoutubeCounts.modules > 0 ? (
+                      <>
+                        <p className="text-base sm:text-lg font-bold text-gray-800">
+                          {currentPathYoutubeCounts.modules} module{currentPathYoutubeCounts.modules !== 1 ? 's' : ''}
+                        </p>
+                        {currentPathYoutubeCounts.submodules > 0 && (
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {currentPathYoutubeCounts.submodules} submodules
+                          </p>
+                        )}
+                        {currentPathYoutubeCounts.chapters > 0 && (
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {currentPathYoutubeCounts.chapters} chapters
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-base sm:text-lg font-bold text-gray-800">
+                          {currentPath.learningModules.length} module{currentPath.learningModules.length !== 1 ? 's' : ''}
+                        </p>
+                        {getTotalSubmodules(currentPath.learningModules) > 0 && (
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {getTotalSubmodules(currentPath.learningModules)} submodules
+                          </p>
+                        )}
+                        {getTotalChapters(currentPath.learningModules) > 0 && (
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {getTotalChapters(currentPath.learningModules)} chapters
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/60 rounded-xl sm:rounded-2xl border border-indigo-200">
@@ -1126,120 +1386,6 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Learning Modules */}
-                {selectedPathDetails.learningModules && selectedPathDetails.learningModules.length > 0 && (
-                  <div>
-                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2 sm:mb-3 md:mb-4 flex items-center gap-1.5 sm:gap-2">
-                      <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
-                      Learning Modules ({selectedPathDetails.learningModules.length})
-                    </h3>
-                    <div className="space-y-3 sm:space-y-4">
-                      {selectedPathDetails.learningModules.map((module, index) => {
-                        const isExpanded = expandedModules.has(index);
-                        const hasSubmodules = module.submodules && module.submodules.length > 0;
-                        
-                        // Color array for module badges - cycles through colors
-                        const moduleColors = [
-                          'from-purple-500 to-blue-500',
-                          'from-green-500 to-emerald-500',
-                          'from-orange-500 to-red-500',
-                          'from-pink-500 to-rose-500',
-                          'from-indigo-500 to-purple-500',
-                          'from-cyan-500 to-blue-500',
-                          'from-yellow-500 to-orange-500',
-                          'from-teal-500 to-green-500'
-                        ];
-                        const moduleColor = moduleColors[index % moduleColors.length];
-                        
-                        return (
-                          <motion.div
-                            key={index}
-                            className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg sm:rounded-xl overflow-hidden border border-gray-200"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                          >
-                            <div className="p-3 sm:p-4 md:p-6">
-                              <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2 sm:gap-4">
-                                <div className="flex items-start gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
-                                  <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${moduleColor} rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0`}>
-                                    <span className="text-white font-bold text-base sm:text-lg">{index + 1}</span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1 sm:mb-2">{module.module}</h4>
-                                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{module.description}</p>
-                                  </div>
-                                </div>
-                                {hasSubmodules && (
-                                  <button
-                                    onClick={() => {
-                                      const newExpanded = new Set(expandedModules);
-                                      if (newExpanded.has(index)) {
-                                        newExpanded.delete(index);
-                                      } else {
-                                        newExpanded.add(index);
-                                      }
-                                      setExpandedModules(newExpanded);
-                                    }}
-                                    className="ml-2 sm:ml-4 p-1.5 sm:p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors flex-shrink-0"
-                                  >
-                                    <ChevronRight
-                                      className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
-                                    />
-                                  </button>
-                                )}
-                              </div>
-
-                              {/* Submodules */}
-                              {hasSubmodules && isExpanded && (
-                                <motion.div
-                                  className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 pl-8 sm:pl-12 md:pl-16"
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                >
-                                  {module.submodules?.map((submodule, subIndex) => (
-                                    <div
-                                      key={subIndex}
-                                      className="bg-white rounded-lg p-3 sm:p-4 border border-gray-200"
-                                    >
-                                      <h5 className="text-sm sm:text-base font-semibold text-gray-800 mb-1 sm:mb-2">{submodule.title}</h5>
-                                      <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">{submodule.description}</p>
-                                      
-                                      {/* Chapters */}
-                                      {submodule.chapters && submodule.chapters.length > 0 && (
-                                        <div className="space-y-2 sm:space-y-2.5">
-                                          <h6 className="text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Chapters:</h6>
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
-                                            {submodule.chapters.map((chapter, chapterIndex) => (
-                                              <div
-                                                key={chapterIndex}
-                                                className="flex items-start gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700 bg-gray-50 p-2 rounded-lg"
-                                              >
-                                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></div>
-                                                <div className="flex-1 min-w-0">
-                                                  <span className="font-medium truncate block">{chapter.title}</span>
-                                                  {chapter.description && (
-                                                    <span className="text-gray-500 text-xs mt-0.5 block line-clamp-1">{chapter.description}</span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </motion.div>
-                              )}
-                            </div>
-                          </motion.div>
-                        );
-                      })}
                     </div>
                   </div>
                 )}
@@ -1449,16 +1595,11 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                 )}
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 pt-4 sm:pt-5 md:pt-6 border-t border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 pt-4 sm:pt-5 md:pt-6 border-t border-gray-200">
                   <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg sm:rounded-xl">
                     <Clock className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-purple-600 mx-auto mb-1 sm:mb-2" />
                     <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">Duration</p>
                     <p className="text-base sm:text-lg md:text-xl font-bold text-gray-900 truncate">{selectedPathDetails.timeRequired}</p>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
-                    <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600 mx-auto mb-1 sm:mb-2" />
-                    <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">Modules</p>
-                    <p className="text-base sm:text-lg md:text-xl font-bold text-gray-900">{selectedPathDetails.learningModules.length}</p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-indigo-50 rounded-lg sm:rounded-xl">
                     <Target className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-indigo-600 mx-auto mb-1 sm:mb-2" />
@@ -1466,6 +1607,40 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                     <p className="text-base sm:text-lg md:text-xl font-bold text-gray-900">{selectedPathDetails.focusAreas.length}</p>
                   </div>
                 </div>
+
+                {/* YouTube Data Stats - Shows actual generated content */}
+                {youtubeDataCounts.loading ? (
+                  <div className="pt-4 sm:pt-5 md:pt-6 border-t border-gray-200">
+                    <div className="flex items-center justify-center gap-2 p-4">
+                      <RefreshCw className="w-5 h-5 animate-spin text-purple-600" />
+                      <p className="text-sm text-gray-600">Loading YouTube data...</p>
+                    </div>
+                  </div>
+                ) : (youtubeDataCounts.modules > 0 || youtubeDataCounts.submodules > 0 || youtubeDataCounts.chapters > 0) && (
+                  <div className="pt-4 sm:pt-5 md:pt-6 border-t border-gray-200">
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+                      <Play className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
+                      YouTube Content Generated
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+                      <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg sm:rounded-xl border border-purple-200">
+                        <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-purple-600 mx-auto mb-1 sm:mb-2" />
+                        <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">Modules</p>
+                        <p className="text-base sm:text-lg md:text-xl font-bold text-gray-900">{youtubeDataCounts.modules}</p>
+                      </div>
+                      <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl border border-blue-200">
+                        <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600 mx-auto mb-1 sm:mb-2" />
+                        <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">Submodules</p>
+                        <p className="text-base sm:text-lg md:text-xl font-bold text-gray-900">{youtubeDataCounts.submodules}</p>
+                      </div>
+                      <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg sm:rounded-xl border border-indigo-200">
+                        <Play className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-indigo-600 mx-auto mb-1 sm:mb-2" />
+                        <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">Chapters</p>
+                        <p className="text-base sm:text-lg md:text-xl font-bold text-gray-900">{youtubeDataCounts.chapters}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Footer */}

@@ -6,6 +6,7 @@ import Teacher from '@/models/Teacher';
 import Organization from '@/models/Organization';
 import Test from '@/models/Test';
 import Student from '@/models/Student';
+import Notification from '@/models/Notification';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -133,6 +134,63 @@ export async function POST(
     }
 
     await test.save();
+
+    // Send notifications to assigned students
+    try {
+      let studentIdsToNotify: string[] = [];
+      
+      if (assignmentType === 'individual' && studentIds) {
+        studentIdsToNotify = studentIds;
+      } else if (assignmentType === 'class' && classGrades) {
+        const studentsInClasses = await Student.find({
+          classGrade: { $in: classGrades }
+        });
+        studentIdsToNotify = studentsInClasses.map(s => s.uniqueId || s.userId);
+      } else if (assignmentType === 'all_students' && organizationId) {
+        const allStudents = await Student.find({ organizationId });
+        studentIdsToNotify = allStudents.map(s => s.uniqueId || s.userId);
+      }
+
+      // Get student user IDs for notifications
+      const students = await Student.find({
+        $or: [
+          { uniqueId: { $in: studentIdsToNotify } },
+          { userId: { $in: studentIdsToNotify } }
+        ]
+      });
+
+      const notifications = [];
+      for (const student of students) {
+        const studentUser = await User.findById(student.userId);
+        if (studentUser) {
+          const notification = new Notification({
+            recipientId: student.userId,
+            recipientRole: 'student',
+            senderId: user._id.toString(),
+            senderRole: user.role as 'teacher' | 'organization',
+            senderName: user.name,
+            type: 'test_assigned',
+            priority: 'normal',
+            title: 'New Test Assigned',
+            message: `A new test "${test.title}" has been assigned to you.${test.endDate ? ` Due date: ${new Date(test.endDate).toLocaleDateString()}` : ''}`,
+            read: false,
+            metadata: {
+              testId: test._id.toString(),
+              endDate: test.endDate?.toISOString(),
+              subject: test.subject
+            }
+          });
+          notifications.push(notification);
+        }
+      }
+
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('Error sending notifications to students:', notifError);
+      // Don't fail the assignment if notification fails
+    }
 
     return NextResponse.json({
       success: true,

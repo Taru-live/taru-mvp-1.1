@@ -843,23 +843,6 @@ export default function ChapterPage() {
                 </div>
               )}
             </div>
-
-            {/* Quick Action Buttons */}
-            <div className="flex gap-2">
-              <motion.button
-                onClick={() => {
-                  setShowQuizConfirmModal(true);
-                  setActiveTab('quiz');
-                }}
-                disabled={mcqLoading}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg"
-              >
-                <Brain className="w-4 h-4" />
-                <span className="hidden sm:inline">Start Quiz</span>
-              </motion.button>
-            </div>
           </div>
         </div>
       </div>
@@ -936,8 +919,8 @@ export default function ChapterPage() {
                   </div>
                 )}
               </div>
-              <div className="p-4 bg-gray-50 border-t border-gray-200">
-                <p className="text-sm text-gray-600">{chapter.chapterDescription}</p>
+              <div className="p-4 bg-gray-50 border-t border-gray-200 overflow-hidden min-w-0">
+                <p className="text-sm text-gray-600 break-words whitespace-normal overflow-wrap-anywhere word-break break-word hyphens-auto">{chapter.chapterDescription}</p>
               </div>
             </div>
 

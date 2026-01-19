@@ -69,6 +69,7 @@ function CareerDetailsContent() {
   const [savedPathId, setSavedPathId] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [requiresPayment, setRequiresPayment] = useState(false);
+  const fetchingRef = React.useRef(false); // Use ref to prevent duplicate calls
   const router = useRouter();
   const searchParams = useSearchParams();
   const careerPath = searchParams?.get('careerPath') || null;
@@ -102,43 +103,6 @@ function CareerDetailsContent() {
     try {
       setIsSaving(true);
       
-      // First, save career details
-      // Ensure we send the original careerDetails with modules field preserved
-      const careerDetailsToSave = {
-        ...careerDetails,
-        output: {
-          ...careerDetails.output,
-          // Preserve modules if it exists, and ensure learningPath is also present
-          modules: careerDetails.output.modules || undefined,
-          learningPath: careerDetails.output.learningPath || (careerDetails.output.modules ? undefined : [])
-        }
-      };
-      
-      console.log('🔍 Saving career details with structure:', {
-        hasModules: !!careerDetailsToSave.output.modules,
-        modulesLength: careerDetailsToSave.output.modules?.length || 0,
-        hasLearningPath: !!careerDetailsToSave.output.learningPath,
-        learningPathLength: careerDetailsToSave.output.learningPath?.length || 0
-      });
-      
-      const careerDetailsResponse = await fetch('/api/career-details/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          careerDetails: careerDetailsToSave,
-          careerPath: searchParams?.get('careerPath') || 'Unknown Career',
-          description: careerDetails.output.overview?.join(' ') || 'Career learning path'
-        }),
-      });
-
-      if (!careerDetailsResponse.ok) {
-        const errorData = await careerDetailsResponse.json().catch(() => ({}));
-        setSaveError(errorData.error || 'Failed to save career details');
-        return;
-      }
-
       // Transform modules to learningPath if needed for learning-paths/save
       let learningModulesForSave = careerDetails.output.learningPath || [];
       
@@ -161,7 +125,7 @@ function CareerDetailsContent() {
         console.log('🔍 Transformed learningModulesForSave length:', learningModulesForSave.length);
       }
       
-      // Then, save learning path
+      // Save learning path
       const response = await fetch('/api/learning-paths/save', {
         method: 'POST',
         headers: {
@@ -424,12 +388,14 @@ function CareerDetailsContent() {
   };
 
   const fetchCareerDetails = async () => {
-    if (hasFetchedCareerDetails) {
-      console.log('🔍 Career details already fetched, skipping...');
+    // Prevent duplicate calls using ref (works even in React Strict Mode)
+    if (hasFetchedCareerDetails || fetchingRef.current) {
+      console.log('🔍 Career details already fetched or fetching in progress, skipping...');
       return;
     }
     
     try {
+      fetchingRef.current = true;
       console.log('🔍 Fetching career details for:', { careerPath, description });
       setHasFetchedCareerDetails(true);
       setLoading(true);
@@ -508,8 +474,10 @@ function CareerDetailsContent() {
     } catch (err) {
       console.error('Error fetching career details:', err);
       setError('Failed to load career details');
+      setHasFetchedCareerDetails(false); // Reset on error so it can be retried
     } finally {
       setLoading(false);
+      fetchingRef.current = false; // Reset ref when done
     }
   };
 
@@ -577,6 +545,7 @@ function CareerDetailsContent() {
   // Reset fetch flag when career path or learning path ID changes
   useEffect(() => {
     setHasFetchedCareerDetails(false);
+    fetchingRef.current = false; // Also reset the ref
   }, [careerPath, learningPathId]);
 
   // Fetch user info when session data changes or on initial load
@@ -1550,12 +1519,53 @@ function CareerDetailsContent() {
           setShowPaymentModal(false);
           setRequiresPayment(false);
           setSaveError(null);
-          // Retry saving the learning path after successful payment
-          if (careerDetails?.output && userInfo?.id) {
-            await saveLearningPath();
-          }
-          // Stay on the career details page to show the learning path
-          // User can navigate to dashboard manually if needed
+          
+          // Wait for subscription to be created after payment verification
+          // Payment verification creates subscription, but it may take a moment
+          let retries = 0;
+          const maxRetries = 5;
+          const retryDelay = 1000; // 1 second
+          
+          const waitForSubscriptionAndSave = async () => {
+            if (!careerDetails?.output || !userInfo?.id) return;
+            
+            // Check subscription status first (using GET with query params)
+            try {
+              const statusResponse = await fetch('/api/payments/subscription-status?learningPathId=null', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+              });
+              
+              const statusData = await statusResponse.json();
+              
+              // If subscription is available, try saving
+              if (statusData.hasSubscription || statusData.hasActiveSubscription) {
+                console.log('✅ Subscription available, attempting to save learning path...');
+                await saveLearningPath();
+              } else if (retries < maxRetries) {
+                // Wait and retry
+                retries++;
+                console.log(`⏳ Waiting for subscription... (attempt ${retries}/${maxRetries})`);
+                setTimeout(waitForSubscriptionAndSave, retryDelay);
+              } else {
+                // Max retries reached, show error
+                setSaveError('Payment completed but subscription is not ready yet. Please try saving again in a moment.');
+                setRequiresPayment(false);
+              }
+            } catch (err) {
+              console.error('Error checking subscription status:', err);
+              if (retries < maxRetries) {
+                retries++;
+                setTimeout(waitForSubscriptionAndSave, retryDelay);
+              } else {
+                setSaveError('Failed to verify subscription. Please try saving again.');
+              }
+            }
+          };
+          
+          // Start waiting for subscription
+          setTimeout(waitForSubscriptionAndSave, 500); // Initial delay
         }}
         planType="basic"
         paymentFor="learning_path_save"
