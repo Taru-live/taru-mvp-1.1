@@ -1174,7 +1174,7 @@ export default function LearningPathTab({ user, onTabChange, isParentView = fals
                     whileTap={{ scale: 0.98 }}
                   >
                     <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform duration-300" />
-                    <span className="hidden sm:inline">View Full Details</span>
+                    <span className="hidden sm:inline">View more...</span>
                     <span className="sm:hidden">View Details</span>
                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-300" />
                   </motion.button>

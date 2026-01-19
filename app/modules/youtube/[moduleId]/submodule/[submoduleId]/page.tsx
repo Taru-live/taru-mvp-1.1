@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -14,7 +13,11 @@ import {
   Grid3X3,
   List,
   Trophy,
-  Zap
+  Zap,
+  Bookmark,
+  BookmarkCheck,
+  ThumbsUp,
+  CheckCircle
 } from 'lucide-react';
 
 interface Chapter {
@@ -51,6 +54,9 @@ export default function SubmodulePage() {
   const [loading, setLoading] = useState(true);
   const [uniqueId, setUniqueId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [bookmarkedVideos, setBookmarkedVideos] = useState<Set<string>>(new Set());
+  const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
+  const [completedVideos, setCompletedVideos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchUserData();
@@ -213,6 +219,42 @@ export default function SubmodulePage() {
   const getVideoId = (url: string) => {
     const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     return match ? match[1] : null;
+  };
+
+  const toggleBookmark = (chapterId: string) => {
+    setBookmarkedVideos(prev => {
+      const newBookmarks = new Set(prev);
+      if (newBookmarks.has(chapterId)) {
+        newBookmarks.delete(chapterId);
+      } else {
+        newBookmarks.add(chapterId);
+      }
+      return newBookmarks;
+    });
+  };
+
+  const toggleLike = (chapterId: string) => {
+    setLikedVideos(prev => {
+      const newLikes = new Set(prev);
+      if (newLikes.has(chapterId)) {
+        newLikes.delete(chapterId);
+      } else {
+        newLikes.add(chapterId);
+      }
+      return newLikes;
+    });
+  };
+
+  const markAsCompleted = (chapterId: string) => {
+    setCompletedVideos(prev => {
+      const newCompleted = new Set(prev);
+      if (newCompleted.has(chapterId)) {
+        newCompleted.delete(chapterId);
+      } else {
+        newCompleted.add(chapterId);
+      }
+      return newCompleted;
+    });
   };
 
   // Color palette for kids
@@ -398,8 +440,11 @@ export default function SubmodulePage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
           {submodule.chapters.map((chapter, index) => {
-            const videoId = getVideoId(chapter.youtubeUrl);
             const colorScheme = colors[index % colors.length];
+            const chapterId = `chapter-${chapter.chapterId}`;
+            const isBookmarked = bookmarkedVideos.has(chapterId);
+            const isLiked = likedVideos.has(chapterId);
+            const isCompleted = completedVideos.has(chapterId);
             
             return (
               <motion.div
@@ -408,58 +453,85 @@ export default function SubmodulePage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ delay: 0.1 * index, type: "spring", stiffness: 200 }}
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="group cursor-pointer"
-                onClick={() => handleChapterClick(chapter.chapterId)}
+                className="group"
               >
                 <div className={`bg-gradient-to-br ${colorScheme.bg} rounded-3xl shadow-xl border-4 ${colorScheme.border} overflow-hidden h-full transition-all duration-300 hover:shadow-2xl`}>
-                  {/* Video Thumbnail */}
-                  <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
-                    {videoId ? (
-                      <Image
-                        src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                        alt={chapter.chapterTitle}
-                        width={1280}
-                        height={720}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Play className="w-16 h-16 text-white opacity-50" />
-                      </div>
-                    )}
-                    
-                    {/* Play Button Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                      <motion.div
-                        className={`${colorScheme.icon} rounded-full p-4 shadow-2xl`}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <Play className="w-8 h-8 text-white fill-white" />
-                      </motion.div>
-                    </div>
-
-                    {/* Number Badge */}
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
-                      <span className="text-lg font-bold text-purple-600">{index + 1}</span>
-                    </div>
-                  </div>
-
                   {/* Chapter Info */}
                   <div className="p-5">
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem]">
-                      {chapter.chapterTitle || chapter.youtubeTitle || `Lesson ${index + 1}`}
-                    </h3>
-                    <p className="text-white/90 text-sm mb-3 line-clamp-2 min-h-[2.5rem]">
-                      {chapter.chapterDescription || 'Learn something amazing!'}
-                    </p>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
+                          <span className="text-lg font-bold text-purple-600">{index + 1}</span>
+                        </div>
+                        <div className="flex-1">
+                          <h3 
+                            className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem] cursor-pointer hover:text-yellow-200 transition-colors"
+                            onClick={() => handleChapterClick(chapter.chapterId)}
+                          >
+                            {chapter.chapterTitle || chapter.youtubeTitle || `Lesson ${index + 1}`}
+                          </h3>
+                          <p className="text-white/90 text-sm mb-3 line-clamp-2 min-h-[2.5rem]">
+                            {chapter.chapterDescription || 'Learn something amazing!'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(chapterId);
+                        }}
+                        className={`p-2 rounded-full transition-all ${
+                          isBookmarked 
+                            ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                            : 'bg-white/20 text-white hover:bg-yellow-500'
+                        }`}
+                        title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+                      >
+                        {isBookmarked ? (
+                          <BookmarkCheck className="w-4 h-4" />
+                        ) : (
+                          <Bookmark className="w-4 h-4" />
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(chapterId);
+                        }}
+                        className={`p-2 rounded-full transition-all ${
+                          isLiked 
+                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                            : 'bg-white/20 text-white hover:bg-blue-500'
+                        }`}
+                        title={isLiked ? 'Unlike' : 'Like'}
+                      >
+                        <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                      </button>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsCompleted(chapterId);
+                        }}
+                        className={`p-2 rounded-full transition-all ${
+                          isCompleted 
+                            ? 'bg-green-500 text-white hover:bg-green-600' 
+                            : 'bg-white/20 text-white hover:bg-green-500'
+                        }`}
+                        title={isCompleted ? 'Mark as incomplete' : 'Mark as completed'}
+                      >
+                        <CheckCircle className={`w-4 h-4 ${isCompleted ? 'fill-current' : ''}`} />
+                      </button>
+                    </div>
                     
                     {/* Duration Badge */}
                     {chapter.duration && (
-                      <div className="flex items-center gap-2 text-white/80 text-xs">
+                      <div className="flex items-center gap-2 text-white/80 text-xs mb-3">
                         <Clock className="w-4 h-4" />
                         <span>{chapter.duration}</span>
                       </div>
@@ -488,8 +560,11 @@ export default function SubmodulePage() {
             className="space-y-4"
           >
             {submodule.chapters.map((chapter, index) => {
-              const videoId = getVideoId(chapter.youtubeUrl);
               const colorScheme = colors[index % colors.length];
+              const chapterId = `chapter-${chapter.chapterId}`;
+              const isBookmarked = bookmarkedVideos.has(chapterId);
+              const isLiked = likedVideos.has(chapterId);
+              const isCompleted = completedVideos.has(chapterId);
               
               return (
                 <motion.div
@@ -498,76 +573,101 @@ export default function SubmodulePage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * index, type: "spring", stiffness: 200 }}
                   whileHover={{ scale: 1.02, x: 5 }}
-                  className="group cursor-pointer"
-                  onClick={() => handleChapterClick(chapter.chapterId)}
+                  className="group"
                 >
                   <div className={`bg-gradient-to-r ${colorScheme.bg} rounded-2xl shadow-xl border-4 ${colorScheme.border} overflow-hidden transition-all duration-300 hover:shadow-2xl`}>
-                    <div className="flex flex-col sm:flex-row">
-                      {/* Video Thumbnail */}
-                      <div className="relative w-full sm:w-64 h-48 sm:h-auto bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden flex-shrink-0">
-                        {videoId ? (
-                          <Image
-                            src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                            alt={chapter.chapterTitle}
-                            width={1280}
-                            height={720}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Play className="w-16 h-16 text-white opacity-50" />
+                    {/* Chapter Info */}
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-white/90 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
+                              <span className="text-lg font-bold text-purple-600">{index + 1}</span>
+                            </div>
+                            <div className="flex-1">
+                              <h3 
+                                className="text-xl sm:text-2xl font-bold text-white mb-2 cursor-pointer hover:text-yellow-200 transition-colors"
+                                onClick={() => handleChapterClick(chapter.chapterId)}
+                              >
+                                {chapter.chapterTitle || chapter.youtubeTitle || `Lesson ${index + 1}`}
+                              </h3>
+                              <p className="text-white/90 text-sm sm:text-base mb-3">
+                                {chapter.chapterDescription || 'Learn something amazing!'}
+                              </p>
+                            </div>
                           </div>
-                        )}
-                        
-                        {/* Play Button Overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                          <motion.div
-                            className={`${colorScheme.icon} rounded-full p-3 shadow-2xl`}
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <Play className="w-6 h-6 text-white fill-white" />
-                          </motion.div>
                         </div>
-
-                        {/* Number Badge */}
-                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
-                          <span className="text-lg font-bold text-purple-600">{index + 1}</span>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(chapterId);
+                            }}
+                            className={`p-2 rounded-full transition-all ${
+                              isBookmarked 
+                                ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                                : 'bg-white/20 text-white hover:bg-yellow-500'
+                            }`}
+                            title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+                          >
+                            {isBookmarked ? (
+                              <BookmarkCheck className="w-4 h-4" />
+                            ) : (
+                              <Bookmark className="w-4 h-4" />
+                            )}
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleLike(chapterId);
+                            }}
+                            className={`p-2 rounded-full transition-all ${
+                              isLiked 
+                                ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                                : 'bg-white/20 text-white hover:bg-blue-500'
+                            }`}
+                            title={isLiked ? 'Unlike' : 'Like'}
+                          >
+                            <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsCompleted(chapterId);
+                            }}
+                            className={`p-2 rounded-full transition-all ${
+                              isCompleted 
+                                ? 'bg-green-500 text-white hover:bg-green-600' 
+                                : 'bg-white/20 text-white hover:bg-green-500'
+                            }`}
+                            title={isCompleted ? 'Mark as incomplete' : 'Mark as completed'}
+                          >
+                            <CheckCircle className={`w-4 h-4 ${isCompleted ? 'fill-current' : ''}`} />
+                          </button>
                         </div>
                       </div>
-
-                      {/* Chapter Info */}
-                      <div className="p-5 flex-1 flex flex-col justify-between">
-                        <div>
-                          <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                            {chapter.chapterTitle || chapter.youtubeTitle || `Lesson ${index + 1}`}
-                          </h3>
-                          <p className="text-white/90 text-sm sm:text-base mb-3">
-                            {chapter.chapterDescription || 'Learn something amazing!'}
-                          </p>
-                        </div>
-                        
-                        <div className="flex items-center justify-between flex-wrap gap-3">
-                          {/* Duration Badge */}
-                          {chapter.duration && (
-                            <div className="flex items-center gap-2 text-white/90 text-sm bg-white/20 px-3 py-1.5 rounded-full">
-                              <Clock className="w-4 h-4" />
-                              <span>{chapter.duration}</span>
-                            </div>
-                          )}
-
-                          {/* Star Rating */}
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < 4 ? 'text-yellow-300 fill-yellow-300' : 'text-white/30'}`}
-                              />
-                            ))}
+                      
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        {/* Duration Badge */}
+                        {chapter.duration && (
+                          <div className="flex items-center gap-2 text-white/90 text-sm bg-white/20 px-3 py-1.5 rounded-full">
+                            <Clock className="w-4 h-4" />
+                            <span>{chapter.duration}</span>
                           </div>
+                        )}
+
+                        {/* Star Rating */}
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < 4 ? 'text-yellow-300 fill-yellow-300' : 'text-white/30'}`}
+                            />
+                          ))}
                         </div>
                       </div>
                     </div>

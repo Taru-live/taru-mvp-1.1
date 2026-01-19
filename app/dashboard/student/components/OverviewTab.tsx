@@ -196,16 +196,8 @@ export default function OverviewTab({
     fetchYouTubeData();
   }, [user?.uniqueId]);
   
-  // Refresh data when component mounts or when switching to this tab
-  useEffect(() => {
-    if (onRefresh) {
-      // Refresh data when tab becomes active to ensure latest data
-      const refreshTimer = setTimeout(() => {
-        onRefresh();
-      }, 100);
-      return () => clearTimeout(refreshTimer);
-    }
-  }, [onRefresh]);
+  // Note: Data refresh is handled by parent component when switching tabs
+  // No need to auto-refresh here to avoid infinite loops
   
   // Monitor dashboardData changes to ensure proper display
   useEffect(() => {

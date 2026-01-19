@@ -979,7 +979,7 @@ export default function OrganizationAdminDashboard() {
     { id: 'content', label: 'Content Management', icon: '/icons/modules.png' },
     { id: 'branches', label: 'Branches', icon: '/icons/rewards.png' },
     { id: 'teachers', label: 'Teachers', icon: '/icons/teacher.png' },
-    { id: 'reports', label: 'Reports', icon: '/icons/report.png' },
+    { id: 'reports', label: 'Reports', icon: 'reports' },
     { id: 'analytics', label: 'Analytics', icon: '/icons/analytics.png' },
     { id: 'audit-logs', label: 'Audit Logs', icon: '/icons/audit.png' },
     { id: 'announcements', label: 'Announcements', icon: '/icons/bot.png' },

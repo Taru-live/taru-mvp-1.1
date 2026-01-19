@@ -572,9 +572,29 @@ function StudentDashboardContent() {
   // Refresh dashboard data when switching to progress or overview tab
   useEffect(() => {
     if ((activeTab === 'progress' || activeTab === 'overview') && user) {
-      refreshDashboardData();
+      const fetchData = async () => {
+        try {
+          const response = await fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
+            cache: 'no-cache',
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch dashboard data');
+          }
+          
+          const data = await response.json();
+          console.log('🔄 Refreshed dashboard data - totalModules:', data?.overview?.totalModules);
+          setDashboardData(data);
+        } catch (error) {
+          console.error('Error refreshing dashboard data:', error);
+        }
+      };
+      fetchData();
     }
-  }, [activeTab, user, refreshDashboardData]);
+  }, [activeTab, user]);
 
   // Function to test API connectivity
   const testApiConnectivity = async () => {
@@ -835,6 +855,9 @@ function StudentDashboardContent() {
     setUserAvatar(avatarPath);
     setIsAvatarSelectorOpen(false);
     
+    // Update user object immediately for UI consistency
+    setUser(prev => prev ? { ...prev, avatar: avatarPath } : null);
+    
     // Save avatar selection to backend
     try {
       const response = await fetch('/api/student/update-avatar', {
@@ -852,9 +875,17 @@ function StudentDashboardContent() {
         console.log('✅ Avatar saved successfully');
       } else {
         console.error('❌ Failed to save avatar:', response.statusText);
+        // Revert on error
+        const savedAvatar = user?.avatar || '/avatars/Group.svg';
+        setUserAvatar(savedAvatar);
+        setUser(prev => prev ? { ...prev, avatar: savedAvatar } : null);
       }
     } catch (error) {
       console.error('❌ Error saving avatar:', error);
+      // Revert on error
+      const savedAvatar = user?.avatar || '/avatars/Group.svg';
+      setUserAvatar(savedAvatar);
+      setUser(prev => prev ? { ...prev, avatar: savedAvatar } : null);
     }
   };
 
@@ -1489,22 +1520,7 @@ function StudentDashboardContent() {
                   <OverviewTab
                     courses={courses}
                     onTabChange={setActiveTab}
-                    onRefresh={async () => {
-                      // Refresh dashboard data with cache busting
-                      try {
-                        const response = await fetch(`/api/dashboard/student/overview?t=${Date.now()}`, {
-                          cache: 'no-cache',
-                          headers: {
-                            'Cache-Control': 'no-cache'
-                          }
-                        });
-                        const data = await response.json();
-                        setDashboardData(data);
-                        console.log('🔄 Overview tab refreshed - totalModules:', data?.overview?.totalModules);
-                      } catch (error) {
-                        console.error('Error refreshing dashboard data:', error);
-                      }
-                    }}
+                    onRefresh={refreshDashboardData}
                     dashboardData={dashboardData}
                     user={user ? { uniqueId: user.uniqueId || undefined } : undefined}
                   />
@@ -1664,7 +1680,7 @@ function StudentDashboardContent() {
               <div className="absolute" style={{ left: '120px', top: '9.47px', width: '158px', height: '48.01px' }}>
                 {/* Avatar */}
                 <div 
-                  className="absolute rounded-full overflow-hidden flex-shrink-0"
+                  className="absolute rounded-full overflow-hidden flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all duration-200"
                   style={{
                     width: '47.37px',
                     height: '47.37px',
@@ -1672,6 +1688,8 @@ function StudentDashboardContent() {
                     top: '0px',
                     background: '#6C18CD',
                   }}
+                  onClick={() => setIsAvatarSelectorOpen(true)}
+                  title="Click to change avatar"
                 >
                   <Image 
                     src={userAvatar} 

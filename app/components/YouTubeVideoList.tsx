@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Play, ExternalLink, Loader2, AlertCircle, Youtube, Clock, Eye } from 'lucide-react';
+import { Play, ExternalLink, Loader2, AlertCircle, Youtube, Clock, Eye, Bookmark, BookmarkCheck, ThumbsUp, CheckCircle } from 'lucide-react';
 
 interface Chapter {
   chapterIndex: number;
@@ -31,6 +30,9 @@ export default function YouTubeVideoList({ uniqueid, onVideoSelect }: YouTubeVid
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
+  const [bookmarkedVideos, setBookmarkedVideos] = useState<Set<string>>(new Set());
+  const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
+  const [completedVideos, setCompletedVideos] = useState<Set<string>>(new Set());
   // No longer need selectedModule since we have chapters directly
 
   useEffect(() => {
@@ -164,9 +166,40 @@ export default function YouTubeVideoList({ uniqueid, onVideoSelect }: YouTubeVid
     return match ? match[1] : null;
   };
 
-  const getThumbnailUrl = (videoUrl: string): string => {
-    const videoId = extractVideoId(videoUrl);
-    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
+  const toggleBookmark = (chapterId: string) => {
+    setBookmarkedVideos(prev => {
+      const newBookmarks = new Set(prev);
+      if (newBookmarks.has(chapterId)) {
+        newBookmarks.delete(chapterId);
+      } else {
+        newBookmarks.add(chapterId);
+      }
+      return newBookmarks;
+    });
+  };
+
+  const toggleLike = (chapterId: string) => {
+    setLikedVideos(prev => {
+      const newLikes = new Set(prev);
+      if (newLikes.has(chapterId)) {
+        newLikes.delete(chapterId);
+      } else {
+        newLikes.add(chapterId);
+      }
+      return newLikes;
+    });
+  };
+
+  const markAsCompleted = (chapterId: string) => {
+    setCompletedVideos(prev => {
+      const newCompleted = new Set(prev);
+      if (newCompleted.has(chapterId)) {
+        newCompleted.delete(chapterId);
+      } else {
+        newCompleted.add(chapterId);
+      }
+      return newCompleted;
+    });
   };
 
   if (loading) {
@@ -279,49 +312,16 @@ export default function YouTubeVideoList({ uniqueid, onVideoSelect }: YouTubeVid
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {youtubeData.chapters.map((chapter, index) => {
-              const thumbnailUrl = getThumbnailUrl(chapter.videoUrl);
+              const chapterId = `chapter-${chapter.chapterIndex}`;
+              const isBookmarked = bookmarkedVideos.has(chapterId);
+              const isLiked = likedVideos.has(chapterId);
+              const isCompleted = completedVideos.has(chapterId);
               
               return (
                 <div
                   key={`chapter-${chapter.chapterIndex}`}
-                  className="bg-white rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-red-200"
-                  onClick={() => handleVideoClick(chapter.videoUrl, chapter.videoTitle)}
+                  className="bg-white rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group border border-gray-100 hover:border-red-200"
                 >
-                  {/* Video Thumbnail */}
-                  <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
-                    {thumbnailUrl ? (
-                      <Image
-                        src={thumbnailUrl}
-                        alt={chapter.videoTitle}
-                        width={640}
-                        height={360}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                        <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
-                          <Play className="w-8 h-8 text-white ml-1" />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Play Button Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300">
-                      <div className="w-20 h-20 bg-red-600 bg-opacity-90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-2xl">
-                        <Play className="w-8 h-8 text-white ml-1" />
-                      </div>
-                    </div>
-
-                    {/* Duration Badge */}
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                      <Clock className="w-3 h-3 inline mr-1" />
-                      Video
-                    </div>
-                  </div>
-
                   {/* Video Info */}
                   <div className="p-5">
                     <div className="flex items-start gap-3 mb-3">
@@ -329,7 +329,10 @@ export default function YouTubeVideoList({ uniqueid, onVideoSelect }: YouTubeVid
                         <span className="text-red-600 font-bold text-sm">{chapter.chapterIndex}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors">
+                        <h4 
+                          className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors cursor-pointer"
+                          onClick={() => handleVideoClick(chapter.videoUrl, chapter.videoTitle)}
+                        >
                           {chapter.videoTitle}
                         </h4>
                         <p className="text-sm text-gray-600 mb-2">
@@ -338,12 +341,70 @@ export default function YouTubeVideoList({ uniqueid, onVideoSelect }: YouTubeVid
                       </div>
                     </div>
                     
+                    {/* Action Buttons */}
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        YouTube Learning
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBookmark(chapterId);
+                          }}
+                          className={`p-2 rounded-full transition-all ${
+                            isBookmarked 
+                              ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                              : 'bg-gray-100 text-gray-600 hover:bg-yellow-100 hover:text-yellow-600'
+                          }`}
+                          title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+                        >
+                          {isBookmarked ? (
+                            <BookmarkCheck className="w-4 h-4" />
+                          ) : (
+                            <Bookmark className="w-4 h-4" />
+                          )}
+                        </button>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLike(chapterId);
+                          }}
+                          className={`p-2 rounded-full transition-all ${
+                            isLiked 
+                              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                              : 'bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600'
+                          }`}
+                          title={isLiked ? 'Unlike' : 'Like'}
+                        >
+                          <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                        </button>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsCompleted(chapterId);
+                          }}
+                          className={`p-2 rounded-full transition-all ${
+                            isCompleted 
+                              ? 'bg-green-500 text-white hover:bg-green-600' 
+                              : 'bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600'
+                          }`}
+                          title={isCompleted ? 'Mark as incomplete' : 'Mark as completed'}
+                        >
+                          <CheckCircle className={`w-4 h-4 ${isCompleted ? 'fill-current' : ''}`} />
+                        </button>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVideoClick(chapter.videoUrl, chapter.videoTitle);
+                        }}
+                        className="flex items-center gap-2 text-xs text-gray-500 hover:text-red-500 transition-colors"
+                      >
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span>YouTube Learning</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>

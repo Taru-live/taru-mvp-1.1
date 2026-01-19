@@ -196,7 +196,7 @@ export default function TeacherDashboard() {
     { id: 'students', label: 'My Students', icon: '/icons/profile.png' },
     { id: 'modules', label: 'Learning Modules', icon: '/icons/modules.png' },
     { id: 'assignments', label: 'Assignments', icon: '/icons/report.png' },
-    { id: 'tests', label: 'Tests', icon: '/icons/report.png' },
+    { id: 'tests', label: 'Tests', icon: 'tests' },
     { id: 'analytics', label: 'Analytics', icon: '/icons/rewards.png' },
     { id: 'settings', label: 'Settings', icon: '/icons/settings.png' },
   ];
